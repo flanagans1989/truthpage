@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str
     STRIPE_WEBHOOK_SECRET: str = ""
     STRIPE_PRICE_GROWTH: str = ""
-    ANTHROPIC_API_KEY: str
+    GEMINI_API_KEY: str
     RESEND_API_KEY: str
     SENTRY_DSN: str = ""
 
