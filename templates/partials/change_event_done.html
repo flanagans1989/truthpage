@@ -1,0 +1,25 @@
+{% if action == "approved" %}
+<div class="rounded-xl border border-green-200 bg-green-50 px-6 py-5 flex items-center gap-3 transition-all">
+    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+    </div>
+    <div>
+        <p class="text-sm font-semibold text-green-800">Change approved</p>
+        <p class="text-xs text-green-600 mt-0.5">This change has been published to your privacy page.</p>
+    </div>
+</div>
+{% else %}
+<div class="rounded-xl border border-slate-200 bg-slate-50 px-6 py-5 flex items-center gap-3 transition-all">
+    <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+    </div>
+    <div>
+        <p class="text-sm font-semibold text-slate-700">Change rejected</p>
+        <p class="text-xs text-slate-500 mt-0.5">Marked as a false positive — no action taken.</p>
+    </div>
+</div>
+{% endif %}

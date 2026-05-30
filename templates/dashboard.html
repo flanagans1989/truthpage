@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — TrustPages{% endblock %}
+
+{% block content %}
+<div class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0">
+        <div class="px-6 py-5 border-b border-slate-200">
+            <span class="text-blue-600 font-bold text-lg tracking-tight">TrustPages</span>
+        </div>
+        <nav class="flex-1 px-3 py-4 space-y-0.5">
+            <a href="/dashboard"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                Overview
+            </a>
+            <a href="#subprocessors"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                Sub-processors
+            </a>
+            <a href="/dashboard/queue"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                Approval Queue
+            </a>
+            <a href="#"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Settings
+            </a>
+        </nav>
+        <div class="px-4 py-4 border-t border-slate-200">
+            <p class="text-xs text-slate-400 px-3">Workspace</p>
+            <p class="text-sm font-medium text-slate-700 px-3 mt-0.5 truncate">{{ tenant.slug }}</p>
+        </div>
+    </aside>
+
+    <!-- Main area -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+        <!-- Top bar -->
+        <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <h2 class="text-base font-semibold text-slate-900">{{ tenant.name }}</h2>
+                <span class="text-xs px-2.5 py-0.5 rounded-full font-medium
+                    {% if tenant.subscription_status == 'active' %}bg-green-100 text-green-700
+                    {% elif tenant.subscription_status == 'trialing' %}bg-blue-100 text-blue-700
+                    {% elif tenant.subscription_status == 'past_due' %}bg-amber-100 text-amber-700
+                    {% else %}bg-slate-100 text-slate-600{% endif %}">
+                    {{ tenant.subscription_status }}
+                </span>
+            </div>
+            <a href="/auth/logout"
+               class="text-sm text-slate-500 hover:text-slate-800 transition font-medium">
+                Sign out
+            </a>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-8">
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+                <div class="bg-white rounded-xl border border-slate-200 p-6">
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Sub-processors</p>
+                    <p class="text-3xl font-bold text-slate-900">{{ rows | length }}</p>
+                    <p class="text-xs text-slate-400 mt-1">Monitored URLs</p>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-6">
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Active</p>
+                    <p class="text-3xl font-bold text-green-600">{{ rows | selectattr('monitoring_enabled') | list | length }}</p>
+                    <p class="text-xs text-slate-400 mt-1">Currently monitoring</p>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-6">
+                    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Paused</p>
+                    <p class="text-3xl font-bold text-slate-400">{{ rows | rejectattr('monitoring_enabled') | list | length }}</p>
+                    <p class="text-xs text-slate-400 mt-1">Monitoring disabled</p>
+                </div>
+            </div>
+
+            <!-- Sub-processors section -->
+            <div id="subprocessors" class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+
+                <!-- Section header + Add form toggle -->
+                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                    <h3 class="text-sm font-semibold text-slate-900">Sub-processors</h3>
+                    <button
+                        onclick="document.getElementById('add-form').classList.toggle('hidden')"
+                        class="text-xs font-medium px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                        + Add New
+                    </button>
+                </div>
+
+                <!-- Add form (hidden by default, toggled by button) -->
+                <div id="add-form" class="hidden border-b border-slate-200 bg-slate-50 px-6 py-5">
+                    <p class="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-4">Add Sub-processor</p>
+                    <form
+                        hx-post="/dashboard/subprocessors"
+                        hx-target="#subprocessor-table"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="this.reset(); document.getElementById('add-form').classList.add('hidden')"
+                        class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Name</label>
+                            <input type="text" name="name" required placeholder="e.g. Stripe"
+                                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Privacy Policy URL</label>
+                            <input type="url" name="monitored_url" required placeholder="https://stripe.com/privacy"
+                                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-500 mb-1">Check Interval</label>
+                            <select name="check_interval_minutes"
+                                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="60">Every hour</option>
+                                <option value="360">Every 6 hours</option>
+                                <option value="720">Every 12 hours</option>
+                                <option value="1440" selected>Daily</option>
+                                <option value="10080">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-3 flex gap-3">
+                            <button type="submit"
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+                                Add Sub-processor
+                            </button>
+                            <button type="button"
+                                onclick="document.getElementById('add-form').classList.add('hidden'); this.closest('form').reset()"
+                                class="px-4 py-2 border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Table (HTMX target) -->
+                <div id="subprocessor-table" class="px-6 py-4">
+                    {% include "partials/subprocessor_table.html" %}
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+</div>
+{% endblock %}

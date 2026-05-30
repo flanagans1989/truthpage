@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ tenant.name }} — Sub-processor Trust Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.3/dist/htmx.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-4xl mx-auto px-6 py-6 flex items-start justify-between gap-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">{{ tenant.name }}</h1>
+                <p class="text-slate-500 text-sm mt-1">Sub-processor &amp; DPA Compliance Page</p>
+            </div>
+            <div class="text-right shrink-0">
+                <span class="inline-flex items-center gap-1.5 text-xs text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-full font-medium">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                    Monitored by TrustPages
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-4xl mx-auto px-6 py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Sub-processor list (2/3 width) -->
+            <div class="lg:col-span-2">
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="text-base font-semibold text-slate-900">Authorized Sub-processors</h2>
+                    <span class="text-xs text-slate-400">{{ subprocessors | length }} active</span>
+                </div>
+
+                {% if subprocessors %}
+                <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+                    {% for sp in subprocessors %}
+                    <div class="px-5 py-4 flex items-start justify-between gap-4">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-slate-900">{{ sp.name }}</p>
+                            <a href="{{ sp.monitored_url }}" target="_blank" rel="noopener noreferrer"
+                               class="text-xs text-blue-600 hover:underline break-all">
+                                {{ sp.monitored_url }}
+                            </a>
+                        </div>
+                        <div class="shrink-0 text-right">
+                            <span class="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full font-medium">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Active
+                            </span>
+                            <p class="text-xs text-slate-400 mt-1">
+                                {% if sp.last_checked_at %}
+                                    Checked {{ sp.last_checked_at.strftime('%d %b %Y') }}
+                                {% else %}
+                                    Pending first check
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% else %}
+                <div class="bg-white rounded-xl border border-slate-200 border-dashed p-10 text-center">
+                    <p class="text-slate-400 text-sm">No sub-processors listed yet.</p>
+                </div>
+                {% endif %}
+
+                <!-- Footer note -->
+                <p class="text-xs text-slate-400 mt-5 leading-relaxed">
+                    This page is automatically maintained and updated whenever a change in any
+                    sub-processor's privacy policy is detected and approved.
+                    Powered by <a href="/" class="text-blue-500 hover:underline">TrustPages</a>.
+                </p>
+            </div>
+
+            <!-- Subscribe sidebar (1/3 width) -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl border border-slate-200 p-6 sticky top-8">
+                    <div class="mb-4">
+                        <h3 class="text-sm font-semibold text-slate-900">Stay Informed</h3>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                            Get notified whenever {{ tenant.name }} updates
+                            their sub-processor list or data processing agreements.
+                        </p>
+                    </div>
+
+                    <form id="subscribe-form"
+                          hx-post="/trust/{{ tenant.slug }}/subscribe"
+                          hx-target="#subscribe-form"
+                          hx-swap="outerHTML">
+                        <label class="block text-xs text-slate-500 mb-1.5">Your email address</label>
+                        <input
+                            type="email"
+                            name="email"
+                            required
+                            placeholder="you@company.com"
+                            class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3">
+                        <button type="submit"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition">
+                            Subscribe to Updates
+                        </button>
+                    </form>
+
+                    <p class="text-xs text-slate-400 mt-3 text-center">
+                        We'll send a confirmation email. No spam, ever.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

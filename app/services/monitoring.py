@@ -1,0 +1,128 @@
+import logging
+from datetime import UTC, timedelta
+from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.core.llm.analyzer import LLMDiffAnalyzer
+from app.core.scraper.detector import ChangeDetector
+from app.core.scraper.fetcher import fetch_raw_html
+from app.core.scraper.hasher import ContentHasher
+from app.core.scraper.normalizer import HTMLNormalizer
+from app.db.models.change_event import ChangeEvent, ChangeStatus
+from app.db.models.mixins import utc_now
+from app.db.models.subprocessor import Subprocessor
+
+logger = logging.getLogger(__name__)
+
+_normalizer = HTMLNormalizer()
+_hasher = ContentHasher()
+_detector = ChangeDetector()
+_llm_analyzer = LLMDiffAnalyzer()
+
+_AUTO_PUBLISH_CLASSIFICATION = "COSMETIC"
+_AUTO_PUBLISH_CONFIDENCE_THRESHOLD = 0.85
+
+
+async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -> None:
+    """
+    Orchestrates a single subprocessor monitoring cycle:
+    fetch → normalize → hash → diff → LLM analysis → persist.
+    """
+    # a) Load subprocessor with tenant (explicit join to avoid lazy-raise)
+    result = await session.execute(
+        select(Subprocessor)
+        .where(Subprocessor.id == subprocessor_id)
+        .options(selectinload(Subprocessor.tenant))
+    )
+    subprocessor: Subprocessor | None = result.scalar_one_or_none()
+
+    # b) Guard: missing or disabled
+    if subprocessor is None:
+        logger.warning("Subprocessor %s not found", subprocessor_id)
+        return
+    if not subprocessor.monitoring_enabled:
+        logger.debug("Subprocessor %s monitoring disabled, skipping", subprocessor_id)
+        return
+
+    # c) Fetch raw HTML — Tier-1 (httpx) or Tier-2 (Playwright) based on subprocessor state
+    try:
+        raw_html = await fetch_raw_html(
+            subprocessor.monitored_url,
+            subprocessor_id=subprocessor.id,
+            session=session,
+            use_browser=subprocessor.requires_browser,
+        )
+    except Exception:
+        logger.exception("Failed to fetch %s", subprocessor.monitored_url)
+        return
+
+    # d) Normalize and hash
+    canonical_text = _normalizer.normalize(raw_html)
+    new_hash = _hasher.hash(canonical_text)
+
+    now = utc_now()
+    next_check = now + timedelta(minutes=subprocessor.check_interval_minutes)
+
+    # e) No change — update timestamps only, no LLM cost
+    if subprocessor.last_content_hash == new_hash:
+        logger.debug("No change detected for subprocessor %s", subprocessor_id)
+        subprocessor.last_checked_at = now
+        subprocessor.next_check_at = next_check
+        await session.commit()
+        return
+
+    # f) Change detected — produce diff
+    raw_diff = _detector.unified_diff(
+        old_text=subprocessor.last_content_text or "",
+        new_text=canonical_text,
+        label=subprocessor.monitored_url,
+    )
+    logger.info("Change detected for subprocessor %s", subprocessor_id)
+
+    # g) Analyze diff with LLM before persisting (truncate to ~12k chars ≈ ~3k tokens)
+    diff_for_llm = raw_diff[:12_000] if len(raw_diff) > 12_000 else raw_diff
+    try:
+        analysis = await _llm_analyzer.analyze(diff_for_llm)
+        logger.info(
+            "LLM analysis for subprocessor %s: %s (confidence=%.2f)",
+            subprocessor_id,
+            analysis.classification,
+            analysis.confidence,
+        )
+    except Exception:
+        logger.exception("LLM analysis failed for subprocessor %s, defaulting to UNCERTAIN", subprocessor_id)
+        from app.core.llm.schemas import DiffAnalysis
+        analysis = DiffAnalysis(
+            summary="LLM analysis failed — manual review required.",
+            classification="UNCERTAIN",
+            confidence=0.0,
+        )
+
+    auto_publish = (
+        analysis.classification == _AUTO_PUBLISH_CLASSIFICATION
+        and analysis.confidence > _AUTO_PUBLISH_CONFIDENCE_THRESHOLD
+    )
+    status = ChangeStatus.auto_published.value if auto_publish else ChangeStatus.pending_review.value
+
+    change_event = ChangeEvent(
+        subprocessor_id=subprocessor.id,
+        old_hash=subprocessor.last_content_hash or "",
+        new_hash=new_hash,
+        raw_diff=raw_diff,
+        llm_summary=analysis.summary,
+        llm_classification=analysis.classification,
+        llm_confidence=analysis.confidence,
+        status=status,
+    )
+    session.add(change_event)
+
+    # h) Update subprocessor state
+    subprocessor.last_content_hash = new_hash
+    subprocessor.last_content_text = canonical_text
+    subprocessor.last_checked_at = now
+    subprocessor.next_check_at = next_check
+
+    await session.commit()

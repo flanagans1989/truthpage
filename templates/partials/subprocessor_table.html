@@ -1,0 +1,71 @@
+{% if rows %}
+<table class="w-full text-sm">
+    <thead>
+        <tr class="border-b border-slate-200 text-left text-xs font-medium text-slate-500 uppercase tracking-wide">
+            <th class="pb-3 pr-4">Name</th>
+            <th class="pb-3 pr-4">URL</th>
+            <th class="pb-3 pr-4">Interval</th>
+            <th class="pb-3 pr-4">Status</th>
+            <th class="pb-3 text-right">Actions</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+        {% for sp in rows %}
+        <tr class="group">
+            <td class="py-3 pr-4 font-medium text-slate-900">{{ sp.name }}</td>
+            <td class="py-3 pr-4 text-slate-500 max-w-xs truncate">
+                <a href="{{ sp.monitored_url }}" target="_blank"
+                   class="hover:text-blue-600 transition">{{ sp.monitored_url }}</a>
+            </td>
+            <td class="py-3 pr-4 text-slate-500">
+                {% if sp.check_interval_minutes >= 1440 %}
+                    {{ (sp.check_interval_minutes // 1440) }}d
+                {% elif sp.check_interval_minutes >= 60 %}
+                    {{ (sp.check_interval_minutes // 60) }}h
+                {% else %}
+                    {{ sp.check_interval_minutes }}m
+                {% endif %}
+            </td>
+            <td class="py-3 pr-4">
+                {% if sp.monitoring_enabled %}
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Active
+                </span>
+                {% else %}
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span> Paused
+                </span>
+                {% endif %}
+            </td>
+            <td class="py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                    <button
+                        hx-post="/dashboard/subprocessors/{{ sp.id }}/toggle"
+                        hx-target="#subprocessor-table"
+                        hx-swap="innerHTML"
+                        class="text-xs px-2.5 py-1 rounded border border-slate-200 text-slate-600 hover:bg-slate-50 transition">
+                        {% if sp.monitoring_enabled %}Pause{% else %}Resume{% endif %}
+                    </button>
+                    <button
+                        hx-post="/dashboard/subprocessors/{{ sp.id }}/delete"
+                        hx-target="#subprocessor-table"
+                        hx-swap="innerHTML"
+                        hx-confirm="Delete '{{ sp.name }}'? This cannot be undone."
+                        class="text-xs px-2.5 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50 transition">
+                        Delete
+                    </button>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="text-center py-12 text-slate-400 text-sm">
+    <svg class="w-8 h-8 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    No sub-processors yet. Add one above to start monitoring.
+</div>
+{% endif %}

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Process *)",
+      "PowerShell(Receive-Job *)",
+      "Bash(python -c \"from app.services.approval import approve_change_event, reject_change_event; print\\('Import OK'\\)\")",
+      "Bash(uv run *)",
+      "Bash(ping -n 3 127.0.0.1)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/auth/login)",
+      "Bash(ping -n 4 127.0.0.1)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/auth/request -d \"email=test@acme.com\" -H \"Content-Type: application/x-www-form-urlencoded\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://127.0.0.1:8000/auth/login)",
+      "Bash(findstr /i \"TrustPages Sign\")",
+      "Bash(curl -s http://127.0.0.1:8000/auth/login -o -)",
+      "Bash(curl *)"
+    ]
+  }
+}

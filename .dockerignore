@@ -1,0 +1,29 @@
+# Secrets — never bake into the image
+.env
+.env.*
+secrets/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Version control
+.git/
+.gitignore
+
+# Dev tooling
+.venv/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Docs / local notes
+*.md
+TODO.md
