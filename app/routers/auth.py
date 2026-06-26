@@ -151,6 +151,8 @@ async def request_magic_link(request: Request, email: str = Form(...)):
 
     token = _make_magic_token(email)
     magic_url = f"{settings.APP_URL}/auth/verify?token={token}"
+    if settings.APP_URL.startswith("http://localhost"):
+        print(f"[LOCAL ONLY] Magic Link URL: {magic_url}", flush=True)
     logger.info("[MAGIC LINK] sent to %s (token_prefix=%s...)", email, token[:8])
     await mailer.send_magic_link(email=email, link=magic_url)
     return """<!DOCTYPE html>

@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.config import settings
 from app.db.models.change_event import ChangeEvent, ChangeStatus
 from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
@@ -52,16 +53,20 @@ async def approve_change_event(
     if subprocessor.last_content_hash != event.new_hash:
         subprocessor.last_content_hash = event.new_hash
 
-    # Collect confirmed subscribers before committing (session still open)
+    # Collect active confirmed subscribers before committing (session still open)
     sub_result = await session.execute(
-        select(Subscriber.email).where(
+        select(Subscriber.email, Subscriber.unsubscribe_token).where(
             Subscriber.tenant_id == subprocessor.tenant_id,
             Subscriber.confirmed == True,  # noqa: E712
+            Subscriber.is_active == True,  # noqa: E712
         )
     )
-    subscriber_emails: list[str] = [row[0] for row in sub_result.all()]
+    recipients: list[tuple[str, str]] = [
+        (row[0], f"{settings.APP_URL}/trust/unsubscribe?token={row[1]}")
+        for row in sub_result.all()
+    ]
 
-    if subscriber_emails:
+    if recipients:
         event.notified_at = now
 
     await session.commit()
@@ -71,10 +76,10 @@ async def approve_change_event(
         approved_by_user,
     )
 
-    if subscriber_emails:
+    if recipients:
         asyncio.create_task(
             mailer.send_change_notification(
-                emails=subscriber_emails,
+                recipients=recipients,
                 tenant_name=subprocessor.tenant.name,
                 subprocessor_name=subprocessor.name,
                 summary=event.llm_summary or "A change was detected in the privacy policy.",
@@ -82,7 +87,7 @@ async def approve_change_event(
         )
         logger.info(
             "approve_change_event: queued change_notification for %d subscriber(s)",
-            len(subscriber_emails),
+            len(recipients),
         )
 
 

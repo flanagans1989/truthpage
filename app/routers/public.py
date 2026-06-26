@@ -35,8 +35,26 @@ def _make_subscription_token(subscriber_id: str) -> str:
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM)
 
 
-# NOTE: verify-subscription MUST be defined before /{slug} — otherwise FastAPI
-# would match "verify-subscription" as a slug value.
+# NOTE: static paths (verify-subscription, unsubscribe) MUST be defined before
+# /{slug} — otherwise FastAPI would match them as slug values.
+@router.get("/trust/unsubscribe", response_class=HTMLResponse)
+async def unsubscribe(
+    request: Request,
+    token: str,
+    db: AsyncSession = Depends(get_db_session),
+):
+    result = await db.execute(select(Subscriber).where(Subscriber.unsubscribe_token == token))
+    subscriber = result.scalar_one_or_none()
+    if subscriber is None:
+        raise HTTPException(status_code=404, detail="Invalid unsubscribe link.")
+
+    subscriber.is_active = False
+    await db.commit()
+    logger.info("unsubscribe: subscriber %s deactivated", subscriber.id)
+
+    return _templates.TemplateResponse(request, "public_unsubscribed.html", {})
+
+
 @router.get("/trust/verify-subscription", response_class=HTMLResponse)
 async def verify_subscription(
     request: Request,

@@ -40,41 +40,44 @@ _FALLBACK = DiffAnalysis(
 
 class LLMDiffAnalyzer:
     def __init__(self) -> None:
+        # Sync client — called via asyncio.to_thread to avoid blocking the event loop.
+        # Avoids the NotImplementedError raised by google-genai's .aio interface.
         self._client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-    async def analyze(self, raw_diff: str) -> DiffAnalysis:
-        """
-        Sends the diff to Gemini Flash and returns a structured DiffAnalysis via
-        JSON mode with a Pydantic response schema. Times out after 30 s; any
-        failure falls back to UNCERTAIN so the sweep loop is never blocked.
-        """
+    def _call_gemini(self, raw_diff: str) -> DiffAnalysis:
+        """Synchronous Gemini call — runs in a thread pool via asyncio.to_thread."""
         prompt = (
             "Analyze the following privacy policy diff:\n\n"
             f"```diff\n{raw_diff}\n```"
         )
+        response = self._client.models.generate_content(
+            model=_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=_SYSTEM_PROMPT,
+                response_mime_type="application/json",
+                response_schema=DiffAnalysis,
+            ),
+        )
+        if not response.text:
+            logger.error("Gemini returned empty response")
+            return _FALLBACK
+        result = DiffAnalysis.model_validate(json.loads(response.text))
+        logger.info(
+            "Gemini analysis: %s (confidence=%.2f)", result.classification, result.confidence
+        )
+        return result
+
+    async def analyze(self, raw_diff: str) -> DiffAnalysis:
+        """
+        Sends the diff to Gemini Flash. Runs the sync SDK call in a thread pool
+        with a 30-second timeout so the sweep loop is never blocked.
+        """
         try:
-            response = await asyncio.wait_for(
-                self._client.aio.models.generate_content(
-                    model=_MODEL,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=_SYSTEM_PROMPT,
-                        response_mime_type="application/json",
-                        response_schema=DiffAnalysis,
-                    ),
-                ),
+            return await asyncio.wait_for(
+                asyncio.to_thread(self._call_gemini, raw_diff),
                 timeout=30.0,
             )
-            if not response.text:
-                logger.error("Gemini returned empty response; defaulting to UNCERTAIN")
-                return _FALLBACK
-
-            result = DiffAnalysis.model_validate(json.loads(response.text))
-            logger.debug(
-                "Gemini analysis: %s (confidence=%.2f)", result.classification, result.confidence
-            )
-            return result
-
         except asyncio.TimeoutError:
             logger.error("Gemini API timed out after 30 s; defaulting to UNCERTAIN")
             return _FALLBACK

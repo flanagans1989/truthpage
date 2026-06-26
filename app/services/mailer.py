@@ -1,4 +1,5 @@
 import asyncio
+import html
 import logging
 
 import httpx
@@ -97,13 +98,19 @@ class MailerService:
 
     async def send_change_notification(
         self,
-        emails: list[str],
+        recipients: list[tuple[str, str]],  # (email, unsubscribe_url)
         tenant_name: str,
         subprocessor_name: str,
         summary: str,
     ) -> None:
         subject = f"[{tenant_name}] Sub-processor change detected: {subprocessor_name}"
-        html = f"""
+
+        safe_tenant = html.escape(tenant_name)
+        safe_name = html.escape(subprocessor_name)
+        safe_summary = html.escape(summary)
+
+        def _build_html(unsubscribe_url: str) -> str:
+            return f"""
 <!DOCTYPE html>
 <html>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
@@ -116,7 +123,7 @@ class MailerService:
             Data Processing Update
           </p>
           <p style="margin:0 0 24px;font-size:20px;font-weight:700;color:#0f172a;">
-            {tenant_name} updated their sub-processor list
+            {safe_tenant} updated their sub-processor list
           </p>
           <table width="100%" cellpadding="0" cellspacing="0"
                  style="background:#f1f5f9;border-radius:8px;padding:20px;margin-bottom:24px;">
@@ -124,16 +131,19 @@ class MailerService:
               <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">
                 Sub-processor
               </p>
-              <p style="margin:0 0 16px;font-size:16px;font-weight:700;color:#0f172a;">{subprocessor_name}</p>
+              <p style="margin:0 0 16px;font-size:16px;font-weight:700;color:#0f172a;">{safe_name}</p>
               <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">
                 What changed
               </p>
-              <p style="margin:0;font-size:14px;color:#334155;line-height:1.6;">{summary}</p>
+              <p style="margin:0;font-size:14px;color:#334155;line-height:1.6;">{safe_summary}</p>
             </td></tr>
           </table>
-          <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.5;">
-            You're receiving this because you subscribed to updates from {tenant_name}.
+          <p style="margin:0 0 16px;font-size:12px;color:#94a3b8;line-height:1.5;">
+            You're receiving this because you subscribed to updates from {safe_tenant}.
             This change has been reviewed and approved by their privacy team.
+          </p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">
+            <a href="{unsubscribe_url}" style="color:#94a3b8;">Unsubscribe</a>
           </p>
         </td></tr>
       </table>
@@ -141,12 +151,13 @@ class MailerService:
   </table>
 </body>
 </html>"""
-        tasks = [self._send(email, subject, html) for email in emails]
+
+        tasks = [self._send(email, subject, _build_html(url)) for email, url in recipients]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         sent = sum(1 for r in results if not isinstance(r, Exception))
         logger.info(
             "mailer: change_notification sent %d/%d for subprocessor '%s'",
-            sent, len(emails), subprocessor_name,
+            sent, len(recipients), subprocessor_name,
         )
 
 
