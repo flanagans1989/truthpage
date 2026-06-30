@@ -1,9 +1,11 @@
 import logging
+from collections import deque
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
 import jwt
+from cachetools import TTLCache
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -18,6 +20,25 @@ from app.db.session import get_db_session
 from app.services.mailer import mailer
 
 logger = logging.getLogger(__name__)
+
+_SUB_RL_MAX = 3
+_SUB_RL_WINDOW = 60
+_sub_rl_store: TTLCache = TTLCache(maxsize=10000, ttl=_SUB_RL_WINDOW)
+
+
+def _sub_rate_limit(key: str) -> bool:
+    now = datetime.now(UTC).timestamp()
+    cutoff = now - _SUB_RL_WINDOW
+    dq = _sub_rl_store.get(key)
+    if dq is None:
+        dq = deque()
+    while dq and dq[0] < cutoff:
+        dq.popleft()
+    if len(dq) >= _SUB_RL_MAX:
+        return False
+    dq.append(now)
+    _sub_rl_store[key] = dq
+    return True
 
 router = APIRouter(tags=["public"])
 _templates = Jinja2Templates(directory=Path(__file__).parent.parent.parent / "templates")
@@ -118,6 +139,13 @@ async def subscribe(
     email: str = Form(...),
     db: AsyncSession = Depends(get_db_session),
 ):
+    client_ip = request.headers.get("Fly-Client-IP") or (
+        request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+    ) or (request.client.host if request.client else "unknown")
+    if not _sub_rate_limit(f"ip:{client_ip}") or not _sub_rate_limit(f"email:{email}"):
+        logger.warning("subscribe: rate limit hit for email=%s ip=%s", email, client_ip)
+        raise HTTPException(status_code=429, detail="Too many requests. Please wait a minute.")
+
     result = await db.execute(select(Tenant).where(Tenant.slug == slug))
     tenant = result.scalar_one_or_none()
     if tenant is None:

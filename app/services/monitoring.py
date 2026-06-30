@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import UTC, timedelta
 from uuid import UUID
@@ -48,13 +49,21 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         return
 
     # c) Fetch raw HTML — Tier-1 (httpx) or Tier-2 (Playwright) based on subprocessor state
+    # 90s hard ceiling: 30s page.goto + buffer for browser launch/teardown.
+    # Prevents a hung Playwright process from freezing the entire sweep job.
     try:
-        raw_html = await fetch_raw_html(
-            subprocessor.monitored_url,
-            subprocessor_id=subprocessor.id,
-            session=session,
-            use_browser=subprocessor.requires_browser,
+        raw_html = await asyncio.wait_for(
+            fetch_raw_html(
+                subprocessor.monitored_url,
+                subprocessor_id=subprocessor.id,
+                session=session,
+                use_browser=subprocessor.requires_browser,
+            ),
+            timeout=90.0,
         )
+    except asyncio.TimeoutError:
+        logger.warning("Fetch timed out after 90 s for %s — skipping", subprocessor.monitored_url)
+        return
     except Exception:
         logger.exception("Failed to fetch %s", subprocessor.monitored_url)
         return

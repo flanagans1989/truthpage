@@ -111,10 +111,18 @@ async def fetch_raw_html(
     requires_browser=True so the next cycle skips Tier-1 entirely.
     """
     if not use_browser:
-        html, blocked = await _fetch_tier1(url)
+        try:
+            html, blocked = await _fetch_tier1(url)
+        except (httpx.ConnectError, httpx.RemoteProtocolError) as exc:
+            logger.info("Tier-1 connection error for %s (%s) — escalating to Tier-2", url, exc)
+            blocked = True
+            html = ""
         if not blocked:
             return html
-        logger.info("Bot protection detected for %s — escalating to Tier-2 (Playwright)", url)
+        if not html:
+            logger.info("Bot protection or connection failure for %s — escalating to Tier-2 (Playwright)", url)
+        else:
+            logger.info("Bot protection detected for %s — escalating to Tier-2 (Playwright)", url)
 
     html = await _fetch_tier2(url)
 

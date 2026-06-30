@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: trustpages
+    runtime: docker
+    plan: free
+    region: frankfurt
+    healthCheckPath: /healthz
+    # Alembic migration'ları her deploy'dan önce otomatik çalıştır
+    preDeployCommand: uv run alembic upgrade head
+    envVars:
+      # ── Zorunlu (Render dashboard'dan doldur) ───────────────────────────
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+      # ── Uygulama URL'i (deploy sonrası Render'ın verdiği URL ile güncelle) ──
+      - key: APP_URL
+        sync: false
+
+      # ── Varsayılan değerleri olan opsiyonel değişkenler ──────────────────
+      - key: RESEND_FROM_EMAIL
+        value: TrustPages <onboarding@resend.dev>
+      - key: STRIPE_PRICE_GROWTH
+        sync: false
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: /opt/playwright-browsers
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # - key: SENTRY_DSN
+      #   sync: false

@@ -1,9 +1,10 @@
 import logging
 import random
 import re
-from collections import defaultdict, deque
+from collections import deque
 from datetime import UTC, datetime, timedelta
 
+from cachetools import TTLCache
 import jwt
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -26,9 +27,9 @@ _SESSION_EXPIRE = timedelta(days=30)
 # ── In-memory rate limiter ────────────────────────────────────────────────────
 # Keyed by "ip:<addr>" or "email:<addr>"; value = deque of UNIX timestamps.
 # Safe in single-worker asyncio: no concurrent writes from multiple threads.
-_rl_store: dict[str, deque] = defaultdict(deque)
-_RL_MAX = 3       # max requests
-_RL_WINDOW = 60   # per N seconds
+_RL_MAX = 3
+_RL_WINDOW = 60
+_rl_store: TTLCache = TTLCache(maxsize=10000, ttl=_RL_WINDOW)
 
 
 def _get_client_ip(request: Request) -> str:
@@ -46,12 +47,15 @@ def _rate_limit_check(key: str) -> bool:
     """Return True if the request is allowed; False if the limit is exceeded."""
     now = datetime.now(UTC).timestamp()
     cutoff = now - _RL_WINDOW
-    dq = _rl_store[key]
+    dq = _rl_store.get(key)
+    if dq is None:
+        dq = deque()
     while dq and dq[0] < cutoff:
         dq.popleft()
     if len(dq) >= _RL_MAX:
         return False
     dq.append(now)
+    _rl_store[key] = dq
     return True
 
 
@@ -166,7 +170,7 @@ async def request_magic_link(request: Request, email: str = Form(...)):
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 w-full max-w-md text-center">
         <div class="text-4xl mb-4">📬</div>
         <h1 class="text-xl font-bold text-slate-900 mb-2">Magic link sent!</h1>
-        <p class="text-slate-500 text-sm mb-6">In development, copy the link from the server terminal.</p>
+        <p class="text-slate-500 text-sm mb-6">Check your inbox — the link expires in 15 minutes.</p>
         <a href="/auth/login" class="text-blue-600 text-sm hover:underline">← Back to sign in</a>
     </div>
 </body>
@@ -195,7 +199,8 @@ async def verify_magic_link(
     result = await db.execute(select(Tenant).where(Tenant.slug == base_slug))
     tenant = result.scalar_one_or_none()
 
-    if tenant is None:
+    is_new_tenant = tenant is None
+    if is_new_tenant:
         # New domain: resolve a unique slug before inserting
         slug = await _get_unique_slug(base_slug, email, db)
         tenant = Tenant(name=_email_to_company_name(email), slug=slug)
@@ -205,8 +210,16 @@ async def verify_magic_link(
     else:
         logger.info("verify_magic_link: existing tenant slug='%s' for email='%s'", tenant.slug, email)
 
+    # New tenants → onboarding checkout; returning paid/trialing tenants → dashboard
+    if is_new_tenant:
+        destination = "/dashboard/billing/checkout"
+    elif tenant.subscription_status in ("canceled", "unpaid", "past_due"):
+        destination = "/dashboard/billing/checkout"
+    else:
+        destination = "/dashboard"
+
     session_token = _make_session_token(str(tenant.id))
-    redirect = RedirectResponse(url="/dashboard", status_code=303)
+    redirect = RedirectResponse(url=destination, status_code=303)
     redirect.set_cookie(
         key="session",
         value=session_token,

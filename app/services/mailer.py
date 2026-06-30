@@ -9,7 +9,6 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 _RESEND_API_URL = "https://api.resend.com/emails"
-_FROM = "TrustPages <onboarding@resend.dev>"
 
 
 class MailerService:
@@ -19,7 +18,7 @@ class MailerService:
                 resp = await client.post(
                     _RESEND_API_URL,
                     headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}"},
-                    json={"from": _FROM, "to": [to], "subject": subject, "html": html},
+                    json={"from": settings.RESEND_FROM_EMAIL, "to": [to], "subject": subject, "html": html},
                 )
                 resp.raise_for_status()
                 logger.info("mailer: sent '%s' to %s (status=%s)", subject, to, resp.status_code)
@@ -27,35 +26,113 @@ class MailerService:
             logger.exception("mailer: failed to send '%s' to %s", subject, to)
 
     async def send_magic_link(self, email: str, link: str) -> None:
-        subject = "Your TrustPages magic link"
-        html = f"""
-<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:48px 0;">
+        subject = "Your TrustPages sign-in link"
+        body = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sign in to TrustPages</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+         style="padding:48px 16px;">
     <tr><td align="center">
-      <table width="480" cellpadding="0" cellspacing="0"
-             style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:48px 40px;">
-        <tr><td>
-          <p style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0f172a;">Sign in to TrustPages</p>
-          <p style="margin:0 0 32px;font-size:14px;color:#64748b;line-height:1.6;">
-            Click the button below to sign in. This link expires in 15 minutes.
-          </p>
-          <a href="{link}"
-             style="display:inline-block;background:#2563eb;color:#ffffff;font-size:14px;
-                    font-weight:600;padding:14px 28px;border-radius:8px;text-decoration:none;">
-            Sign in to TrustPages
-          </a>
-          <p style="margin:32px 0 0;font-size:12px;color:#94a3b8;line-height:1.5;">
-            If you didn't request this link, you can safely ignore this email.
-          </p>
-        </td></tr>
+
+      <!-- Card -->
+      <table role="presentation" width="520" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;max-width:520px;">
+
+        <!-- Header bar -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1e40af 0%,#2563eb 100%);padding:32px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+              <tr>
+                <td>
+                  <span style="display:inline-block;background:rgba(255,255,255,0.15);
+                               border-radius:8px;padding:6px 10px;font-size:18px;line-height:1;">
+                    &#128274;
+                  </span>
+                </td>
+                <td style="padding-left:12px;vertical-align:middle;">
+                  <span style="font-size:18px;font-weight:800;color:#ffffff;letter-spacing:-0.3px;">
+                    TrustPages
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:40px 40px 0;">
+            <p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.3px;">
+              Your sign-in link is ready
+            </p>
+            <p style="margin:0 0 32px;font-size:14px;color:#64748b;line-height:1.7;">
+              Click the button below to sign in to your TrustPages account.
+              This link is valid for <strong>15 minutes</strong> and can only be used once.
+            </p>
+
+            <!-- CTA Button -->
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="border-radius:10px;background:#2563eb;">
+                  <a href="{link}"
+                     style="display:inline-block;padding:15px 32px;font-size:15px;font-weight:700;
+                            color:#ffffff;text-decoration:none;letter-spacing:0.1px;">
+                    Sign in to TrustPages &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Fallback link -->
+            <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;line-height:1.6;">
+              Button not working?
+              <a href="{link}" style="color:#2563eb;word-break:break-all;">Copy this link</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Divider + Security note -->
+        <tr>
+          <td style="padding:32px 40px 0;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="border-top:1px solid #f1f5f9;padding-top:24px;">
+                  <table role="presentation" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="vertical-align:top;padding-right:10px;font-size:16px;">&#128737;</td>
+                      <td style="font-size:12px;color:#94a3b8;line-height:1.6;">
+                        <strong style="color:#64748b;">Security notice</strong><br>
+                        TrustPages will never ask for your password. If you didn't request this
+                        email, you can safely ignore it — your account remains secure.
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:24px 40px 32px;">
+            <p style="margin:0;font-size:11px;color:#cbd5e1;line-height:1.5;">
+              &copy; 2025 TrustPages &bull; Privacy policy sub-processor monitoring
+            </p>
+          </td>
+        </tr>
+
       </table>
     </td></tr>
   </table>
 </body>
 </html>"""
-        await self._send(email, subject, html)
+        await self._send(email, subject, body)
 
     async def send_subscription_confirmation(
         self, email: str, link: str, tenant_name: str

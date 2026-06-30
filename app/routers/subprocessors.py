@@ -1,16 +1,37 @@
+import ipaddress
 import logging
+from pathlib import Path
+from urllib.parse import urlparse
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
+
+_RESERVED_HOSTNAMES = frozenset({"localhost", "metadata.google.internal"})
+
+
+def _validate_monitored_url(url: str) -> None:
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise HTTPException(status_code=422, detail="Only http/https URLs are allowed")
+    host = parsed.hostname or ""
+    if not host:
+        raise HTTPException(status_code=422, detail="Invalid URL: missing host")
+    if host in _RESERVED_HOSTNAMES:
+        raise HTTPException(status_code=422, detail="Reserved hostname not allowed")
+    try:
+        addr = ipaddress.ip_address(host)
+        if addr.is_private or addr.is_link_local or addr.is_loopback or addr.is_reserved:
+            raise HTTPException(status_code=422, detail="Private/reserved IP addresses are not allowed")
+    except ValueError:
+        pass  # hostname, not a raw IP — fine
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +54,10 @@ async def create_subprocessor(
     tenant: CurrentTenant,
     name: str = Form(...),
     monitored_url: str = Form(...),
-    check_interval_minutes: int = Form(1440),
+    check_interval_minutes: int = Form(1440, ge=60, le=43200),
     db: AsyncSession = Depends(get_db_session),
 ):
+    _validate_monitored_url(monitored_url)
     subprocessor = Subprocessor(
         tenant_id=tenant.id,
         name=name,

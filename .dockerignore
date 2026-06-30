@@ -13,6 +13,9 @@ __pycache__/
 .git/
 .gitignore
 
+# Claude Code workspace files
+.claude/
+
 # Dev tooling
 .venv/
 .ruff_cache/
