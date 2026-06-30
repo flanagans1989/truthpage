@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 import sentry_sdk
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy import text
 
@@ -96,3 +96,11 @@ async def healthz():
     async with AsyncSessionLocal() as session:
         await session.execute(text("SELECT 1"))
     return {"status": "ok", "database": "reachable"}
+
+
+@app.post("/internal/sweep")
+async def trigger_sweep(x_admin_secret: str = Header(...)):
+    if x_admin_secret != settings.JWT_SECRET:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    await sweep_due_subprocessors(AsyncSessionLocal)
+    return {"status": "sweep triggered"}
