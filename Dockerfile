@@ -1,7 +1,8 @@
 # ── Stage 1: dependency builder ──────────────────────────────────────────────
 FROM python:3.12-slim AS builder
 
-WORKDIR /build
+# Use /app so venv shebang paths match the runtime stage exactly
+WORKDIR /app
 
 # Inject uv from the official image (no pip needed)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -24,7 +25,7 @@ WORKDIR /app
 # for whatever Debian version this base image ships (avoids hardcoding
 # package names that change across Debian releases, e.g. libasound2 → libasound2t64).
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-COPY --from=builder /build /app
+COPY --from=builder /app /app
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 
