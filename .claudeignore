@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Büyük / okunması gereksiz dosyalar (token tasarrufu)
+uv.lock
+alembic.ini
+*.log
+.env
+.env.*
