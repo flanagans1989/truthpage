@@ -62,20 +62,45 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
             timeout=90.0,
         )
     except asyncio.TimeoutError:
-        logger.warning("Fetch timed out after 90 s for %s — skipping", subprocessor.monitored_url)
+        logger.warning("Fetch timed out after 90 s for %s — retrying in 30 min", subprocessor.monitored_url)
+        subprocessor.next_check_at = utc_now() + timedelta(minutes=30)
+        await session.commit()
         return
     except Exception:
-        logger.exception("Failed to fetch %s", subprocessor.monitored_url)
+        logger.exception("Failed to fetch %s — retrying in 30 min", subprocessor.monitored_url)
+        subprocessor.next_check_at = utc_now() + timedelta(minutes=30)
+        await session.commit()
         return
 
     # d) Normalize and hash
     canonical_text = _normalizer.normalize(raw_html)
+    if not canonical_text:
+        # Empty body usually means an error page or a broken render, not a
+        # genuine policy wipe — never overwrite the baseline with it.
+        logger.warning(
+            "Empty normalized content for %s — treating as fetch failure, retrying in 30 min",
+            subprocessor.monitored_url,
+        )
+        subprocessor.next_check_at = utc_now() + timedelta(minutes=30)
+        await session.commit()
+        return
     new_hash = _hasher.hash(canonical_text)
 
     now = utc_now()
     next_check = now + timedelta(minutes=subprocessor.check_interval_minutes)
 
-    # e) No change — update timestamps only, no LLM cost
+    # e) First check — store the baseline silently; there is no "before" to
+    # diff against, so a ChangeEvent here would be pure noise.
+    if subprocessor.last_content_hash is None:
+        logger.info("Baseline captured for subprocessor %s", subprocessor_id)
+        subprocessor.last_content_hash = new_hash
+        subprocessor.last_content_text = canonical_text
+        subprocessor.last_checked_at = now
+        subprocessor.next_check_at = next_check
+        await session.commit()
+        return
+
+    # f) No change — update timestamps only, no LLM cost
     if subprocessor.last_content_hash == new_hash:
         logger.debug("No change detected for subprocessor %s", subprocessor_id)
         subprocessor.last_checked_at = now

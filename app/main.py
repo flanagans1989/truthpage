@@ -1,3 +1,4 @@
+import hmac
 import logging
 import logging.config
 from contextlib import asynccontextmanager
@@ -100,7 +101,7 @@ async def healthz():
 
 @app.post("/internal/sweep")
 async def trigger_sweep(x_admin_secret: str = Header(...)):
-    if x_admin_secret != settings.JWT_SECRET:
+    if not hmac.compare_digest(x_admin_secret, settings.JWT_SECRET):
         raise HTTPException(status_code=403, detail="Forbidden")
     await sweep_due_subprocessors(AsyncSessionLocal)
     return {"status": "sweep triggered"}

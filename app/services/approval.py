@@ -49,9 +49,10 @@ async def approve_change_event(
     event.approved_by = approved_by_user
     event.approved_at = now
 
+    # NOTE: subprocessor.last_content_hash is already advanced by the
+    # monitoring cycle at detection time. Re-writing it here from an older
+    # event would roll the baseline backwards and re-trigger the same diff.
     subprocessor = event.subprocessor
-    if subprocessor.last_content_hash != event.new_hash:
-        subprocessor.last_content_hash = event.new_hash
 
     # Collect active confirmed subscribers before committing (session still open)
     sub_result = await session.execute(

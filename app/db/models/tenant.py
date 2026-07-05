@@ -20,6 +20,9 @@ class Tenant(TimestampMixin, Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Owner email — the only address that can sign in to this tenant.
+    # Nullable for legacy rows; claimed on first post-migration login.
+    email: Mapped[str | None] = mapped_column(String(320), unique=True, nullable=True, index=True)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     subscription_status: Mapped[str] = mapped_column(

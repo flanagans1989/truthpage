@@ -139,6 +139,7 @@ async def subscribe(
     email: str = Form(...),
     db: AsyncSession = Depends(get_db_session),
 ):
+    email = email.strip().lower()
     client_ip = request.headers.get("Fly-Client-IP") or (
         request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
     ) or (request.client.host if request.client else "unknown")

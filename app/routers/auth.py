@@ -1,6 +1,7 @@
 import logging
 import random
 import re
+import secrets
 from collections import deque
 from datetime import UTC, datetime, timedelta
 
@@ -31,6 +32,10 @@ _RL_MAX = 3
 _RL_WINDOW = 60
 _rl_store: TTLCache = TTLCache(maxsize=10000, ttl=_RL_WINDOW)
 
+# Magic tokens are single-use: consumed jti values live here until the token
+# would have expired anyway. In-memory is fine for a single-worker deploy.
+_used_magic_jti: TTLCache = TTLCache(maxsize=50000, ttl=int(_MAGIC_EXPIRE.total_seconds()))
+
 
 def _get_client_ip(request: Request) -> str:
     # Fly.io injects the real client IP in this header
@@ -60,7 +65,12 @@ def _rate_limit_check(key: str) -> bool:
 
 
 def _make_magic_token(email: str) -> str:
-    payload = {"sub": email, "type": "magic", "exp": datetime.now(UTC) + _MAGIC_EXPIRE}
+    payload = {
+        "sub": email,
+        "type": "magic",
+        "jti": secrets.token_urlsafe(16),
+        "exp": datetime.now(UTC) + _MAGIC_EXPIRE,
+    }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=_ALGORITHM)
 
 
@@ -145,6 +155,7 @@ async def login_page():
 
 @router.post("/request", response_class=HTMLResponse)
 async def request_magic_link(request: Request, email: str = Form(...)):
+    email = email.strip().lower()
     client_ip = _get_client_ip(request)
     if not _rate_limit_check(f"ip:{client_ip}") or not _rate_limit_check(f"email:{email}"):
         logger.warning("rate_limit: magic link blocked for email=%s ip=%s", email, client_ip)
@@ -186,24 +197,43 @@ async def verify_magic_link(
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[_ALGORITHM])
         email: str | None = payload.get("sub")
         token_type: str | None = payload.get("type")
-        if not email or token_type != "magic":
+        jti: str | None = payload.get("jti")
+        if not email or token_type != "magic" or not jti:
             raise HTTPException(status_code=400, detail="Invalid token")
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=400, detail="Magic link has expired. Please request a new one.")
     except jwt.PyJWTError:
         raise HTTPException(status_code=400, detail="Invalid token")
 
-    base_slug = _email_to_slug(email)
+    if jti in _used_magic_jti:
+        raise HTTPException(status_code=400, detail="This link has already been used. Please request a new one.")
+    _used_magic_jti[jti] = True
 
-    # Look up by base slug first — if found, this email domain already has a tenant
-    result = await db.execute(select(Tenant).where(Tenant.slug == base_slug))
+    email = email.strip().lower()
+
+    # Exact-email match: an email address maps to exactly one tenant.
+    result = await db.execute(select(Tenant).where(Tenant.email == email))
     tenant = result.scalar_one_or_none()
+
+    if tenant is None:
+        # Legacy fallback: pre-0003 tenants have no email set. Let the first
+        # login from the matching domain slug claim them; once claimed the
+        # exact-email rule above is the only way in.
+        base_slug = _email_to_slug(email)
+        legacy = await db.execute(
+            select(Tenant).where(Tenant.slug == base_slug, Tenant.email == None)  # noqa: E711
+        )
+        tenant = legacy.scalar_one_or_none()
+        if tenant is not None:
+            tenant.email = email
+            await db.commit()
+            logger.info("verify_magic_link: legacy tenant '%s' claimed by '%s'", tenant.slug, email)
 
     is_new_tenant = tenant is None
     if is_new_tenant:
-        # New domain: resolve a unique slug before inserting
+        base_slug = _email_to_slug(email)
         slug = await _get_unique_slug(base_slug, email, db)
-        tenant = Tenant(name=_email_to_company_name(email), slug=slug)
+        tenant = Tenant(name=_email_to_company_name(email), slug=slug, email=email)
         db.add(tenant)
         await db.commit()
         logger.info("verify_magic_link: new tenant created slug='%s' for email='%s'", slug, email)

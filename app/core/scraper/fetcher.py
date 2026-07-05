@@ -66,6 +66,14 @@ async def _fetch_tier1(url: str) -> tuple[str, bool]:
         response = await client.get(url)
         html = response.text
         blocked = _is_bot_protected(response.status_code, html)
+        if not blocked and response.status_code >= 400:
+            # Error page (404/500/…) — never treat its HTML as page content,
+            # or the error page would be diffed against the real policy.
+            raise httpx.HTTPStatusError(
+                f"HTTP {response.status_code} for {url}",
+                request=response.request,
+                response=response,
+            )
         return html, blocked
 
 
@@ -77,7 +85,9 @@ async def _fetch_tier2(url: str) -> str:
         browser = await pw.chromium.launch(headless=True)
         try:
             page = await browser.new_page()
-            await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+            response = await page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+            if response is not None and response.status >= 400:
+                raise RuntimeError(f"HTTP {response.status} for {url} (Tier-2)")
             html = await page.content()
         finally:
             await browser.close()
