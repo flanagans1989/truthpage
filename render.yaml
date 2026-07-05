@@ -5,8 +5,8 @@ services:
     plan: free
     region: frankfurt
     healthCheckPath: /healthz
-    # Alembic migration'ları her deploy'dan önce otomatik çalıştır
-    preDeployCommand: uv run alembic upgrade head
+    # NOT: preDeployCommand free planda ÇALIŞMAZ (sessizce yok sayılır).
+    # Migration'lar Dockerfile CMD içinde container açılışında koşuyor.
     envVars:
       # ── Zorunlu (Render dashboard'dan doldur) ───────────────────────────
       - key: DATABASE_URL

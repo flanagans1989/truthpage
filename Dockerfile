@@ -49,6 +49,6 @@ USER appuser
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", \
-     "--host", "0.0.0.0", "--port", "8000", \
-     "--workers", "1", "--log-level", "info"]
+# Migrations run at container start: Render's free plan ignores
+# preDeployCommand, so this is the only place they reliably execute.
+CMD ["sh", "-c", "uv run alembic upgrade head && exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level info"]
