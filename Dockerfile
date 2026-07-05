@@ -15,7 +15,15 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY . .
 RUN uv sync --frozen --no-dev
 
-# ── Stage 2: runtime ─────────────────────────────────────────────────────────
+# ── Stage 2: browser binaries ────────────────────────────────────────────────
+# cdn.playwright.dev geo-blocks Render's build region (403 "not available in
+# your location"), so `playwright install` fails there. Take the browsers from
+# Microsoft's official image instead — tag MUST match the locked playwright
+# version in uv.lock. Drop the browsers we don't use to keep the image small.
+FROM mcr.microsoft.com/playwright:v1.60.0-noble AS browsers
+RUN rm -rf /ms-playwright/firefox-* /ms-playwright/webkit-*
+
+# ── Stage 3: runtime ─────────────────────────────────────────────────────────
 FROM python:3.12-slim AS runtime
 
 WORKDIR /app
@@ -29,9 +37,10 @@ COPY --from=builder /app /app
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 
-RUN uv run playwright install-deps chromium \
-    && uv run playwright install chromium \
-    && chmod -R o+rx /opt/playwright-browsers
+# System libraries via apt (no CDN involved), browser binaries from the MCR image
+RUN uv run playwright install-deps chromium
+COPY --from=browsers /ms-playwright /opt/playwright-browsers
+RUN chmod -R o+rx /opt/playwright-browsers
 
 # Non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
