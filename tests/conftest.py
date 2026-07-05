@@ -6,4 +6,3 @@ os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://test:test@localhost/
 os.environ.setdefault("JWT_SECRET", "test-secret-not-for-production")
 os.environ.setdefault("GEMINI_API_KEY", "test")
 os.environ.setdefault("RESEND_API_KEY", "test")
-os.environ.setdefault("STRIPE_SECRET_KEY", "sk_test_dummy")

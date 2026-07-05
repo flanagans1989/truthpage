@@ -25,7 +25,8 @@ class Tenant(TimestampMixin, Base):
     # Nullable for legacy rows; claimed on first post-migration login.
     email: Mapped[str | None] = mapped_column(String(320), unique=True, nullable=True, index=True)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
-    stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    paddle_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    paddle_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     subscription_status: Mapped[str] = mapped_column(
         String(20),
         nullable=False,

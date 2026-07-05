@@ -1,8 +1,9 @@
-import asyncio
+import hashlib
+import hmac
+import json
 import logging
 from uuid import UUID
 
-import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,18 +16,23 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
-
 _SUBSCRIPTION_STATUS_MAP = {
     "active": "active",
     "trialing": "trialing",
     "past_due": "past_due",
-    "canceled": "canceled",
-    "unpaid": "unpaid",
     "paused": "canceled",  # treat paused as canceled for gating purposes
-    "incomplete": "past_due",
-    "incomplete_expired": "canceled",
+    "canceled": "canceled",
 }
+
+
+def _verify_signature(payload: bytes, sig_header: str, secret: str) -> bool:
+    parts = dict(p.split("=", 1) for p in sig_header.split(";") if "=" in p)
+    ts, h1 = parts.get("ts"), parts.get("h1")
+    if not ts or not h1:
+        return False
+    signed_payload = f"{ts}:{payload.decode('utf-8')}".encode("utf-8")
+    expected = hmac.new(secret.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, h1)
 
 
 async def _find_tenant_by_id(tenant_id_str: str, db: AsyncSession) -> Tenant | None:
@@ -38,108 +44,108 @@ async def _find_tenant_by_id(tenant_id_str: str, db: AsyncSession) -> Tenant | N
     return result.scalar_one_or_none()
 
 
-async def _find_tenant_by_customer(stripe_customer_id: str, db: AsyncSession) -> Tenant | None:
+async def _find_tenant_by_customer(paddle_customer_id: str, db: AsyncSession) -> Tenant | None:
     result = await db.execute(
-        select(Tenant).where(Tenant.stripe_customer_id == stripe_customer_id)
+        select(Tenant).where(Tenant.paddle_customer_id == paddle_customer_id)
     )
     return result.scalar_one_or_none()
 
 
-async def _handle_checkout_completed(session: dict, db: AsyncSession) -> None:
-    client_ref = session.get("client_reference_id")
-    stripe_customer_id = session.get("customer")
+async def _handle_transaction_completed(data: dict, db: AsyncSession) -> None:
+    tenant_id_str = (data.get("custom_data") or {}).get("tenant_id")
+    paddle_customer_id = data.get("customer_id")
+    paddle_subscription_id = data.get("subscription_id")
 
     tenant: Tenant | None = None
-    if client_ref:
-        tenant = await _find_tenant_by_id(client_ref, db)
-    if tenant is None and stripe_customer_id:
-        tenant = await _find_tenant_by_customer(stripe_customer_id, db)
+    if tenant_id_str:
+        tenant = await _find_tenant_by_id(tenant_id_str, db)
+    if tenant is None and paddle_customer_id:
+        tenant = await _find_tenant_by_customer(paddle_customer_id, db)
 
     if tenant is None:
-        logger.warning("webhook checkout.session.completed: no tenant found (ref=%s)", client_ref)
+        logger.warning("webhook transaction.completed: no tenant found (ref=%s)", tenant_id_str)
         return
 
-    if stripe_customer_id:
-        tenant.stripe_customer_id = stripe_customer_id
+    if paddle_customer_id:
+        tenant.paddle_customer_id = paddle_customer_id
+    if paddle_subscription_id:
+        tenant.paddle_subscription_id = paddle_subscription_id
     tenant.subscription_status = "active"
     await db.commit()
     logger.info(
-        "webhook checkout.session.completed: tenant %s activated (customer=%s)",
-        tenant.id, stripe_customer_id,
+        "webhook transaction.completed: tenant %s activated (customer=%s)",
+        tenant.id, paddle_customer_id,
     )
 
 
-async def _handle_subscription_updated(subscription: dict, db: AsyncSession) -> None:
-    stripe_customer_id: str = subscription.get("customer", "")
-    raw_status: str = subscription.get("status", "")
+async def _handle_subscription_updated(data: dict, db: AsyncSession) -> None:
+    paddle_customer_id: str = data.get("customer_id", "")
+    paddle_subscription_id: str = data.get("id", "")
+    raw_status: str = data.get("status", "")
     mapped_status = _SUBSCRIPTION_STATUS_MAP.get(raw_status, "past_due")
 
-    tenant = await _find_tenant_by_customer(stripe_customer_id, db)
+    tenant = await _find_tenant_by_customer(paddle_customer_id, db)
     if tenant is None:
         logger.warning(
-            "webhook customer.subscription.updated: no tenant for customer %s", stripe_customer_id
+            "webhook subscription.updated: no tenant for customer %s", paddle_customer_id
         )
         return
 
+    if paddle_subscription_id:
+        tenant.paddle_subscription_id = paddle_subscription_id
     tenant.subscription_status = mapped_status
     await db.commit()
     logger.info(
-        "webhook customer.subscription.updated: tenant %s status → %s",
+        "webhook subscription.updated: tenant %s status → %s",
         tenant.id, mapped_status,
     )
 
 
-async def _handle_subscription_deleted(subscription: dict, db: AsyncSession) -> None:
-    stripe_customer_id: str = subscription.get("customer", "")
+async def _handle_subscription_canceled(data: dict, db: AsyncSession) -> None:
+    paddle_customer_id: str = data.get("customer_id", "")
 
-    tenant = await _find_tenant_by_customer(stripe_customer_id, db)
+    tenant = await _find_tenant_by_customer(paddle_customer_id, db)
     if tenant is None:
         logger.warning(
-            "webhook customer.subscription.deleted: no tenant for customer %s", stripe_customer_id
+            "webhook subscription.canceled: no tenant for customer %s", paddle_customer_id
         )
         return
 
     tenant.subscription_status = "canceled"
     await db.commit()
-    logger.info(
-        "webhook customer.subscription.deleted: tenant %s canceled", tenant.id
-    )
+    logger.info("webhook subscription.canceled: tenant %s canceled", tenant.id)
 
 
-@router.post("/stripe")
-async def stripe_webhook(
+@router.post("/paddle")
+async def paddle_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db_session),
 ):
     payload = await request.body()
-    sig_header = request.headers.get("stripe-signature", "")
+    sig_header = request.headers.get("paddle-signature", "")
 
-    if not settings.STRIPE_WEBHOOK_SECRET:
+    if not settings.PADDLE_WEBHOOK_SECRET:
         raise HTTPException(status_code=503, detail="Webhook secret not configured")
 
-    try:
-        event = await asyncio.to_thread(
-            stripe.Webhook.construct_event,
-            payload,
-            sig_header,
-            settings.STRIPE_WEBHOOK_SECRET,
-        )
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.SignatureVerificationError:
+    if not _verify_signature(payload, sig_header, settings.PADDLE_WEBHOOK_SECRET):
         raise HTTPException(status_code=400, detail="Invalid webhook signature")
 
-    event_type: str = event["type"]
-    data_object: dict = event["data"]["object"]
+    try:
+        event = json.loads(payload)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid payload")
 
-    logger.info("webhook: received event type=%s id=%s", event_type, event["id"])
+    event_type: str = event.get("event_type", "")
+    data: dict = event.get("data", {})
 
-    if event_type == "checkout.session.completed":
-        await _handle_checkout_completed(data_object, db)
-    elif event_type == "customer.subscription.updated":
-        await _handle_subscription_updated(data_object, db)
-    elif event_type == "customer.subscription.deleted":
-        await _handle_subscription_deleted(data_object, db)
+    logger.info("webhook: received event type=%s id=%s", event_type, event.get("event_id"))
+
+    if event_type == "transaction.completed":
+        await _handle_transaction_completed(data, db)
+    elif event_type == "subscription.updated" or event_type == "subscription.activated":
+        await _handle_subscription_updated(data, db)
+    elif event_type == "subscription.canceled":
+        await _handle_subscription_canceled(data, db)
     else:
         logger.debug("webhook: unhandled event type %s — ignoring", event_type)
 

@@ -12,9 +12,11 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     APP_URL: str = "http://localhost:8000"
     JWT_SECRET: str
-    STRIPE_SECRET_KEY: str
-    STRIPE_WEBHOOK_SECRET: str = ""
-    STRIPE_PRICE_GROWTH: str = ""
+    PADDLE_API_KEY: str = ""
+    PADDLE_CLIENT_TOKEN: str = ""
+    PADDLE_WEBHOOK_SECRET: str = ""
+    PADDLE_PRICE_ID_GROWTH: str = ""
+    PADDLE_ENVIRONMENT: str = "sandbox"  # "sandbox" | "production"
     GEMINI_API_KEY: str
     RESEND_API_KEY: str
     RESEND_FROM_EMAIL: str = "TrustPages <onboarding@resend.dev>"

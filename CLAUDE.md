@@ -9,7 +9,7 @@ Privacy policy sub-processor monitoring SaaS. Tenants add URLs to monitor; the a
 - **LLM:** Gemini 2.5 Flash (`google-genai`)
 - **Scheduler:** APScheduler (5-min sweep)
 - **Auth:** Magic link → JWT cookie (30-day session)
-- **Billing:** Stripe
+- **Billing:** Paddle (Merchant of Record — Stripe doesn't support Turkey-based sellers)
 - **Email:** Resend
 - **Deploy:** Render (render.yaml; migrations run via preDeployCommand)
 - **Package manager:** uv
@@ -37,7 +37,7 @@ python run_sweep.py                    # manual sweep trigger
 
 ## Required env vars
 
-`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_GROWTH`, `APP_URL`  
+`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `PADDLE_API_KEY`, `PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_ID_GROWTH`, `APP_URL`  
 Optional: `SENTRY_DSN`
 
 ## Business logic

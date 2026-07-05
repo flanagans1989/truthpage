@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustPages — Upgrade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+</head>
+<body class="min-h-screen bg-slate-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 w-full max-w-md text-center">
+        <span class="text-blue-600 font-bold text-xl">TrustPages</span>
+        <h1 class="text-2xl font-bold text-slate-900 mt-4 mb-1">Opening checkout…</h1>
+        <p class="text-slate-500 text-sm">If nothing happens, make sure pop-ups aren't blocked.</p>
+        <a href="/dashboard" class="text-blue-600 text-sm hover:underline mt-6 inline-block">← Back to dashboard</a>
+    </div>
+
+    <script>
+        {% if paddle_environment == "sandbox" %}
+        Paddle.Environment.set("sandbox");
+        {% endif %}
+        Paddle.Initialize({ token: {{ paddle_client_token|tojson }} });
+        Paddle.Checkout.open({
+            items: [{ priceId: {{ price_id|tojson }}, quantity: 1 }],
+            customData: { tenant_id: {{ tenant_id|tojson }} },
+            customer: { email: {{ (customer_email or '')|tojson }} },
+            settings: {
+                successUrl: {{ success_url|tojson }}
+            }
+        });
+    </script>
+</body>
+</html>

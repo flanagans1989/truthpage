@@ -17,9 +17,11 @@ services:
         sync: false
       - key: RESEND_API_KEY
         sync: false
-      - key: STRIPE_SECRET_KEY
+      - key: PADDLE_API_KEY
         sync: false
-      - key: STRIPE_WEBHOOK_SECRET
+      - key: PADDLE_CLIENT_TOKEN
+        sync: false
+      - key: PADDLE_WEBHOOK_SECRET
         sync: false
 
       # ── Uygulama URL'i (deploy sonrası Render'ın verdiği URL ile güncelle) ──
@@ -29,8 +31,10 @@ services:
       # ── Varsayılan değerleri olan opsiyonel değişkenler ──────────────────
       - key: RESEND_FROM_EMAIL
         value: TrustPages <onboarding@resend.dev>
-      - key: STRIPE_PRICE_GROWTH
+      - key: PADDLE_PRICE_ID_GROWTH
         sync: false
+      - key: PADDLE_ENVIRONMENT
+        value: production
       - key: PLAYWRIGHT_BROWSERS_PATH
         value: /opt/playwright-browsers
       - key: PYTHONUNBUFFERED
