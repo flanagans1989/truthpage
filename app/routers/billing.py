@@ -41,3 +41,23 @@ async def checkout(tenant: CurrentTenant):
 
     logger.info("billing: checkout session created for tenant %s", tenant.id)
     return RedirectResponse(url=session.url, status_code=303)
+
+
+@router.get("/portal")
+async def billing_portal(tenant: CurrentTenant):
+    """Stripe customer portal — manage payment method, invoices, cancellation."""
+    if not tenant.stripe_customer_id:
+        # No Stripe customer yet — nothing to manage, send them to checkout
+        return RedirectResponse(url="/dashboard/billing/checkout", status_code=303)
+
+    try:
+        session = await asyncio.to_thread(
+            stripe.billing_portal.Session.create,
+            customer=tenant.stripe_customer_id,
+            return_url=f"{settings.APP_URL}/dashboard",
+        )
+    except stripe.StripeError:
+        logger.exception("Stripe portal session creation failed for tenant %s", tenant.id)
+        raise HTTPException(status_code=502, detail="Could not open the billing portal")
+
+    return RedirectResponse(url=session.url, status_code=303)

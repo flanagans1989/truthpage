@@ -1,10 +1,11 @@
 import uuid
+from datetime import datetime
 
-from sqlalchemy import CheckConstraint, String, Uuid
+from sqlalchemy import CheckConstraint, DateTime, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.db.models.mixins import TimestampMixin
+from app.db.models.mixins import TimestampMixin, utc_now
 
 SUBSCRIPTION_STATUSES = ("trialing", "active", "past_due", "canceled", "unpaid")
 
@@ -31,6 +32,17 @@ class Tenant(TimestampMixin, Base):
         default="trialing",
         server_default="trialing",
     )
+    # End of the free trial. Only meaningful while status == "trialing";
+    # a paid subscription (status == "active") ignores it.
+    trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @property
+    def trial_expired(self) -> bool:
+        return (
+            self.subscription_status == "trialing"
+            and self.trial_ends_at is not None
+            and self.trial_ends_at <= utc_now()
+        )
 
     subprocessors: Mapped[list["Subprocessor"]] = relationship(  # noqa: F821
         "Subprocessor",

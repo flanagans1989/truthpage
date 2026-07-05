@@ -15,6 +15,7 @@ from app.core.scraper.normalizer import HTMLNormalizer
 from app.db.models.change_event import ChangeEvent, ChangeStatus
 from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
+from app.services.mailer import mailer
 
 logger = logging.getLogger(__name__)
 
@@ -160,3 +161,14 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
     subprocessor.next_check_at = next_check
 
     await session.commit()
+
+    # i) Alert the tenant owner — pending changes are invisible until someone
+    # opens the dashboard, so email is the only push signal they get.
+    if not auto_publish and subprocessor.tenant.email:
+        await mailer.send_review_needed(
+            email=subprocessor.tenant.email,
+            subprocessor_name=subprocessor.name,
+            monitored_url=subprocessor.monitored_url,
+            summary=analysis.summary,
+            classification=analysis.classification,
+        )

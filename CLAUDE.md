@@ -49,3 +49,6 @@ Optional: `SENTRY_DSN`
 - **Rate limit:** 3 magic link requests / minute per IP and per email
 - **DB pool:** `pool_size=3, max_overflow=1` (Neon free tier)
 - **Subscription statuses:** `trialing | active | past_due | canceled | unpaid`
+- **Trial:** 14 days (`tenant.trial_ends_at`); expired trials are excluded from sweeps and redirected to checkout on login
+- **Auth:** tenant ↔ email is exact-match (`tenant.email`, unique); magic links are single-use
+- **Tenant alerts:** pending-review changes email the tenant owner (`mailer.send_review_needed`)

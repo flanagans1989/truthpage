@@ -1,6 +1,6 @@
 import logging
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import selectinload
 
@@ -11,7 +11,6 @@ from app.services.monitoring import run_subprocessor_check
 
 logger = logging.getLogger(__name__)
 
-_BILLABLE_STATUSES = ("active", "trialing")
 
 
 async def sweep_due_subprocessors(session_factory: async_sessionmaker[AsyncSession]) -> None:
@@ -28,7 +27,14 @@ async def sweep_due_subprocessors(session_factory: async_sessionmaker[AsyncSessi
             .join(Subprocessor.tenant)
             .where(
                 Subprocessor.monitoring_enabled == True,  # noqa: E712
-                Tenant.subscription_status.in_(_BILLABLE_STATUSES),
+                or_(
+                    Tenant.subscription_status == "active",
+                    and_(
+                        Tenant.subscription_status == "trialing",
+                        # Legacy rows without a trial end keep working until claimed
+                        (Tenant.trial_ends_at == None) | (Tenant.trial_ends_at > now),  # noqa: E711
+                    ),
+                ),
                 (Subprocessor.next_check_at <= now) | (Subprocessor.next_check_at == None),  # noqa: E711
             )
             .options(selectinload(Subprocessor.tenant))

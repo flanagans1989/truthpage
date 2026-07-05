@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.models.change_event import ChangeEvent, ChangeStatus
+from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
@@ -34,8 +35,15 @@ async def dashboard(
         .order_by(Subprocessor.created_at.desc())
     )
     rows = list(result.scalars().all())
+
+    trial_days_left: int | None = None
+    if tenant.subscription_status == "trialing" and tenant.trial_ends_at is not None:
+        trial_days_left = max(0, (tenant.trial_ends_at - utc_now()).days)
+
     return _templates.TemplateResponse(
-        request, "dashboard.html", {"tenant": tenant, "rows": rows}
+        request,
+        "dashboard.html",
+        {"tenant": tenant, "rows": rows, "trial_days_left": trial_days_left},
     )
 
 

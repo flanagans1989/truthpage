@@ -66,14 +66,38 @@
                     {{ tenant.subscription_status }}
                 </span>
             </div>
-            <a href="/auth/logout"
-               class="text-sm text-slate-500 hover:text-slate-800 transition font-medium">
-                Sign out
-            </a>
+            <div class="flex items-center gap-5">
+                <a href="/dashboard/billing/portal"
+                   class="text-sm text-slate-500 hover:text-slate-800 transition font-medium">
+                    Manage billing
+                </a>
+                <a href="/auth/logout"
+                   class="text-sm text-slate-500 hover:text-slate-800 transition font-medium">
+                    Sign out
+                </a>
+            </div>
         </header>
 
         <!-- Content -->
         <main class="flex-1 overflow-y-auto p-8">
+
+            {% if trial_days_left is not none %}
+            <div class="mb-6 rounded-xl border px-5 py-4 flex items-center justify-between
+                {% if trial_days_left <= 3 %}bg-amber-50 border-amber-200{% else %}bg-blue-50 border-blue-200{% endif %}">
+                <p class="text-sm {% if trial_days_left <= 3 %}text-amber-800{% else %}text-blue-800{% endif %}">
+                    {% if trial_days_left == 0 %}
+                    Your free trial ends today — monitoring stops when it expires.
+                    {% else %}
+                    Your free trial ends in <strong>{{ trial_days_left }} day{{ 's' if trial_days_left != 1 }}</strong>.
+                    {% endif %}
+                </p>
+                <a href="/dashboard/billing/checkout"
+                   class="text-sm font-semibold px-4 py-2 rounded-lg text-white transition
+                       {% if trial_days_left <= 3 %}bg-amber-600 hover:bg-amber-700{% else %}bg-blue-600 hover:bg-blue-700{% endif %}">
+                    Upgrade now
+                </a>
+            </div>
+            {% endif %}
 
             <!-- Stats -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">

@@ -24,6 +24,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 _ALGORITHM = "HS256"
 _MAGIC_EXPIRE = timedelta(minutes=15)
 _SESSION_EXPIRE = timedelta(days=30)
+_TRIAL_PERIOD = timedelta(days=14)
 
 # ── In-memory rate limiter ────────────────────────────────────────────────────
 # Keyed by "ip:<addr>" or "email:<addr>"; value = deque of UNIX timestamps.
@@ -233,7 +234,12 @@ async def verify_magic_link(
     if is_new_tenant:
         base_slug = _email_to_slug(email)
         slug = await _get_unique_slug(base_slug, email, db)
-        tenant = Tenant(name=_email_to_company_name(email), slug=slug, email=email)
+        tenant = Tenant(
+            name=_email_to_company_name(email),
+            slug=slug,
+            email=email,
+            trial_ends_at=datetime.now(UTC) + _TRIAL_PERIOD,
+        )
         db.add(tenant)
         await db.commit()
         logger.info("verify_magic_link: new tenant created slug='%s' for email='%s'", slug, email)
@@ -243,7 +249,7 @@ async def verify_magic_link(
     # New tenants → onboarding checkout; returning paid/trialing tenants → dashboard
     if is_new_tenant:
         destination = "/dashboard/billing/checkout"
-    elif tenant.subscription_status in ("canceled", "unpaid", "past_due"):
+    elif tenant.subscription_status in ("canceled", "unpaid", "past_due") or tenant.trial_expired:
         destination = "/dashboard/billing/checkout"
     else:
         destination = "/dashboard"

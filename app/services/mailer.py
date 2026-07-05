@@ -173,6 +173,62 @@ class MailerService:
 </html>"""
         await self._send(email, subject, html)
 
+    async def send_review_needed(
+        self,
+        email: str,
+        subprocessor_name: str,
+        monitored_url: str,
+        summary: str,
+        classification: str,
+    ) -> None:
+        """Alerts the tenant owner that a change is waiting in the approval queue."""
+        subject = f"Action needed: change detected on {subprocessor_name}"
+        queue_url = f"{settings.APP_URL}/dashboard/queue"
+
+        safe_name = html.escape(subprocessor_name)
+        safe_url = html.escape(monitored_url)
+        safe_summary = html.escape(summary)
+        safe_class = html.escape(classification)
+
+        body = f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:48px 0;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:48px 40px;">
+        <tr><td>
+          <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;font-weight:500;text-transform:uppercase;letter-spacing:.05em;">
+            TrustPages &bull; Approval queue
+          </p>
+          <p style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0f172a;">
+            A change needs your review
+          </p>
+          <p style="margin:0 0 24px;font-size:14px;color:#64748b;line-height:1.6;">
+            We detected a <strong>{safe_class}</strong> change on
+            <strong>{safe_name}</strong> (<a href="{safe_url}" style="color:#2563eb;">{safe_url}</a>).
+            Subscribers will only be notified after you approve it.
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0"
+                 style="background:#f1f5f9;border-radius:8px;padding:20px;margin-bottom:24px;">
+            <tr><td>
+              <p style="margin:0;font-size:14px;color:#334155;line-height:1.6;">{safe_summary}</p>
+            </td></tr>
+          </table>
+          <a href="{queue_url}"
+             style="display:inline-block;background:#2563eb;color:#ffffff;font-size:14px;
+                    font-weight:600;padding:14px 28px;border-radius:8px;text-decoration:none;">
+            Review in dashboard
+          </a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+        await self._send(email, subject, body)
+
     async def send_change_notification(
         self,
         recipients: list[tuple[str, str]],  # (email, unsubscribe_url)
