@@ -69,6 +69,39 @@
                 </div>
                 {% endif %}
 
+                <!-- Change history -->
+                <div class="mt-10">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="text-base font-semibold text-slate-900">Change History</h2>
+                        <span class="text-xs text-slate-400">last {{ change_events | length }} update{{ 's' if change_events | length != 1 }}</span>
+                    </div>
+
+                    {% if change_events %}
+                    <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+                        {% for ev in change_events %}
+                        <div class="px-5 py-4">
+                            <div class="flex items-center justify-between gap-4 mb-1">
+                                <p class="text-sm font-semibold text-slate-900">{{ ev.subprocessor.name }}</p>
+                                <div class="shrink-0 flex items-center gap-2">
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-medium
+                                        {% if ev.llm_classification == 'MATERIAL' %}bg-amber-50 text-amber-700
+                                        {% else %}bg-slate-100 text-slate-500{% endif %}">
+                                        {{ 'Reviewed' if ev.status == 'approved' else 'Minor' }}
+                                    </span>
+                                    <span class="text-xs text-slate-400">{{ ev.created_at.strftime('%d %b %Y') }}</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 leading-relaxed">{{ ev.llm_summary or 'A change was detected and published.' }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="bg-white rounded-xl border border-slate-200 border-dashed p-8 text-center">
+                        <p class="text-slate-400 text-sm">No published changes yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
                 <!-- Footer note -->
                 <p class="text-xs text-slate-400 mt-5 leading-relaxed">
                     This page is automatically maintained and updated whenever a change in any

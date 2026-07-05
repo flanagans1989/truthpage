@@ -9,9 +9,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
@@ -75,6 +76,16 @@ async def create_subprocessor(
     check_interval_minutes: int = Form(1440, ge=60, le=43200),
     db: AsyncSession = Depends(get_db_session),
 ):
+    count_result = await db.execute(
+        select(func.count()).select_from(Subprocessor).where(Subprocessor.tenant_id == tenant.id)
+    )
+    if count_result.scalar_one() >= settings.MAX_SUBPROCESSORS_PER_TENANT:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Plan limit reached ({settings.MAX_SUBPROCESSORS_PER_TENANT} monitored URLs). "
+            "Contact support to increase it.",
+        )
+
     # DNS resolution inside is blocking — run off the event loop
     await asyncio.to_thread(_validate_monitored_url, monitored_url)
     subprocessor = Subprocessor(

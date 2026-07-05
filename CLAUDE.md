@@ -11,7 +11,7 @@ Privacy policy sub-processor monitoring SaaS. Tenants add URLs to monitor; the a
 - **Auth:** Magic link → JWT cookie (30-day session)
 - **Billing:** Stripe
 - **Email:** Resend
-- **Deploy:** Fly.io
+- **Deploy:** Render (render.yaml; migrations run via preDeployCommand)
 - **Package manager:** uv
 
 ## Key files
@@ -52,3 +52,6 @@ Optional: `SENTRY_DSN`
 - **Trial:** 14 days (`tenant.trial_ends_at`); expired trials are excluded from sweeps and redirected to checkout on login
 - **Auth:** tenant ↔ email is exact-match (`tenant.email`, unique); magic links are single-use
 - **Tenant alerts:** pending-review changes email the tenant owner (`mailer.send_review_needed`)
+- **Plan cap:** `MAX_SUBPROCESSORS_PER_TENANT` (default 25)
+- **Public trust page:** shows approved + auto-published change history (last 20)
+- **Tests:** `uv run pytest` (unit tests, no DB needed); CI via GitHub Actions

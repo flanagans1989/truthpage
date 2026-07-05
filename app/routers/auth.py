@@ -2,7 +2,6 @@ import logging
 import random
 import re
 import secrets
-from collections import deque
 from datetime import UTC, datetime, timedelta
 
 from cachetools import TTLCache
@@ -13,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.ratelimit import SlidingWindowLimiter, get_client_ip
 from app.db.models.tenant import Tenant
 from app.db.session import get_db_session
 from app.services.mailer import mailer
@@ -26,43 +26,12 @@ _MAGIC_EXPIRE = timedelta(minutes=15)
 _SESSION_EXPIRE = timedelta(days=30)
 _TRIAL_PERIOD = timedelta(days=14)
 
-# ── In-memory rate limiter ────────────────────────────────────────────────────
-# Keyed by "ip:<addr>" or "email:<addr>"; value = deque of UNIX timestamps.
-# Safe in single-worker asyncio: no concurrent writes from multiple threads.
-_RL_MAX = 3
-_RL_WINDOW = 60
-_rl_store: TTLCache = TTLCache(maxsize=10000, ttl=_RL_WINDOW)
+# Keyed by "ip:<addr>" or "email:<addr>".
+_limiter = SlidingWindowLimiter(max_requests=3, window_seconds=60)
 
 # Magic tokens are single-use: consumed jti values live here until the token
 # would have expired anyway. In-memory is fine for a single-worker deploy.
 _used_magic_jti: TTLCache = TTLCache(maxsize=50000, ttl=int(_MAGIC_EXPIRE.total_seconds()))
-
-
-def _get_client_ip(request: Request) -> str:
-    # Fly.io injects the real client IP in this header
-    fly_ip = request.headers.get("Fly-Client-IP")
-    if fly_ip:
-        return fly_ip
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
-
-
-def _rate_limit_check(key: str) -> bool:
-    """Return True if the request is allowed; False if the limit is exceeded."""
-    now = datetime.now(UTC).timestamp()
-    cutoff = now - _RL_WINDOW
-    dq = _rl_store.get(key)
-    if dq is None:
-        dq = deque()
-    while dq and dq[0] < cutoff:
-        dq.popleft()
-    if len(dq) >= _RL_MAX:
-        return False
-    dq.append(now)
-    _rl_store[key] = dq
-    return True
 
 
 def _make_magic_token(email: str) -> str:
@@ -157,8 +126,8 @@ async def login_page():
 @router.post("/request", response_class=HTMLResponse)
 async def request_magic_link(request: Request, email: str = Form(...)):
     email = email.strip().lower()
-    client_ip = _get_client_ip(request)
-    if not _rate_limit_check(f"ip:{client_ip}") or not _rate_limit_check(f"email:{email}"):
+    client_ip = get_client_ip(request)
+    if not _limiter.allow(f"ip:{client_ip}") or not _limiter.allow(f"email:{email}"):
         logger.warning("rate_limit: magic link blocked for email=%s ip=%s", email, client_ip)
         raise HTTPException(
             status_code=429,

@@ -1,18 +1,19 @@
 import logging
-from collections import deque
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
 import jwt
-from cachetools import TTLCache
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
+from app.core.ratelimit import SlidingWindowLimiter, get_client_ip
+from app.db.models.change_event import ChangeEvent, ChangeStatus
 from app.db.models.subscriber import Subscriber
 from app.db.models.subprocessor import Subprocessor
 from app.db.models.tenant import Tenant
@@ -21,24 +22,7 @@ from app.services.mailer import mailer
 
 logger = logging.getLogger(__name__)
 
-_SUB_RL_MAX = 3
-_SUB_RL_WINDOW = 60
-_sub_rl_store: TTLCache = TTLCache(maxsize=10000, ttl=_SUB_RL_WINDOW)
-
-
-def _sub_rate_limit(key: str) -> bool:
-    now = datetime.now(UTC).timestamp()
-    cutoff = now - _SUB_RL_WINDOW
-    dq = _sub_rl_store.get(key)
-    if dq is None:
-        dq = deque()
-    while dq and dq[0] < cutoff:
-        dq.popleft()
-    if len(dq) >= _SUB_RL_MAX:
-        return False
-    dq.append(now)
-    _sub_rl_store[key] = dq
-    return True
+_sub_limiter = SlidingWindowLimiter(max_requests=3, window_seconds=60)
 
 router = APIRouter(tags=["public"])
 _templates = Jinja2Templates(directory=Path(__file__).parent.parent.parent / "templates")
@@ -127,8 +111,27 @@ async def trust_page(
     )
     subprocessors = list(sp_result.scalars().all())
 
+    # Published change history: auto-published cosmetic changes and
+    # manually approved material ones, newest first.
+    ev_result = await db.execute(
+        select(ChangeEvent)
+        .join(ChangeEvent.subprocessor)
+        .where(
+            Subprocessor.tenant_id == tenant.id,
+            ChangeEvent.status.in_(
+                (ChangeStatus.approved.value, ChangeStatus.auto_published.value)
+            ),
+        )
+        .options(selectinload(ChangeEvent.subprocessor))
+        .order_by(ChangeEvent.created_at.desc())
+        .limit(20)
+    )
+    change_events = list(ev_result.scalars().all())
+
     return _templates.TemplateResponse(
-        request, "public_trust.html", {"tenant": tenant, "subprocessors": subprocessors}
+        request,
+        "public_trust.html",
+        {"tenant": tenant, "subprocessors": subprocessors, "change_events": change_events},
     )
 
 
@@ -140,10 +143,8 @@ async def subscribe(
     db: AsyncSession = Depends(get_db_session),
 ):
     email = email.strip().lower()
-    client_ip = request.headers.get("Fly-Client-IP") or (
-        request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
-    ) or (request.client.host if request.client else "unknown")
-    if not _sub_rate_limit(f"ip:{client_ip}") or not _sub_rate_limit(f"email:{email}"):
+    client_ip = get_client_ip(request)
+    if not _sub_limiter.allow(f"ip:{client_ip}") or not _sub_limiter.allow(f"email:{email}"):
         logger.warning("subscribe: rate limit hit for email=%s ip=%s", email, client_ip)
         raise HTTPException(status_code=429, detail="Too many requests. Please wait a minute.")
 
