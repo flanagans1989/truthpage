@@ -7,6 +7,7 @@ import sentry_sdk
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from app.core.config import settings
@@ -78,6 +79,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="TrustPages", version="0.1.0", lifespan=lifespan)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(auth.router)
 app.include_router(dashboard.router)
