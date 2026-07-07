@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 import logging
+import time
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -25,12 +26,25 @@ _SUBSCRIPTION_STATUS_MAP = {
 }
 
 
+# Reject webhooks whose signature timestamp is too old — otherwise a captured
+# payload (e.g. an old transaction.completed) could be replayed to re-activate
+# a canceled subscription. Paddle recommends a 5-second window; we allow more
+# slack for clock drift and retries, which Paddle sends with a fresh signature.
+_SIGNATURE_MAX_AGE_SECONDS = 300
+
+
 def _verify_signature(payload: bytes, sig_header: str, secret: str) -> bool:
     parts = dict(p.split("=", 1) for p in sig_header.split(";") if "=" in p)
     ts, h1 = parts.get("ts"), parts.get("h1")
     if not ts or not h1:
         return False
-    signed_payload = f"{ts}:{payload.decode('utf-8')}".encode("utf-8")
+    try:
+        if abs(time.time() - int(ts)) > _SIGNATURE_MAX_AGE_SECONDS:
+            return False
+        decoded = payload.decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        return False
+    signed_payload = f"{ts}:{decoded}".encode("utf-8")
     expected = hmac.new(secret.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, h1)
 
