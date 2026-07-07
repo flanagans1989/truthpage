@@ -57,6 +57,9 @@ class LLMDiffAnalyzer:
                 system_instruction=_SYSTEM_PROMPT,
                 response_mime_type="application/json",
                 response_schema=DiffAnalysis,
+                # Diff classification doesn't need extended reasoning; thinking
+                # tokens are billed and dominate cost on 2.5 Flash if left on.
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
             ),
         )
         if not response.text:
