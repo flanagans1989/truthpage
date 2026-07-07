@@ -100,6 +100,7 @@ async def login_page():
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TrustPages — Sign In</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/tailwind.css">
 </head>
 <body class="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -145,6 +146,7 @@ async def request_magic_link(request: Request, email: str = Form(...)):
 <head>
     <meta charset="UTF-8">
     <title>TrustPages — Check your inbox</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/tailwind.css">
 </head>
 <body class="min-h-screen bg-slate-50 flex items-center justify-center">
