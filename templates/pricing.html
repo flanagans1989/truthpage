@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Pricing — TrustPages{% endblock %}
+{% block content %}
+<div class="min-h-screen flex flex-col">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="text-blue-600 font-bold text-xl">TrustPages</a>
+            <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">Sign in</a>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl mx-auto px-6 py-16 w-full">
+        <h1 class="text-3xl font-bold text-slate-900 text-center mb-3">Simple pricing</h1>
+        <p class="text-slate-600 text-center mb-12">One plan, everything included. Start with a free 14-day trial.</p>
+
+        <div class="max-w-md mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+            <h2 class="font-semibold text-slate-900 text-lg mb-1">Growth</h2>
+            <p class="mb-6"><span class="text-4xl font-bold text-slate-900">$29</span><span class="text-slate-500"> / month</span></p>
+            <ul class="space-y-3 text-sm text-slate-600 mb-8">
+                <li>✓ Monitor up to 25 sub-processor pages</li>
+                <li>✓ Automated change detection every sweep cycle</li>
+                <li>✓ AI classification of material vs. cosmetic changes</li>
+                <li>✓ Approval queue with diff viewer</li>
+                <li>✓ Public trust page with change history</li>
+                <li>✓ Email notifications for your subscribers</li>
+                <li>✓ 14-day free trial</li>
+            </ul>
+            <a href="/auth/login" class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg text-sm">Start free trial</a>
+            <p class="text-xs text-slate-400 text-center mt-4">Billing is handled securely by Paddle, our merchant of record. Prices exclude any applicable taxes, which Paddle calculates at checkout.</p>
+        </div>
+    </main>
+
+    {% include "_footer.html" %}
+</div>
+{% endblock %}

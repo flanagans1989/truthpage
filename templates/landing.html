@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}TrustPages — Sub-processor change monitoring{% endblock %}
+{% block content %}
+<div class="min-h-screen flex flex-col">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            <span class="text-blue-600 font-bold text-xl">TrustPages</span>
+            <nav class="flex items-center gap-6 text-sm">
+                <a href="/pricing" class="text-slate-600 hover:text-slate-900">Pricing</a>
+                <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg">Sign in</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-1">
+        <section class="max-w-5xl mx-auto px-6 py-20 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">Know when your vendors change their sub-processors</h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-10">
+                TrustPages monitors the privacy policies and sub-processor lists of the services you depend on,
+                classifies every change, and keeps a public, auditable trust page for your customers.
+            </p>
+            <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg">Start free 14-day trial</a>
+            <p class="text-sm text-slate-500 mt-3">No credit card required to start.</p>
+        </section>
+
+        <section class="max-w-5xl mx-auto px-6 pb-20 grid md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-2xl border border-slate-200 p-6">
+                <div class="text-2xl mb-3">🔍</div>
+                <h2 class="font-semibold text-slate-900 mb-2">Automated monitoring</h2>
+                <p class="text-sm text-slate-600">We scrape your vendors' sub-processor pages on a schedule and detect every change — no manual checking.</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-slate-200 p-6">
+                <div class="text-2xl mb-3">🤖</div>
+                <h2 class="font-semibold text-slate-900 mb-2">Smart classification</h2>
+                <p class="text-sm text-slate-600">Changes are classified as material or cosmetic. Cosmetic updates publish automatically; material ones wait for your approval.</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-slate-200 p-6">
+                <div class="text-2xl mb-3">📢</div>
+                <h2 class="font-semibold text-slate-900 mb-2">Public trust page</h2>
+                <p class="text-sm text-slate-600">Your customers get a public change-history page and can subscribe to email notifications for approved changes.</p>
+            </div>
+        </section>
+    </main>
+
+    {% include "_footer.html" %}
+</div>
+{% endblock %}

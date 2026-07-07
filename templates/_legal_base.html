@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen flex flex-col">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="text-blue-600 font-bold text-xl">TrustPages</a>
+            <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">Sign in</a>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-3xl mx-auto px-6 py-14 w-full">
+        <h1 class="text-3xl font-bold text-slate-900 mb-2">{% block page_title %}{% endblock %}</h1>
+        <p class="text-sm text-slate-500 mb-10">Last updated: July 8, 2026</p>
+        <div class="space-y-8 text-sm leading-relaxed text-slate-700">
+            {% block legal_body %}{% endblock %}
+        </div>
+    </main>
+
+    {% include "_footer.html" %}
+</div>
+{% endblock %}

@@ -6,13 +6,12 @@ from contextlib import asynccontextmanager
 import sentry_sdk
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Header, HTTPException
-from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.session import AsyncSessionLocal, engine
-from app.routers import auth, billing, dashboard, public, subprocessors, webhooks
+from app.routers import auth, billing, dashboard, pages, public, subprocessors, webhooks
 from app.scheduler.jobs import sweep_due_subprocessors
 
 # ── Logging ──────────────────────────────────────────────────────────────────
@@ -82,17 +81,13 @@ app = FastAPI(title="TrustPages", version="0.1.0", lifespan=lifespan)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+app.include_router(pages.router)
 app.include_router(auth.router)
 app.include_router(dashboard.router)
 app.include_router(subprocessors.router)
 app.include_router(billing.router)
 app.include_router(webhooks.router)
 app.include_router(public.router)
-
-
-@app.get("/", include_in_schema=False)
-async def root():
-    return RedirectResponse(url="/dashboard", status_code=302)
 
 
 @app.get("/healthz")
