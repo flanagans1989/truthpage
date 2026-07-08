@@ -33,6 +33,9 @@ app/db/models/               # Tenant, Subprocessor, ChangeEvent, Subscriber
 uv run uvicorn app.main:app --reload   # local dev
 alembic upgrade head                   # run migrations
 python run_sweep.py                    # manual sweep trigger
+
+# Rebuild compiled CSS after any template/class change (CLI vendored in tools/, gitignored):
+./tools/tailwindcss.exe -o static/tailwind.css --minify --content "./templates/**/*.html,./app/**/*.py"
 ```
 
 ## Required env vars
