@@ -50,7 +50,7 @@ class TestChartBuilders:
         day1, day2, day3 = chart["columns"]
         assert day1["total"] == 2
         # zero-count statuses are dropped from segments
-        assert {s["label"] for s in day1["segments"]} == {"Approved", "Rejected"}
+        assert {s["label"] for s in day1["segments"]} == {"Onaylandı", "Reddedildi"}
         assert all(s["pct"] == 25.0 for s in day1["segments"])
         assert day2["segments"][0]["pct"] == 100.0
         assert day3["segments"] == []

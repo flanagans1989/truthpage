@@ -21,10 +21,10 @@ CHART_DAYS = 30
 
 # Display order + palette slots for stacked event chart (validated categorical order)
 EVENT_STATUS_SERIES = [
-    (ChangeStatus.auto_published.value, "Auto-published", "#2a78d6"),
-    (ChangeStatus.approved.value, "Approved", "#1baf7a"),
-    (ChangeStatus.pending_review.value, "Pending review", "#eda100"),
-    (ChangeStatus.rejected.value, "Rejected", "#e34948"),
+    (ChangeStatus.auto_published.value, "Otomatik yayın", "#2a78d6"),
+    (ChangeStatus.approved.value, "Onaylandı", "#1baf7a"),
+    (ChangeStatus.pending_review.value, "İncelemede", "#eda100"),
+    (ChangeStatus.rejected.value, "Reddedildi", "#e34948"),
 ]
 
 
@@ -184,7 +184,7 @@ def build_column_chart(days: list[date], counts: dict[date, int]) -> dict[str, A
     peak = max([counts.get(d, 0) for d in days] + [1])
     columns = [
         {
-            "label": d.strftime("%d %b"),
+            "label": d.strftime("%d.%m"),
             "value": counts.get(d, 0),
             "pct": round(counts.get(d, 0) / peak * 100, 1),
         }
@@ -214,5 +214,5 @@ def build_stacked_chart(days: list[date], by_day: dict[date, dict[str, int]]) ->
             for status_value, label, color in EVENT_STATUS_SERIES
             if day_counts.get(status_value, 0) > 0
         ]
-        columns.append({"label": d.strftime("%d %b"), "total": totals[d], "segments": segments})
+        columns.append({"label": d.strftime("%d.%m"), "total": totals[d], "segments": segments})
     return {"columns": columns, "peak": peak, "total": sum(totals.values())}

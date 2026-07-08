@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Platform Admin — TrustPages{% endblock %}
+{% block title %}Yönetim Paneli — TrustPages{% endblock %}
+
+{% set STATUS_TR = {
+    "active": "aktif",
+    "trialing": "deneme",
+    "past_due": "ödeme gecikti",
+    "canceled": "iptal",
+    "unpaid": "ödenmedi",
+} %}
+{% set EVENT_STATUS_TR = {
+    "auto_published": "otomatik yayın",
+    "approved": "onaylandı",
+    "pending_review": "incelemede",
+    "rejected": "reddedildi",
+} %}
 
 {% macro status_badge(status) -%}
     {%- set styles = {
@@ -10,7 +24,7 @@
         "canceled": "bg-slate-100 text-slate-500",
         "unpaid": "bg-red-50 text-red-700",
     } -%}
-    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ styles.get(status, 'bg-slate-100 text-slate-600') }}">{{ status }}</span>
+    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ styles.get(status, 'bg-slate-100 text-slate-600') }}">{{ STATUS_TR.get(status, status) }}</span>
 {%- endmacro %}
 
 {% block content %}
@@ -21,11 +35,11 @@
         <div class="flex items-center gap-3">
             <span class="text-blue-600 font-bold text-lg tracking-tight">TrustPages</span>
             <span class="text-slate-300">/</span>
-            <h1 class="text-base font-semibold text-slate-900">Platform Admin</h1>
+            <h1 class="text-base font-semibold text-slate-900">Yönetim Paneli</h1>
         </div>
         <div class="flex items-center gap-4 text-sm">
-            <span class="text-slate-400">{{ now.strftime("%d %b %Y %H:%M") }} UTC</span>
-            <a href="/dashboard" class="text-slate-600 hover:text-slate-900 font-medium">← My dashboard</a>
+            <span class="text-slate-400">{{ now.strftime("%d.%m.%Y %H:%M") }} UTC</span>
+            <a href="/dashboard" class="text-slate-600 hover:text-slate-900 font-medium">← Müşteri panelim</a>
         </div>
     </header>
 
@@ -34,34 +48,34 @@
         <!-- KPI row -->
         <section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
             <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Tenants</p>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Tenant</p>
                 <p class="text-3xl font-semibold text-slate-900 mt-1">{{ total_tenants }}</p>
-                <p class="text-xs text-slate-500 mt-1">{{ tenants_by_status.get("active", 0) }} active · {{ tenants_by_status.get("trialing", 0) }} trialing</p>
+                <p class="text-xs text-slate-500 mt-1">{{ tenants_by_status.get("active", 0) }} aktif · {{ tenants_by_status.get("trialing", 0) }} deneme</p>
             </div>
             <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Paying</p>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Ödeme yapan</p>
                 <p class="text-3xl font-semibold text-slate-900 mt-1">{{ tenants_by_status.get("active", 0) }}</p>
-                <p class="text-xs text-slate-500 mt-1">{{ tenants_by_status.get("past_due", 0) }} past due · {{ tenants_by_status.get("canceled", 0) }} canceled</p>
+                <p class="text-xs text-slate-500 mt-1">{{ tenants_by_status.get("past_due", 0) }} gecikmiş · {{ tenants_by_status.get("canceled", 0) }} iptal</p>
             </div>
             <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Expired trials</p>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Süresi dolan deneme</p>
                 <p class="text-3xl font-semibold {{ 'text-amber-600' if expired_trials else 'text-slate-900' }} mt-1">{{ expired_trials }}</p>
-                <p class="text-xs text-slate-500 mt-1">of {{ tenants_by_status.get("trialing", 0) }} trialing</p>
+                <p class="text-xs text-slate-500 mt-1">{{ tenants_by_status.get("trialing", 0) }} deneme içinde</p>
             </div>
             <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Monitored URLs</p>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">İzlenen URL</p>
                 <p class="text-3xl font-semibold text-slate-900 mt-1">{{ sub_enabled }}</p>
-                <p class="text-xs text-slate-500 mt-1">{{ sub_total }} total · {{ sub_browser }} need browser{% if sub_overdue %} · <span class="text-amber-600 font-medium">{{ sub_overdue }} overdue</span>{% endif %}</p>
+                <p class="text-xs text-slate-500 mt-1">{{ sub_total }} toplam · {{ sub_browser }} tarayıcı gerekli{% if sub_overdue %} · <span class="text-amber-600 font-medium">{{ sub_overdue }} tarama gecikti</span>{% endif %}</p>
             </div>
             <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Subscribers</p>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Aboneler</p>
                 <p class="text-3xl font-semibold text-slate-900 mt-1">{{ subs_confirmed }}</p>
-                <p class="text-xs text-slate-500 mt-1">confirmed · {{ subs_total }} total</p>
+                <p class="text-xs text-slate-500 mt-1">onaylı · {{ subs_total }} toplam</p>
             </div>
             <div class="bg-white rounded-xl border border-slate-200 p-5">
-                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Changes (24h)</p>
+                <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Değişiklik (24s)</p>
                 <p class="text-3xl font-semibold text-slate-900 mt-1">{{ events_24h }}</p>
-                <p class="text-xs text-slate-500 mt-1">{{ pending_total }} pending review · {{ events_total }} all-time</p>
+                <p class="text-xs text-slate-500 mt-1">{{ pending_total }} incelemede · toplam {{ events_total }}</p>
             </div>
         </section>
 
@@ -71,8 +85,8 @@
             <!-- Signups per day -->
             <div class="bg-white rounded-xl border border-slate-200 p-6">
                 <div class="flex items-baseline justify-between mb-4">
-                    <h2 class="text-sm font-semibold text-slate-900">Tenant signups — last 30 days</h2>
-                    <span class="text-xs text-slate-500">{{ signups_chart.total }} total</span>
+                    <h2 class="text-sm font-semibold text-slate-900">Tenant kayıtları — son 30 gün</h2>
+                    <span class="text-xs text-slate-500">toplam {{ signups_chart.total }}</span>
                 </div>
                 <div class="flex items-end gap-[2px] h-40 border-b border-slate-200">
                     {% for col in signups_chart.columns %}
@@ -91,8 +105,8 @@
             <!-- Change events per day, stacked by status -->
             <div class="bg-white rounded-xl border border-slate-200 p-6">
                 <div class="flex items-baseline justify-between mb-4">
-                    <h2 class="text-sm font-semibold text-slate-900">Change events — last 30 days</h2>
-                    <span class="text-xs text-slate-500">{{ events_chart.total }} total</span>
+                    <h2 class="text-sm font-semibold text-slate-900">Değişiklik olayları — son 30 gün</h2>
+                    <span class="text-xs text-slate-500">toplam {{ events_chart.total }}</span>
                 </div>
                 <div class="flex items-end gap-[2px] h-40 border-b border-slate-200">
                     {% for col in events_chart.columns %}
@@ -123,7 +137,7 @@
 
         <!-- Classification breakdown -->
         <section class="bg-white rounded-xl border border-slate-200 p-6">
-            <h2 class="text-sm font-semibold text-slate-900 mb-4">LLM classification — all time</h2>
+            <h2 class="text-sm font-semibold text-slate-900 mb-4">LLM sınıflandırması — tüm zamanlar</h2>
             {% set cls_peak = classification_counts.values() | max if classification_counts else 1 %}
             <div class="space-y-2 max-w-2xl">
                 {% for name, count in classification_counts | dictsort(by="value", reverse=true) %}
@@ -135,7 +149,7 @@
                     </div>
                 </div>
                 {% else %}
-                <p class="text-sm text-slate-400">No classified changes yet.</p>
+                <p class="text-sm text-slate-400">Henüz sınıflandırılmış değişiklik yok.</p>
                 {% endfor %}
             </div>
         </section>
@@ -143,19 +157,19 @@
         <!-- Tenants table -->
         <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200">
-                <h2 class="text-sm font-semibold text-slate-900">All tenants ({{ total_tenants }})</h2>
+                <h2 class="text-sm font-semibold text-slate-900">Tüm tenant'lar ({{ total_tenants }})</h2>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
                             <th class="px-6 py-3 font-medium">Tenant</th>
-                            <th class="px-4 py-3 font-medium">Status</th>
-                            <th class="px-4 py-3 font-medium">Trial ends</th>
-                            <th class="px-4 py-3 font-medium text-right">URLs</th>
-                            <th class="px-4 py-3 font-medium text-right">Subscribers</th>
-                            <th class="px-4 py-3 font-medium text-right">Pending</th>
-                            <th class="px-4 py-3 font-medium">Signed up</th>
+                            <th class="px-4 py-3 font-medium">Durum</th>
+                            <th class="px-4 py-3 font-medium">Deneme bitişi</th>
+                            <th class="px-4 py-3 font-medium text-right">URL</th>
+                            <th class="px-4 py-3 font-medium text-right">Abone</th>
+                            <th class="px-4 py-3 font-medium text-right">Bekleyen</th>
+                            <th class="px-4 py-3 font-medium">Kayıt</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -165,15 +179,15 @@
                                 <a href="/admin/tenants/{{ tenant.id }}" class="font-medium text-blue-600 hover:underline">{{ tenant.name }}</a>
                                 <p class="text-xs text-slate-400">{{ tenant.email or "—" }} · <a href="/trust/{{ tenant.slug }}" class="hover:underline" target="_blank">/trust/{{ tenant.slug }}</a></p>
                             </td>
-                            <td class="px-4 py-3">{{ status_badge(tenant.subscription_status) }}{% if tenant.trial_expired %} <span class="text-xs text-amber-600">expired</span>{% endif %}</td>
-                            <td class="px-4 py-3 text-slate-500 text-xs">{{ tenant.trial_ends_at.strftime("%d %b %Y") if tenant.trial_ends_at else "—" }}</td>
+                            <td class="px-4 py-3">{{ status_badge(tenant.subscription_status) }}{% if tenant.trial_expired %} <span class="text-xs text-amber-600">süresi doldu</span>{% endif %}</td>
+                            <td class="px-4 py-3 text-slate-500 text-xs">{{ tenant.trial_ends_at.strftime("%d.%m.%Y") if tenant.trial_ends_at else "—" }}</td>
                             <td class="px-4 py-3 text-right tabular-nums">{{ n_subs }}</td>
                             <td class="px-4 py-3 text-right tabular-nums">{{ n_subscribers }}</td>
                             <td class="px-4 py-3 text-right tabular-nums {{ 'text-amber-600 font-semibold' if n_pending else 'text-slate-400' }}">{{ n_pending }}</td>
-                            <td class="px-4 py-3 text-slate-500 text-xs">{{ tenant.created_at.strftime("%d %b %Y") }}</td>
+                            <td class="px-4 py-3 text-slate-500 text-xs">{{ tenant.created_at.strftime("%d.%m.%Y") }}</td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="7" class="px-6 py-8 text-center text-slate-400">No tenants yet.</td></tr>
+                        <tr><td colspan="7" class="px-6 py-8 text-center text-slate-400">Henüz tenant yok.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -183,32 +197,32 @@
         <!-- Recent change events -->
         <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-200">
-                <h2 class="text-sm font-semibold text-slate-900">Latest change events</h2>
+                <h2 class="text-sm font-semibold text-slate-900">Son değişiklik olayları</h2>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
-                            <th class="px-6 py-3 font-medium">When</th>
+                            <th class="px-6 py-3 font-medium">Zaman</th>
                             <th class="px-4 py-3 font-medium">Tenant</th>
                             <th class="px-4 py-3 font-medium">Sub-processor</th>
-                            <th class="px-4 py-3 font-medium">Classification</th>
-                            <th class="px-4 py-3 font-medium">Status</th>
-                            <th class="px-4 py-3 font-medium">Summary</th>
+                            <th class="px-4 py-3 font-medium">Sınıflandırma</th>
+                            <th class="px-4 py-3 font-medium">Durum</th>
+                            <th class="px-4 py-3 font-medium">Özet</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         {% for ev in recent_events %}
                         <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-3 text-slate-500 text-xs whitespace-nowrap">{{ ev.created_at.strftime("%d %b %H:%M") }}</td>
+                            <td class="px-6 py-3 text-slate-500 text-xs whitespace-nowrap">{{ ev.created_at.strftime("%d.%m %H:%M") }}</td>
                             <td class="px-4 py-3"><a href="/admin/tenants/{{ ev.subprocessor.tenant.id }}" class="text-blue-600 hover:underline">{{ ev.subprocessor.tenant.name }}</a></td>
                             <td class="px-4 py-3">{{ ev.subprocessor.name }}</td>
-                            <td class="px-4 py-3 text-xs">{{ ev.llm_classification or "—" }}{% if ev.llm_confidence is not none %} <span class="text-slate-400">({{ (ev.llm_confidence * 100) | round | int }}%)</span>{% endif %}</td>
-                            <td class="px-4 py-3 text-xs">{{ ev.status }}</td>
+                            <td class="px-4 py-3 text-xs">{{ ev.llm_classification or "—" }}{% if ev.llm_confidence is not none %} <span class="text-slate-400">(%{{ (ev.llm_confidence * 100) | round | int }})</span>{% endif %}</td>
+                            <td class="px-4 py-3 text-xs">{{ EVENT_STATUS_TR.get(ev.status, ev.status) }}</td>
                             <td class="px-4 py-3 text-xs text-slate-500 max-w-md truncate">{{ ev.llm_summary or "—" }}</td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No change events yet.</td></tr>
+                        <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">Henüz değişiklik olayı yok.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
