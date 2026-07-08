@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}TrustPages — Sub-processor change monitoring{% endblock %}
-{% block meta_description %}Know when your vendors change their sub-processors. TrustPages monitors privacy policies, classifies changes with AI, and publishes a public trust page your customers can subscribe to.{% endblock %}
+{% block title %}TrustPages — Answer security reviews before they're asked{% endblock %}
+{% block meta_description %}Close enterprise deals faster with a public trust page. TrustPages tracks your vendors and sub-processors, catches every change automatically, and gives security-conscious buyers the answers they need — before the questionnaire arrives.{% endblock %}
 {% block content %}
 <div class="min-h-screen flex flex-col">
     <header class="border-b border-slate-200 bg-white">
@@ -15,10 +15,11 @@
 
     <main class="flex-1">
         <section class="max-w-5xl mx-auto px-6 py-20 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">Know when your vendors change their sub-processors</h1>
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">Answer security reviews before they're asked</h1>
             <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-10">
-                TrustPages monitors the privacy policies and sub-processor lists of the services you depend on,
-                classifies every change, and keeps a public, auditable trust page for your customers.
+                Enterprise buyers will ask who processes their data — and whether you'd notice if that changed.
+                TrustPages gives you a public, always-current trust page backed by automated vendor monitoring,
+                so security reviews stop stalling your deals.
             </p>
             <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg">Start free 14-day trial</a>
             <p class="text-sm text-slate-500 mt-3">No credit card required to start.</p>
@@ -26,20 +27,30 @@
 
         <section class="max-w-5xl mx-auto px-6 pb-20 grid md:grid-cols-3 gap-8">
             <div class="bg-white rounded-2xl border border-slate-200 p-6">
-                <div class="text-2xl mb-3">🔍</div>
-                <h2 class="font-semibold text-slate-900 mb-2">Automated monitoring</h2>
-                <p class="text-sm text-slate-600">We scrape your vendors' sub-processor pages on a schedule and detect every change — no manual checking.</p>
+                <div class="text-2xl mb-3">🤝</div>
+                <h2 class="font-semibold text-slate-900 mb-2">Close deals faster</h2>
+                <p class="text-sm text-slate-600">Send one link instead of filling in the same vendor questions on every security review. Buyers see a professional, auditable compliance presence — even if you're a five-person team.</p>
             </div>
             <div class="bg-white rounded-2xl border border-slate-200 p-6">
-                <div class="text-2xl mb-3">🤖</div>
-                <h2 class="font-semibold text-slate-900 mb-2">Smart classification</h2>
-                <p class="text-sm text-slate-600">Changes are classified as material or cosmetic. Cosmetic updates publish automatically; material ones wait for your approval.</p>
+                <div class="text-2xl mb-3">🔍</div>
+                <h2 class="font-semibold text-slate-900 mb-2">Never miss a vendor change</h2>
+                <p class="text-sm text-slate-600">Your DPA promises customers you'll flag sub-processor changes — but vendors change them silently. We check their pages for you and classify every change with AI, so only real changes need your attention.</p>
             </div>
             <div class="bg-white rounded-2xl border border-slate-200 p-6">
                 <div class="text-2xl mb-3">📢</div>
-                <h2 class="font-semibold text-slate-900 mb-2">Public trust page</h2>
-                <p class="text-sm text-slate-600">Your customers get a public change-history page and can subscribe to email notifications for approved changes.</p>
+                <h2 class="font-semibold text-slate-900 mb-2">Keep customers informed automatically</h2>
+                <p class="text-sm text-slate-600">Approved changes publish to your trust page and notify your subscribers by email — your notification obligation, handled without a single manual announcement.</p>
             </div>
+        </section>
+
+        <section class="max-w-3xl mx-auto px-6 pb-20 text-center">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4">Why not just a Notion page?</h2>
+            <p class="text-slate-600">
+                A static page can't tell you when Stripe quietly adds a new sub-processor, and it can't email your
+                customers about it. TrustPages is the difference between <em>claiming</em> you track your vendors
+                and being able to <em>prove</em> it — with a live change history your buyers can audit. And it costs
+                a fraction of enterprise compliance platforms you don't need yet.
+            </p>
         </section>
 
         <section class="bg-white border-y border-slate-200">
@@ -75,8 +86,8 @@
         </section>
 
         <section class="max-w-5xl mx-auto px-6 py-16 text-center">
-            <h2 class="text-2xl font-bold text-slate-900 mb-3">Stop checking vendor pages by hand</h2>
-            <p class="text-slate-600 mb-8">Set it up once — get notified only when something actually changes.</p>
+            <h2 class="text-2xl font-bold text-slate-900 mb-3">Be enterprise-ready before the questionnaire arrives</h2>
+            <p class="text-slate-600 mb-8">Set it up in five minutes — get notified only when something actually changes.</p>
             <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg">Start free 14-day trial</a>
         </section>
     </main>
