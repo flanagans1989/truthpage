@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     SENTRY_DSN: str = ""
     # Growth plan cap; raise per-tenant later if plans diversify
     MAX_SUBPROCESSORS_PER_TENANT: int = 25
+    # Comma-separated emails allowed to open /admin (matched against tenant.email)
+    ADMIN_EMAILS: str = ""
+
+    @property
+    def admin_email_set(self) -> frozenset[str]:
+        return frozenset(e.strip().lower() for e in self.ADMIN_EMAILS.split(",") if e.strip())
 
 
 settings = Settings()

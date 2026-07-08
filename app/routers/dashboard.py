@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.config import settings
 from app.db.models.change_event import ChangeEvent, ChangeStatus
 from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
@@ -43,7 +44,12 @@ async def dashboard(
     return _templates.TemplateResponse(
         request,
         "dashboard.html",
-        {"tenant": tenant, "rows": rows, "trial_days_left": trial_days_left},
+        {
+            "tenant": tenant,
+            "rows": rows,
+            "trial_days_left": trial_days_left,
+            "is_admin": bool(tenant.email) and tenant.email.lower() in settings.admin_email_set,
+        },
     )
 
 

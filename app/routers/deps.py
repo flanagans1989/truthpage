@@ -48,3 +48,16 @@ async def get_current_tenant(
 
 
 CurrentTenant = Annotated[Tenant, Depends(get_current_tenant)]
+
+
+async def get_current_admin(tenant: CurrentTenant) -> Tenant:
+    """Platform admin = a signed-in tenant whose email is in ADMIN_EMAILS.
+
+    404 (not 403) so the route's existence isn't leaked to regular tenants.
+    """
+    if not tenant.email or tenant.email.lower() not in settings.admin_email_set:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return tenant
+
+
+CurrentAdmin = Annotated[Tenant, Depends(get_current_admin)]

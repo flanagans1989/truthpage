@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tenant.name }} — Platform Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+
+    <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <a href="/admin" class="text-blue-600 font-bold text-lg tracking-tight hover:underline">Platform Admin</a>
+            <span class="text-slate-300">/</span>
+            <h1 class="text-base font-semibold text-slate-900">{{ tenant.name }}</h1>
+        </div>
+        <a href="/admin" class="text-sm text-slate-600 hover:text-slate-900 font-medium">← Back to overview</a>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-8 py-8 space-y-8">
+
+        <!-- Tenant facts -->
+        <section class="bg-white rounded-xl border border-slate-200 p-6 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4 text-sm">
+            <div>
+                <p class="text-xs text-slate-500 uppercase tracking-wide">Email</p>
+                <p class="font-medium text-slate-900 mt-0.5">{{ tenant.email or "—" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 uppercase tracking-wide">Trust page</p>
+                <p class="mt-0.5"><a href="/trust/{{ tenant.slug }}" target="_blank" class="text-blue-600 hover:underline">/trust/{{ tenant.slug }}</a></p>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 uppercase tracking-wide">Subscription</p>
+                <p class="font-medium text-slate-900 mt-0.5">{{ tenant.subscription_status }}{% if tenant.trial_expired %} <span class="text-amber-600 text-xs">(trial expired)</span>{% endif %}</p>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 uppercase tracking-wide">Trial ends</p>
+                <p class="font-medium text-slate-900 mt-0.5">{{ tenant.trial_ends_at.strftime("%d %b %Y") if tenant.trial_ends_at else "—" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 uppercase tracking-wide">Signed up</p>
+                <p class="font-medium text-slate-900 mt-0.5">{{ tenant.created_at.strftime("%d %b %Y") }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 uppercase tracking-wide">Paddle customer</p>
+                <p class="font-mono text-xs text-slate-700 mt-1">{{ tenant.paddle_customer_id or "—" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 uppercase tracking-wide">Paddle subscription</p>
+                <p class="font-mono text-xs text-slate-700 mt-1">{{ tenant.paddle_subscription_id or "—" }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500 uppercase tracking-wide">Tenant ID</p>
+                <p class="font-mono text-xs text-slate-700 mt-1">{{ tenant.id }}</p>
+            </div>
+        </section>
+
+        <!-- Sub-processors -->
+        <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h2 class="text-sm font-semibold text-slate-900">Sub-processors ({{ subprocessors | length }})</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
+                            <th class="px-6 py-3 font-medium">Name</th>
+                            <th class="px-4 py-3 font-medium">URL</th>
+                            <th class="px-4 py-3 font-medium">Monitoring</th>
+                            <th class="px-4 py-3 font-medium text-right">Interval</th>
+                            <th class="px-4 py-3 font-medium">Last checked</th>
+                            <th class="px-4 py-3 font-medium">Next check</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for sp in subprocessors %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-3 font-medium text-slate-900">{{ sp.name }}{% if sp.requires_browser %} <span class="text-xs text-slate-400">(browser)</span>{% endif %}</td>
+                            <td class="px-4 py-3 max-w-xs truncate"><a href="{{ sp.monitored_url }}" target="_blank" rel="noopener" class="text-blue-600 hover:underline text-xs">{{ sp.monitored_url }}</a></td>
+                            <td class="px-4 py-3 text-xs">{{ "enabled" if sp.monitoring_enabled else "disabled" }}</td>
+                            <td class="px-4 py-3 text-right tabular-nums text-xs">{{ sp.check_interval_minutes }} min</td>
+                            <td class="px-4 py-3 text-xs text-slate-500">{{ sp.last_checked_at.strftime("%d %b %H:%M") if sp.last_checked_at else "never" }}</td>
+                            <td class="px-4 py-3 text-xs text-slate-500">{{ sp.next_check_at.strftime("%d %b %H:%M") if sp.next_check_at else "—" }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">No sub-processors.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Change events -->
+        <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h2 class="text-sm font-semibold text-slate-900">Latest change events</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
+                            <th class="px-6 py-3 font-medium">When</th>
+                            <th class="px-4 py-3 font-medium">Sub-processor</th>
+                            <th class="px-4 py-3 font-medium">Classification</th>
+                            <th class="px-4 py-3 font-medium">Status</th>
+                            <th class="px-4 py-3 font-medium">Summary</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for ev in events %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-3 text-slate-500 text-xs whitespace-nowrap">{{ ev.created_at.strftime("%d %b %H:%M") }}</td>
+                            <td class="px-4 py-3">{{ ev.subprocessor.name }}</td>
+                            <td class="px-4 py-3 text-xs">{{ ev.llm_classification or "—" }}{% if ev.llm_confidence is not none %} <span class="text-slate-400">({{ (ev.llm_confidence * 100) | round | int }}%)</span>{% endif %}</td>
+                            <td class="px-4 py-3 text-xs">{{ ev.status }}</td>
+                            <td class="px-4 py-3 text-xs text-slate-500 max-w-md truncate">{{ ev.llm_summary or "—" }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">No change events.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Subscribers -->
+        <section class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h2 class="text-sm font-semibold text-slate-900">Subscribers ({{ subscribers | length }})</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs text-slate-500 uppercase tracking-wide border-b border-slate-200">
+                            <th class="px-6 py-3 font-medium">Email</th>
+                            <th class="px-4 py-3 font-medium">Confirmed</th>
+                            <th class="px-4 py-3 font-medium">Active</th>
+                            <th class="px-4 py-3 font-medium">Subscribed</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for sub in subscribers %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-3">{{ sub.email }}</td>
+                            <td class="px-4 py-3 text-xs">{{ "yes" if sub.confirmed else "no" }}</td>
+                            <td class="px-4 py-3 text-xs">{{ "yes" if sub.is_active else "no" }}</td>
+                            <td class="px-4 py-3 text-xs text-slate-500">{{ sub.created_at.strftime("%d %b %Y") }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">No subscribers.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+{% endblock %}
