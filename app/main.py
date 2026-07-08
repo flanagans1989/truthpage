@@ -79,7 +79,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="TrustPages", version="0.1.0", lifespan=lifespan)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+class RevalidatedStaticFiles(StaticFiles):
+    """Static assets change on deploy without versioned filenames; force
+    revalidation so browsers pick up new CSS/JS via ETag (304 when unchanged)
+    instead of serving heuristically-cached stale copies."""
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
+app.mount("/static", RevalidatedStaticFiles(directory="static"), name="static")
 
 app.include_router(pages.router)
 app.include_router(auth.router)
