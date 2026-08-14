@@ -42,7 +42,13 @@
       "mcp__claude_ai_Gmail__get_thread",
       "WebSearch",
       "WebFetch(domain:docs.lemonsqueezy.com)",
-      "Bash(gh pr *)"
+      "Bash(gh pr *)",
+      "WebFetch(domain:sub-processors.com)",
+      "mcp__claude_ai_Gmail__create_draft",
+      "WebFetch(domain:chatlab.com)",
+      "WebFetch(domain:www.talis.com)",
+      "WebFetch(domain:www.chatlab.com)",
+      "WebFetch(domain:www.sfdevtools.com)"
     ]
   }
 }
