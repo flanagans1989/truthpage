@@ -41,7 +41,8 @@
       "Bash(uv sync *)",
       "mcp__claude_ai_Gmail__get_thread",
       "WebSearch",
-      "WebFetch(domain:docs.lemonsqueezy.com)"
+      "WebFetch(domain:docs.lemonsqueezy.com)",
+      "Bash(gh pr *)"
     ]
   }
 }
