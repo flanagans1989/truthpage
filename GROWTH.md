@@ -213,6 +213,21 @@ Every prospect on the list now either has a connect note above or is explicitly 
 of 2026-08-15. SFDevTools is the one deliberate skip (genuinely anonymous project, no name to
 address).
 
+**⚠️ LinkedIn free-tier hard limit discovered 2026-08-15:** personalized connection notes are
+capped at **3 per calendar month** on a free account (LinkedIn shows the remaining count in the
+"Davetinize not eklensin mi?" dialog). Connects without a note have no such cap, but lose the
+personalization. **Sent this batch (used up the 3-note quota for this month):**
+
+| Name | Company |
+|---|---|
+| Matouš Kučera | Amio |
+| Martin Donadieu | Capgo |
+| Thibault Le Ouay | OpenStatus |
+
+Remaining ~24 people in the table above are **not yet connected**. Options next month: (1) send
+the next 3 personalized once the quota resets, prioritizing by fit; (2) send the rest without a
+note (uncapped, but generic); (3) LinkedIn Premium removes the cap. Decide before the next batch.
+
 ### Tier A email drafts (created 2026-08-15)
 
 Personalized per the Tier A template above, using emails found via web search (not guessed).
