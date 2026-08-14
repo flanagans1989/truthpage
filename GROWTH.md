@@ -84,6 +84,47 @@ Subject: `who watches {vendor}'s sub-processors for you?`
   currently find out when a vendor changes their sub-processors? Asking because I built
   something for this and I'm trying to learn how teams handle it today."
 
+## Prospect list (seeded 2026-08-14, web search only — verify before sending)
+
+Found via Google-dork-style web searches per "Where to find prospects" above. Names are
+from public sources (Crunchbase/LinkedIn/The Org); **no email addresses were guessed**.
+Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
+
+### Tier A
+
+| Company | Subprocessor page | Product | Decision-maker | Note |
+|---|---|---|---|---|
+| Userlist | userlist.com/docs/legal/sub-processors/ | Email marketing for SaaS | Jane Portman (Co-Founder & CEO) | verified |
+| SaasAnt | saasant.com/sub-processors/ | Accounting automation | Aravinth Chandrasekaran (Co-Founder & CEO) | verified |
+| SalesQL | salesql.com/legal/subprocessors | LinkedIn email finder | Ariel Camino (CEO) | 11–50 employees, London |
+| Ethnio | ethn.io/subprocessors | UX research recruiting | Nate Bolt (Founder) | verified |
+| Unified.to | unified.to/gdpr | Unified API for HR/ATS/CRM | Roy Pereira / Alexey Adamsky (Co-Founders) | verified |
+| Sessionboard | sessionboard.com/legal/list-of-sub-processors | Conference/event mgmt | Chris Carver (Co-Founder & CEO) | verified |
+| OpenStatus | openstatus.dev | Open-source status pages | Thibault Le Ouay + Max | 2-person bootstrapped team — ideal fit |
+
+### Tier B
+
+| Company | Subprocessor page | Product | Decision-maker | Note |
+|---|---|---|---|---|
+| Astra Security | help.getastra.com/articles/6386951398 | Security scanning | Shikhil Sharma (CEO) | funded, may be >50 employees |
+| RescueTime | help.rescuetime.com/article/122 | Time tracking | Robby Macdonell (CEO) | |
+| Trustmary | trustmary.com/list-of-subprocessors | Testimonial marketing | Johannes Karjula (CEO) | raised $2.2M, Finland |
+| SmartSurvey | smartsurvey.com/company/sub-processors | Survey platform | Mo Naser (CEO) | $5.5M revenue, may be large |
+| Uptime.com | uptime.com/subprocessors | Website/uptime monitoring | Michael Esposito (CEO) | ~28 employees, borderline size |
+| ChatLab | chatlab.com/subprocessors | AI chatbot for support/sales | not found | Swiss, unfunded, small |
+| Lookback | help.lookback.io | User research | unclear (conflicting search results) | verify before contacting |
+| Opper AI | producthunt.com/products/opper-ai | AI gateway (EU) | not found | new launch, good timing angle |
+
+### Unclear / needs more digging
+
+- **SaaS Custom Domains** (saascustomdomains.com/legal/subprocessors) — very small/solo, no founder name found
+- ~~Conduktor~~ — excluded, raised $52M, enterprise-scale now, not a fit
+
+### Competitive/content signal (not prospects — observe only)
+
+- **Registora** (registora.com) — "The Subprocessor Registry for B2B SaaS", adjacent concept
+- **PageCrawl.io** — has a blog post on subprocessor monitoring, SEO-adjacent competitor signal
+
 ## KPIs (30 days)
 
 | Stage | Target | Healthy rate |
