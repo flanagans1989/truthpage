@@ -115,6 +115,30 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 | Lookback | help.lookback.io | User research | unclear (conflicting search results) | verify before contacting |
 | Opper AI | producthunt.com/products/opper-ai | AI gateway (EU) | not found | new launch, good timing angle |
 
+### Ready-to-send LinkedIn connect notes
+
+Drafted from the template above, personalized per company, kept under LinkedIn's
+~300-char connect-note limit. Copy, paste, send yourself — sending is your action, not
+something to automate.
+
+| Name | Company | Connect note |
+|---|---|---|
+| Jane Portman | Userlist | Hi Jane — saw Userlist's sub-processor page, rare for a team your size. I work on tooling in that exact space (vendor sub-processor monitoring), thought it'd be good to connect. |
+| Aravinth Chandrasekaran | SaasAnt | Hi Aravinth — saw SaasAnt's sub-processor list, solid to have as a smaller team. I build tooling in that exact space, thought it'd be good to connect. |
+| Ariel Camino | SalesQL | Hi Ariel — noticed SalesQL keeps a public sub-processor page, not common at your size. I work on tooling for tracking exactly those changes, thought it'd be good to connect. |
+| Nate Bolt | Ethnio | Hi Nate — saw Ethnio's sub-processor page. I build tooling in that exact space (monitoring vendor sub-processor changes), thought it'd be good to connect. |
+| Roy Pereira | Unified.to | Hi Roy — saw Unified's sub-processor disclosure, sharp for a dev-infra startup. I work on tooling for tracking exactly those changes, thought it'd be good to connect. |
+| Chris Carver | Sessionboard | Hi Chris — saw Sessionboard's sub-processor list, rare for a team your size. I build tooling in that exact space, thought it'd be good to connect. |
+| Thibault Le Ouay | OpenStatus | Hi Thibault — love what you and Max are building with OpenStatus. I work on tooling adjacent to that (vendor sub-processor monitoring), thought it'd be good to connect. |
+| Shikhil Sharma | Astra Security | Hi Shikhil — saw Astra's sub-processor page. I build tooling for tracking vendor sub-processor changes — figured a security company would get the problem instantly. |
+| Robby Macdonell | RescueTime | Hi Robby — saw RescueTime's sub-processor disclosure. I work on tooling in that exact space, thought it'd be good to connect. |
+| Johannes Karjula | Trustmary | Hi Johannes — saw Trustmary's sub-processor list. I build tooling for tracking vendor sub-processor changes, thought it'd be good to connect. |
+| Mo Naser | SmartSurvey | Hi Mo — saw SmartSurvey's sub-processor page. I work on tooling in that exact space, thought it'd be good to connect. |
+| Michael Esposito | Uptime.com | Hi Michael — saw Uptime.com's sub-processor list. I build tooling adjacent to monitoring — tracking vendor sub-processor changes specifically — thought it'd be good to connect. |
+
+No note drafted for Lookback / Opper AI / ChatLab / SaaS Custom Domains — decision-maker
+name wasn't confirmed, find them on LinkedIn first (company page → People).
+
 ### Unclear / needs more digging
 
 - **SaaS Custom Domains** (saascustomdomains.com/legal/subprocessors) — very small/solo, no founder name found
