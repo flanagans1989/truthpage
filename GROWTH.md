@@ -217,7 +217,7 @@ address).
 
 Personalized per the Tier A template above, using emails found via web search (not guessed).
 
-**Sent 2026-08-15** (reviewed and sent on request):
+**All 7 sent 2026-08-15** (reviewed and sent on request):
 
 | Name | Company | Email used | Note |
 |---|---|---|---|
@@ -226,13 +226,11 @@ Personalized per the Tier A template above, using emails found via web search (n
 | Chris Carver | Sessionboard | chris@sessionboard.com | direct, CEO |
 | Thibault Le Ouay | OpenStatus | ping@openstatus.dev | general inbox, no direct address found |
 | Aravinth Chandrasekaran | SaasAnt | support@saasant.com | general inbox, no direct address found |
+| Jane Portman | Userlist | jane@uibreakfast.com | direct address, published on her personal site (UI Breakfast), not userlist.com |
+| Roy Pereira | Unified.to | roy@unified.to | direct, CEO |
 
-**Still sitting in Gmail Drafts — not sent, review and send yourself:**
-
-| Name | Company | Email used | Note |
-|---|---|---|---|
-| Jane Portman | Userlist | jane@uibreakfast.com | direct address, but published on her personal site (UI Breakfast), not userlist.com — flagged in the draft in case a userlist.com address is preferred |
-| Roy Pereira | Unified.to | roy@unified.to | direct, CEO — resolved 2026-08-15 on second pass (found via his LinkedIn/podcast bylines; corrects the earlier dead end where the only surfaced email, hello@calendarhero.com, belonged to his *previous* company) |
+**Next up:** wait for replies (track in the Fri metrics retro), and start sending the LinkedIn
+connect notes above — that's still a manual step.
 
 ### Unclear / needs more digging
 
