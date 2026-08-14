@@ -60,14 +60,14 @@ async def lifespan(app: FastAPI):
     _scheduler.add_job(
         sweep_due_subprocessors,
         trigger="interval",
-        minutes=5,
+        minutes=30,
         args=[AsyncSessionLocal],
         id="sweep_due_subprocessors",
         replace_existing=True,
         max_instances=1,  # never overlap; one sweep at a time
     )
     _scheduler.start()
-    logger.info("Zamanlayıcı tetiklendi — sweep job her 5 dakikada bir çalışacak")
+    logger.info("Zamanlayıcı tetiklendi — sweep job her 30 dakikada bir çalışacak")
 
     yield
 

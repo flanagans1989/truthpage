@@ -7,7 +7,7 @@ Privacy policy sub-processor monitoring SaaS. Tenants add URLs to monitor; the a
 - **Backend:** FastAPI + SQLAlchemy async + PostgreSQL (Neon)
 - **Templates:** Jinja2 + HTMX + Tailwind CDN
 - **LLM:** Gemini 2.5 Flash (`google-genai`)
-- **Scheduler:** APScheduler (5-min sweep)
+- **Scheduler:** APScheduler (30-min sweep — kept long to stay within Neon free-tier compute quota; see incident 2026-07-19)
 - **Auth:** Magic link → JWT cookie (30-day session)
 - **Billing:** Paddle (Merchant of Record — Stripe doesn't support Turkey-based sellers)
 - **Email:** Resend
