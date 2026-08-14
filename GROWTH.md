@@ -111,7 +111,7 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 | Trustmary | trustmary.com/list-of-subprocessors | Testimonial marketing | Johannes Karjula (CEO) | raised $2.2M, Finland |
 | SmartSurvey | smartsurvey.com/company/sub-processors | Survey platform | Mo Naser (CEO) | $5.5M revenue, may be large |
 | Uptime.com | uptime.com/subprocessors | Website/uptime monitoring | Michael Esposito (CEO) | ~28 employees, borderline size |
-| ChatLab | chatlab.com/subprocessors | AI chatbot for support/sales | not found | Swiss (Kriens), unfunded, small — chatlab.com is NOT chatlabs.com (Michel Tjoeng, NY-based, different co); don't conflate |
+| ChatLab | chatlab.com/subprocessors | AI chatbot for support/sales | Marcin Piotr Rabiej (Prezes Zarządu / President of the Board) | resolved 2026-08-15, see "Third pass" table below — Poland-registered (Kraków), not the Swiss/Kriens entity some aggregators index; also not chatlabs.com (Michel Tjoeng, NY, unrelated company) |
 | Lookback | help.lookback.io | User research | Henrik Mattsson (CEO) | resolved 2026-08-15 — current CEO per Crunchbase/Pillar VC; founders (Bengtsson/Littke) no longer run it |
 | Opper AI | producthunt.com/products/opper-ai | AI gateway (EU) | Göran Sandahl (CEO & Co-Founder) | resolved 2026-08-15; VC-backed (Luminar/Emblem/Greens Capital), still early enough to be worth a shot |
 | Formbricks | formbricks.com/about | Open-source survey/feedback platform | Johannes Dancker (Co-Founder & CEO) | seed stage, Kiel Germany, small team |
@@ -226,11 +226,7 @@ Review and send yourself:
 | Thibault Le Ouay | OpenStatus | ping@openstatus.dev | general inbox, no direct address found |
 | Aravinth Chandrasekaran | SaasAnt | support@saasant.com | general inbox, no direct address found |
 | Jane Portman | Userlist | jane@uibreakfast.com | direct address, but published on her personal site (UI Breakfast), not userlist.com — flagged in the draft in case a userlist.com address is preferred |
-| Roy Pereira | Unified.to | roy@unified.to | direct, CEO — resolved on second pass |
-
-**Roy Pereira (Unified.to) — resolved 2026-08-15, second pass:** direct address `roy@unified.to`
-found (his own LinkedIn/podcast bylines), corrected from the earlier dead end
-(hello@calendarhero.com belonged to his *previous* company). Draft added to the table below.
+| Roy Pereira | Unified.to | roy@unified.to | direct, CEO — resolved 2026-08-15 on second pass (found via his LinkedIn/podcast bylines; corrects the earlier dead end where the only surfaced email, hello@calendarhero.com, belonged to his *previous* company) |
 
 ### Unclear / needs more digging
 
