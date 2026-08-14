@@ -213,10 +213,11 @@ Every prospect on the list now either has a connect note above or is explicitly 
 of 2026-08-15. SFDevTools is the one deliberate skip (genuinely anonymous project, no name to
 address).
 
-### Tier A email drafts (created 2026-08-15, sitting in Gmail Drafts — not sent)
+### Tier A email drafts (created 2026-08-15)
 
 Personalized per the Tier A template above, using emails found via web search (not guessed).
-Review and send yourself:
+
+**Sent 2026-08-15** (reviewed and sent on request):
 
 | Name | Company | Email used | Note |
 |---|---|---|---|
@@ -225,6 +226,11 @@ Review and send yourself:
 | Chris Carver | Sessionboard | chris@sessionboard.com | direct, CEO |
 | Thibault Le Ouay | OpenStatus | ping@openstatus.dev | general inbox, no direct address found |
 | Aravinth Chandrasekaran | SaasAnt | support@saasant.com | general inbox, no direct address found |
+
+**Still sitting in Gmail Drafts — not sent, review and send yourself:**
+
+| Name | Company | Email used | Note |
+|---|---|---|---|
 | Jane Portman | Userlist | jane@uibreakfast.com | direct address, but published on her personal site (UI Breakfast), not userlist.com — flagged in the draft in case a userlist.com address is preferred |
 | Roy Pereira | Unified.to | roy@unified.to | direct, CEO — resolved 2026-08-15 on second pass (found via his LinkedIn/podcast bylines; corrects the earlier dead end where the only surfaced email, hello@calendarhero.com, belonged to his *previous* company) |
 
