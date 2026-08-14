@@ -20,6 +20,7 @@ Privacy policy sub-processor monitoring SaaS. Tenants add URLs to monitor; the a
 app/main.py                  # FastAPI app + scheduler startup
 app/core/config.py           # Settings (pydantic-settings, reads .env)
 app/core/llm/analyzer.py     # Gemini diff classification
+app/core/templating.py       # Shared Jinja2Templates instance (injects ga_measurement_id global)
 app/core/scraper/            # fetcher (httpx+Playwright), normalizer, hasher, detector
 app/services/monitoring.py   # Sweep orchestration: fetch→normalize→hash→diff→LLM→persist
 app/scheduler/jobs.py        # APScheduler job (calls monitoring.py)
@@ -41,7 +42,7 @@ python run_sweep.py                    # manual sweep trigger
 ## Required env vars
 
 `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `PADDLE_API_KEY`, `PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_ID_GROWTH`, `APP_URL`  
-Optional: `SENTRY_DSN`
+Optional: `SENTRY_DSN`, `GA_MEASUREMENT_ID` (GA4, e.g. `G-XXXXXXX` — blank disables analytics)
 
 ## Business logic
 

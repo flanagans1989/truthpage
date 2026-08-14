@@ -1,18 +1,17 @@
 import logging
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from uuid import UUID
 
 import jwt
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.ratelimit import SlidingWindowLimiter, get_client_ip
+from app.core.templating import templates as _templates
 from app.db.models.change_event import ChangeEvent, ChangeStatus
 from app.db.models.subscriber import Subscriber
 from app.db.models.subprocessor import Subprocessor
@@ -25,7 +24,6 @@ logger = logging.getLogger(__name__)
 _sub_limiter = SlidingWindowLimiter(max_requests=3, window_seconds=60)
 
 router = APIRouter(tags=["public"])
-_templates = Jinja2Templates(directory=Path(__file__).parent.parent.parent / "templates")
 
 _ALGORITHM = "HS256"
 _SUBSCRIPTION_EXPIRE = timedelta(days=7)

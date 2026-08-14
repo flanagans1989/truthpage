@@ -2,17 +2,16 @@ import asyncio
 import ipaddress
 import logging
 import socket
-from pathlib import Path
 from urllib.parse import urlparse
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.templating import templates as _templates
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
@@ -55,7 +54,6 @@ def _validate_monitored_url(url: str) -> None:
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/dashboard/subprocessors", tags=["subprocessors"])
-_templates = Jinja2Templates(directory=Path(__file__).parent.parent.parent / "templates")
 
 
 async def _load_subprocessors(tenant_id: UUID, db: AsyncSession) -> list[Subprocessor]:

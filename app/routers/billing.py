@@ -1,19 +1,16 @@
 import logging
-from pathlib import Path
 
 import httpx
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
+from app.core.templating import templates as _templates
 from app.routers.deps import CurrentTenant
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/dashboard/billing", tags=["billing"])
-
-_templates = Jinja2Templates(directory=Path(__file__).parent.parent.parent / "templates")
 
 _PADDLE_API_BASE = (
     "https://api.paddle.com"

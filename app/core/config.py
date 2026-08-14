@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str
     RESEND_FROM_EMAIL: str = "TrustPages <onboarding@resend.dev>"
     SENTRY_DSN: str = ""
+    # GA4 measurement ID (e.g. "G-XXXXXXX"); blank disables analytics
+    GA_MEASUREMENT_ID: str = ""
     # Growth plan cap; raise per-tenant later if plans diversify
     MAX_SUBPROCESSORS_PER_TENANT: int = 25
     # Comma-separated emails allowed to open /admin (matched against tenant.email)
