@@ -34,9 +34,11 @@ problem; the pitch is "who watches that page for changes?"
 
 ## ⚠️ Deliverability rule
 
-Never send cold email from **usetrustpages.com** — if it gets flagged, magic links and
-customer notifications die with it. Buy a secondary domain (e.g. gettrustpages.com),
-set up SPF/DKIM, warm up 1–2 weeks, cap at 20–30/day.
+Send cold email from a plain Gmail account (studiominhagen@gmail.com), not from
+usetrustpages.com/Resend — that domain only carries magic links and customer
+notifications, and a spam flag on it would break login for real users. Gmail's normal
+sending limits comfortably cover 20–30/day. (Decided 2026-08-14: a secondary domain +
+Resend Pro upgrade was considered and skipped as unnecessary at this volume.)
 
 ## Email templates
 
