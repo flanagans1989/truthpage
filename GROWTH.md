@@ -196,9 +196,13 @@ Review and send yourself:
 | Chris Carver | Sessionboard | chris@sessionboard.com | direct, CEO |
 | Thibault Le Ouay | OpenStatus | ping@openstatus.dev | general inbox, no direct address found |
 | Aravinth Chandrasekaran | SaasAnt | support@saasant.com | general inbox, no direct address found |
+| Jane Portman | Userlist | jane@uibreakfast.com | direct address, but published on her personal site (UI Breakfast), not userlist.com — flagged in the draft in case a userlist.com address is preferred |
 
-Not drafted — no email found, still need Hunter/Apollo/LinkedIn lookup: Jane Portman (Userlist),
-Roy Pereira (Unified.to).
+**Roy Pereira (Unified.to) — still not drafted (2026-08-15 re-check):** no direct or generic
+email found anywhere public; unified.to only offers a contact form and Discord support, and the
+one email surfaced (hello@calendarhero.com) belongs to Roy's *previous* company, not Unified.to —
+using it would misfire. Options: submit via unified.to/contact yourself, or find his personal
+email via Hunter/Apollo/LinkedIn InMail.
 
 ### Unclear / needs more digging
 
