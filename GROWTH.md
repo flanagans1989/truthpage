@@ -98,7 +98,7 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 | SaasAnt | saasant.com/sub-processors/ | Accounting automation | Aravinth Chandrasekaran (Co-Founder & CEO) | verified |
 | SalesQL | salesql.com/legal/subprocessors | LinkedIn email finder | Ariel Camino (CEO) | 11–50 employees, London |
 | Ethnio | ethn.io/subprocessors | UX research recruiting | Nate Bolt (Founder) | verified |
-| Unified.to | unified.to/gdpr | Unified API for HR/ATS/CRM | Roy Pereira / Alexey Adamsky (Co-Founders) | no public email found (contact form + Discord only) — see note near email drafts section |
+| Unified.to | unified.to/gdpr | Unified API for HR/ATS/CRM | Roy Pereira / Alexey Adamsky (Co-Founders) | resolved 2026-08-15 — direct email found, see email drafts section |
 | Sessionboard | sessionboard.com/legal/list-of-sub-processors | Conference/event mgmt | Chris Carver (Co-Founder & CEO) | verified |
 | OpenStatus | openstatus.dev | Open-source status pages | Thibault Le Ouay + Max | 2-person bootstrapped team — ideal fit |
 
@@ -226,12 +226,11 @@ Review and send yourself:
 | Thibault Le Ouay | OpenStatus | ping@openstatus.dev | general inbox, no direct address found |
 | Aravinth Chandrasekaran | SaasAnt | support@saasant.com | general inbox, no direct address found |
 | Jane Portman | Userlist | jane@uibreakfast.com | direct address, but published on her personal site (UI Breakfast), not userlist.com — flagged in the draft in case a userlist.com address is preferred |
+| Roy Pereira | Unified.to | roy@unified.to | direct, CEO — resolved on second pass |
 
-**Roy Pereira (Unified.to) — still not drafted (2026-08-15 re-check):** no direct or generic
-email found anywhere public; unified.to only offers a contact form and Discord support, and the
-one email surfaced (hello@calendarhero.com) belongs to Roy's *previous* company, not Unified.to —
-using it would misfire. Options: submit via unified.to/contact yourself, or find his personal
-email via Hunter/Apollo/LinkedIn InMail.
+**Roy Pereira (Unified.to) — resolved 2026-08-15, second pass:** direct address `roy@unified.to`
+found (his own LinkedIn/podcast bylines), corrected from the earlier dead end
+(hello@calendarhero.com belonged to his *previous* company). Draft added to the table below.
 
 ### Unclear / needs more digging
 
