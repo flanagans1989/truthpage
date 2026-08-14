@@ -98,7 +98,7 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 | SaasAnt | saasant.com/sub-processors/ | Accounting automation | Aravinth Chandrasekaran (Co-Founder & CEO) | verified |
 | SalesQL | salesql.com/legal/subprocessors | LinkedIn email finder | Ariel Camino (CEO) | 11–50 employees, London |
 | Ethnio | ethn.io/subprocessors | UX research recruiting | Nate Bolt (Founder) | verified |
-| Unified.to | unified.to/gdpr | Unified API for HR/ATS/CRM | Roy Pereira / Alexey Adamsky (Co-Founders) | verified |
+| Unified.to | unified.to/gdpr | Unified API for HR/ATS/CRM | Roy Pereira / Alexey Adamsky (Co-Founders) | no public email found (contact form + Discord only) — see note near email drafts section |
 | Sessionboard | sessionboard.com/legal/list-of-sub-processors | Conference/event mgmt | Chris Carver (Co-Founder & CEO) | verified |
 | OpenStatus | openstatus.dev | Open-source status pages | Thibault Le Ouay + Max | 2-person bootstrapped team — ideal fit |
 
@@ -136,15 +136,25 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 | Amio | amio.io/sub-processors | Conversational AI for customer support | Matouš Kučera (CEO & Founder) | founded 2015, size unconfirmed |
 | Fyr | fyr.ai/sub-processors/ | AI marketing/BI platform | Freddy Aurso (CEO) | Norway, size unconfirmed |
 
-#### Needs more digging (found via sub-processors.com, not yet verified for size/decision-maker)
+#### More resolved 2026-08-15 (moved out of "needs more digging")
 
-SFDevTools (sfdevtools.com/docs/subprocessors), Jetsend (jetsend.com/subprocessors/), Talis
-(talis.com/legal/sub-processors/), SideDrawer (sidedrawer.com/legal/sub-processors), DocDigitizer
-(docdigitizer.com/sub-processors/), CoSkip (coskip.com/subprocessors), Capcade
-(capcade.com/list-of-subprocessors). Several other sub-processors.com listings were excluded as
-already using a trust-center platform (trust.*/trustcenter.* subdomains — BalkanID, Oxolo,
-Flower Labs, AskYourDatabase, Quantrium — disqualified by criterion #2) or clearly >50 employees
-(Testim, Unstructured, Bunny, MangoApps, Deque, GoDaddy, Ivanti, Atlassian, SLB).
+| Company | Subprocessor page | Product | Decision-maker | Note |
+|---|---|---|---|---|
+| DocDigitizer | docdigitizer.com/sub-processors/ | Document digitization/OCR | João Fernandes (Founder & CEO) | 15 employees, Lisbon — good fit |
+| CoSkip | coskip.com/subprocessors | Voice-first AI for field service teams | Andrew M. Jensen (Founder & CEO) | 1–10 employees — great fit |
+| SideDrawer | sidedrawer.com/legal/sub-processors | Digital vault for financial services | J. Gaston Siri (Co-Founder, CEO & CTO) | 27 employees, Toronto — Tier B (fintech-adjacent, borderline size) |
+| SaaS Custom Domains | saascustomdomains.com/legal/subprocessors | Custom domains/white-labelling for SaaS | Drago Crnjac (Founder & CEO) | resolves the "no founder name found" gap from the original list; very small/solo |
+
+**Excluded:** Capcade (52 employees, over the plan cap's spirit and CEO identity conflicts
+across sources — skip). **Still unresolved after a second pass:** ChatLab (chatlab.com Swiss
+entity — no founder name findable anywhere public, distinct from the NY-based ChatLabs which
+does have a named CEO but is a different company), SFDevTools (no leadership info public),
+Jetsend (no leadership info public), Talis (talis.com is ambiguous — at least 3 unrelated
+companies share the name; couldn't confirm which one owns that subprocessor page). Several
+other sub-processors.com listings were excluded as already using a trust-center platform
+(trust.*/trustcenter.* subdomains — BalkanID, Oxolo, Flower Labs, AskYourDatabase, Quantrium —
+disqualified by criterion #2) or clearly >50 employees (Testim, Unstructured, Bunny, MangoApps,
+Deque, GoDaddy, Ivanti, Atlassian, SLB).
 
 **New source for future Monday list-building:** sub-processors.com/recent lists newly-added
 subprocessor pages across all company sizes — faster than one-off Google dorks, worth checking
@@ -179,10 +189,15 @@ something to automate.
 | Louis-Victor Jadavji | Taloflow | Hi Louis-Victor — saw Taloflow's sub-processor list. I build tooling in that exact space (vendor change monitoring), thought it'd be good to connect. |
 | Josh Padnick | Gruntwork | Hi Josh — saw Gruntwork's data sub-processor list. I build tooling for tracking exactly those vendor changes, thought it'd be good to connect. |
 | Chris O'Reilly | AskYourTeam | Hi Chris — saw AskYourTeam's sub-processor list. I work on tooling in that exact space, thought it'd be good to connect. |
+| João Fernandes | DocDigitizer | Hi João — saw DocDigitizer's sub-processor page. I build tooling for tracking exactly those vendor changes, thought it'd be good to connect. |
+| Andrew Jensen | CoSkip | Hi Andrew — saw CoSkip's sub-processor page, rare for a small field-service AI team. I build tooling in that exact space, thought it'd be good to connect. |
+| J. Gaston Siri | SideDrawer | Hi Gaston — saw SideDrawer's sub-processor list, sharp for a fintech-adjacent team. I build tooling in that exact space, thought it'd be good to connect. |
+| Drago Crnjac | SaaS Custom Domains | Hi Drago — saw SaaS Custom Domains' sub-processor page, rare for a solo/small tool. I build tooling for tracking exactly those vendor changes, thought it'd be good to connect. |
 
-No note drafted for ChatLab / SaaS Custom Domains — decision-maker name still unconfirmed,
-find them on LinkedIn first (company page → People). Amio / Fyr (Tier B) also undrafted — verify
-size/fit before spending a connect on them.
+No note drafted for ChatLab (chatlab.com) / SFDevTools / Jetsend / Talis — decision-maker
+name unresolved even after a second search pass; find them on LinkedIn first (company page →
+People) if still worth pursuing. Amio / Fyr (Tier B) also undrafted — verify size/fit before
+spending a connect on them.
 
 ### Tier A email drafts (created 2026-08-15, sitting in Gmail Drafts — not sent)
 
@@ -206,7 +221,7 @@ email via Hunter/Apollo/LinkedIn InMail.
 
 ### Unclear / needs more digging
 
-- **SaaS Custom Domains** (saascustomdomains.com/legal/subprocessors) — very small/solo, no founder name found
+- ~~SaaS Custom Domains~~ — resolved 2026-08-15, see "More resolved" table above (Drago Crnjac)
 - ~~Conduktor~~ — excluded, raised $52M, enterprise-scale now, not a fit
 
 ### Competitive/content signal (not prospects — observe only)
