@@ -1,14 +1,13 @@
 import logging
-from pathlib import Path
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.templating import templates as _templates
 from app.db.models.change_event import ChangeEvent
 from app.db.models.subprocessor import Subprocessor
 from app.db.models.subscriber import Subscriber
@@ -20,8 +19,6 @@ from app.services.admin_stats import collect_admin_stats
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-
-_templates = Jinja2Templates(directory=Path(__file__).parent.parent.parent / "templates")
 
 
 @router.get("", response_class=HTMLResponse)

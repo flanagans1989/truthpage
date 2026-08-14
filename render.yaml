@@ -41,3 +41,5 @@ services:
         value: "1"
       # - key: SENTRY_DSN
       #   sync: false
+      - key: GA_MEASUREMENT_ID
+        value: G-GCKYQVMXDY
