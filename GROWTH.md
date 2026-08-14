@@ -111,12 +111,44 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 | Trustmary | trustmary.com/list-of-subprocessors | Testimonial marketing | Johannes Karjula (CEO) | raised $2.2M, Finland |
 | SmartSurvey | smartsurvey.com/company/sub-processors | Survey platform | Mo Naser (CEO) | $5.5M revenue, may be large |
 | Uptime.com | uptime.com/subprocessors | Website/uptime monitoring | Michael Esposito (CEO) | ~28 employees, borderline size |
-| ChatLab | chatlab.com/subprocessors | AI chatbot for support/sales | not found | Swiss, unfunded, small |
-| Lookback | help.lookback.io | User research | unclear (conflicting search results) | verify before contacting |
-| Opper AI | producthunt.com/products/opper-ai | AI gateway (EU) | not found | new launch, good timing angle |
+| ChatLab | chatlab.com/subprocessors | AI chatbot for support/sales | not found | Swiss (Kriens), unfunded, small — chatlab.com is NOT chatlabs.com (Michel Tjoeng, NY-based, different co); don't conflate |
+| Lookback | help.lookback.io | User research | Henrik Mattsson (CEO) | resolved 2026-08-15 — current CEO per Crunchbase/Pillar VC; founders (Bengtsson/Littke) no longer run it |
+| Opper AI | producthunt.com/products/opper-ai | AI gateway (EU) | Göran Sandahl (CEO & Co-Founder) | resolved 2026-08-15; VC-backed (Luminar/Emblem/Greens Capital), still early enough to be worth a shot |
 | Formbricks | formbricks.com/about | Open-source survey/feedback platform | Johannes Dancker (Co-Founder & CEO) | seed stage, Kiel Germany, small team |
 | Cloud-IAM | cloud-iam.com/gdpr-sub-processor | Keycloak-as-a-service | François-Guillaume Ribreau (Co-Founder & Co-CEO) | dev infra, small team |
-| Hook0 | hook0.com/gdpr-subprocessors | Webhook infrastructure (EU-hosted) | not found | small, France-based, 2 founders per site |
+| Hook0 | hook0.com/gdpr-subprocessors | Webhook infrastructure (EU-hosted) | David Sferruzza (Co-Founder & CTO) | resolved 2026-08-15 — co-founded with F-G Ribreau (same person as Cloud-IAM contact above); used the CTO here instead so the two companies aren't both pitched to Ribreau |
+
+### New prospects (added 2026-08-15, web search + sub-processors.com/recent directory)
+
+#### Tier A
+
+| Company | Subprocessor page | Product | Decision-maker | Note |
+|---|---|---|---|---|
+| Capgo | capgo.app/subprocessors/ | Live updates for Ionic/Capacitor mobile apps | Martin Donadieu (Founder) | ~6-person team, profitable/bootstrapped — great fit |
+| Taloflow | taloflow.ai/subprocessors | AI software-vendor selection | Louis-Victor Jadavji (CEO & Co-Founder) | YC W21, 1–25 employees |
+| Gruntwork | gruntwork.io/legal/data-subprocessor-list | DevOps/IaC infrastructure | Josh Padnick (CEO) | 18 employees, serves startups-to-enterprise B2B |
+| AskYourTeam | askyourteam.com/legal/sub-processors-list | Employee experience platform | Chris O'Reilly (CEO & Co-Founder) | 11–50 employees, NZ |
+
+#### Tier B
+
+| Company | Subprocessor page | Product | Decision-maker | Note |
+|---|---|---|---|---|
+| Amio | amio.io/sub-processors | Conversational AI for customer support | Matouš Kučera (CEO & Founder) | founded 2015, size unconfirmed |
+| Fyr | fyr.ai/sub-processors/ | AI marketing/BI platform | Freddy Aurso (CEO) | Norway, size unconfirmed |
+
+#### Needs more digging (found via sub-processors.com, not yet verified for size/decision-maker)
+
+SFDevTools (sfdevtools.com/docs/subprocessors), Jetsend (jetsend.com/subprocessors/), Talis
+(talis.com/legal/sub-processors/), SideDrawer (sidedrawer.com/legal/sub-processors), DocDigitizer
+(docdigitizer.com/sub-processors/), CoSkip (coskip.com/subprocessors), Capcade
+(capcade.com/list-of-subprocessors). Several other sub-processors.com listings were excluded as
+already using a trust-center platform (trust.*/trustcenter.* subdomains — BalkanID, Oxolo,
+Flower Labs, AskYourDatabase, Quantrium — disqualified by criterion #2) or clearly >50 employees
+(Testim, Unstructured, Bunny, MangoApps, Deque, GoDaddy, Ivanti, Atlassian, SLB).
+
+**New source for future Monday list-building:** sub-processors.com/recent lists newly-added
+subprocessor pages across all company sizes — faster than one-off Google dorks, worth checking
+weekly.
 
 ### Ready-to-send LinkedIn connect notes
 
@@ -140,9 +172,33 @@ something to automate.
 | Michael Esposito | Uptime.com | Hi Michael — saw Uptime.com's sub-processor list. I build tooling adjacent to monitoring — tracking vendor sub-processor changes specifically — thought it'd be good to connect. |
 | Johannes Dancker | Formbricks | Hi Johannes — saw Formbricks' sub-processor page, sharp for an early-stage team. I build tooling for tracking exactly those changes, thought it'd be good to connect. |
 | François-Guillaume Ribreau | Cloud-IAM | Hi François — saw Cloud-IAM's GDPR sub-processor page. I build tooling in that exact space, thought it'd be good to connect. |
+| Henrik Mattsson | Lookback | Hi Henrik — saw Lookback's sub-processor disclosure. I build tooling for tracking exactly those vendor changes, thought it'd be good to connect. |
+| Göran Sandahl | Opper AI | Hi Göran — congrats on Opper's launch as the EU AI gateway. I work on tooling adjacent to that (vendor sub-processor monitoring), thought it'd be good to connect. |
+| David Sferruzza | Hook0 | Hi David — saw Hook0's GDPR sub-processor page, nice for a bootstrapped team. I build tooling in that exact space, thought it'd be good to connect. |
+| Martin Donadieu | Capgo | Hi Martin — saw Capgo's sub-processor page, rare for a 6-person team. I build tooling for tracking exactly those vendor changes, thought it'd be good to connect. |
+| Louis-Victor Jadavji | Taloflow | Hi Louis-Victor — saw Taloflow's sub-processor list. I build tooling in that exact space (vendor change monitoring), thought it'd be good to connect. |
+| Josh Padnick | Gruntwork | Hi Josh — saw Gruntwork's data sub-processor list. I build tooling for tracking exactly those vendor changes, thought it'd be good to connect. |
+| Chris O'Reilly | AskYourTeam | Hi Chris — saw AskYourTeam's sub-processor list. I work on tooling in that exact space, thought it'd be good to connect. |
 
-No note drafted for Lookback / Opper AI / ChatLab / SaaS Custom Domains / Hook0 —
-decision-maker name wasn't confirmed, find them on LinkedIn first (company page → People).
+No note drafted for ChatLab / SaaS Custom Domains — decision-maker name still unconfirmed,
+find them on LinkedIn first (company page → People). Amio / Fyr (Tier B) also undrafted — verify
+size/fit before spending a connect on them.
+
+### Tier A email drafts (created 2026-08-15, sitting in Gmail Drafts — not sent)
+
+Personalized per the Tier A template above, using emails found via web search (not guessed).
+Review and send yourself:
+
+| Name | Company | Email used | Note |
+|---|---|---|---|
+| Ariel Camino | SalesQL | ariel@salesql.com | direct, CEO |
+| Nate Bolt | Ethnio | nate@ethn.io | direct, Founder |
+| Chris Carver | Sessionboard | chris@sessionboard.com | direct, CEO |
+| Thibault Le Ouay | OpenStatus | ping@openstatus.dev | general inbox, no direct address found |
+| Aravinth Chandrasekaran | SaasAnt | support@saasant.com | general inbox, no direct address found |
+
+Not drafted — no email found, still need Hunter/Apollo/LinkedIn lookup: Jane Portman (Userlist),
+Roy Pereira (Unified.to).
 
 ### Unclear / needs more digging
 
