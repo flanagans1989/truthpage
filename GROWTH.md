@@ -114,6 +114,9 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 | ChatLab | chatlab.com/subprocessors | AI chatbot for support/sales | not found | Swiss, unfunded, small |
 | Lookback | help.lookback.io | User research | unclear (conflicting search results) | verify before contacting |
 | Opper AI | producthunt.com/products/opper-ai | AI gateway (EU) | not found | new launch, good timing angle |
+| Formbricks | formbricks.com/about | Open-source survey/feedback platform | Johannes Dancker (Co-Founder & CEO) | seed stage, Kiel Germany, small team |
+| Cloud-IAM | cloud-iam.com/gdpr-sub-processor | Keycloak-as-a-service | François-Guillaume Ribreau (Co-Founder & Co-CEO) | dev infra, small team |
+| Hook0 | hook0.com/gdpr-subprocessors | Webhook infrastructure (EU-hosted) | not found | small, France-based, 2 founders per site |
 
 ### Ready-to-send LinkedIn connect notes
 
@@ -135,9 +138,11 @@ something to automate.
 | Johannes Karjula | Trustmary | Hi Johannes — saw Trustmary's sub-processor list. I build tooling for tracking vendor sub-processor changes, thought it'd be good to connect. |
 | Mo Naser | SmartSurvey | Hi Mo — saw SmartSurvey's sub-processor page. I work on tooling in that exact space, thought it'd be good to connect. |
 | Michael Esposito | Uptime.com | Hi Michael — saw Uptime.com's sub-processor list. I build tooling adjacent to monitoring — tracking vendor sub-processor changes specifically — thought it'd be good to connect. |
+| Johannes Dancker | Formbricks | Hi Johannes — saw Formbricks' sub-processor page, sharp for an early-stage team. I build tooling for tracking exactly those changes, thought it'd be good to connect. |
+| François-Guillaume Ribreau | Cloud-IAM | Hi François — saw Cloud-IAM's GDPR sub-processor page. I build tooling in that exact space, thought it'd be good to connect. |
 
-No note drafted for Lookback / Opper AI / ChatLab / SaaS Custom Domains — decision-maker
-name wasn't confirmed, find them on LinkedIn first (company page → People).
+No note drafted for Lookback / Opper AI / ChatLab / SaaS Custom Domains / Hook0 —
+decision-maker name wasn't confirmed, find them on LinkedIn first (company page → People).
 
 ### Unclear / needs more digging
 
