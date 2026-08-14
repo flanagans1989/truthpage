@@ -133,8 +133,8 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 
 | Company | Subprocessor page | Product | Decision-maker | Note |
 |---|---|---|---|---|
-| Amio | amio.io/sub-processors | Conversational AI for customer support | Matouš Kučera (CEO & Founder) | founded 2015, size unconfirmed |
-| Fyr | fyr.ai/sub-processors/ | AI marketing/BI platform | Freddy Aurso (CEO) | Norway, size unconfirmed |
+| Amio | amio.io/sub-processors | Conversational AI for customer support | Matouš Kučera (CEO & Founder) | resolved 2026-08-15 via his LinkedIn (still active CEO, ~€360k ARR / 100+ e-shops per his own recruiting post) — small team, good fit |
+| Fyr | fyr.ai/sub-processors/ | AI marketing/BI platform | Freddy Aurso (CEO) | resolved 2026-08-15 — LinkedIn confirms 11–50 employees, Norway, right at the segment's size cap |
 
 #### More resolved 2026-08-15 (moved out of "needs more digging")
 
@@ -145,13 +145,24 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 | SideDrawer | sidedrawer.com/legal/sub-processors | Digital vault for financial services | J. Gaston Siri (Co-Founder, CEO & CTO) | 27 employees, Toronto — Tier B (fintech-adjacent, borderline size) |
 | SaaS Custom Domains | saascustomdomains.com/legal/subprocessors | Custom domains/white-labelling for SaaS | Drago Crnjac (Founder & CEO) | resolves the "no founder name found" gap from the original list; very small/solo |
 
-**Excluded:** Capcade (52 employees, over the plan cap's spirit and CEO identity conflicts
-across sources — skip). **Still unresolved after a second pass:** ChatLab (chatlab.com Swiss
-entity — no founder name findable anywhere public, distinct from the NY-based ChatLabs which
-does have a named CEO but is a different company), SFDevTools (no leadership info public),
-Jetsend (no leadership info public), Talis (talis.com is ambiguous — at least 3 unrelated
-companies share the name; couldn't confirm which one owns that subprocessor page). Several
-other sub-processors.com listings were excluded as already using a trust-center platform
+#### Third pass 2026-08-15 (final — every open name/size question below is now closed)
+
+| Company | Subprocessor page | Product | Decision-maker | Note |
+|---|---|---|---|---|
+| ChatLab | chatlab.com/subprocessors | AI chatbot for support/sales | Marcin Piotr Rabiej (Prezes Zarządu / President of the Board) | resolved via Polish KRS company registry (rejestr.io) — the site's footer says "ChatLab Sp. z o.o., Kraków", **not** the Swiss/Kriens entity Tracxn had indexed under the same name; use this Poland-registered company |
+
+**Excluded (confirmed too large / not independent):**
+- **Capcade** — 52 employees, CEO identity conflicts across sources
+- **Talis** (talis.com) — acquired by Kortext (a "global leader in digital content, library and
+  learning solutions") from Sage on 2025-10-08; no longer an independent small company, exclude
+- **Jetsend** (jetsend.com) — confirmed part of **Maropost**'s product portfolio, not an
+  independent company; exclude
+
+**Permanently unresolved:** SFDevTools — checked homepage, about page, and web search three
+times; the team writes in first-person plural ("we built the tool we wished existed") with no
+name anywhere public. Likely a genuinely anonymous solo project — skip rather than keep digging.
+
+Several other sub-processors.com listings were excluded as already using a trust-center platform
 (trust.*/trustcenter.* subdomains — BalkanID, Oxolo, Flower Labs, AskYourDatabase, Quantrium —
 disqualified by criterion #2) or clearly >50 employees (Testim, Unstructured, Bunny, MangoApps,
 Deque, GoDaddy, Ivanti, Atlassian, SLB).
@@ -193,11 +204,14 @@ something to automate.
 | Andrew Jensen | CoSkip | Hi Andrew — saw CoSkip's sub-processor page, rare for a small field-service AI team. I build tooling in that exact space, thought it'd be good to connect. |
 | J. Gaston Siri | SideDrawer | Hi Gaston — saw SideDrawer's sub-processor list, sharp for a fintech-adjacent team. I build tooling in that exact space, thought it'd be good to connect. |
 | Drago Crnjac | SaaS Custom Domains | Hi Drago — saw SaaS Custom Domains' sub-processor page, rare for a solo/small tool. I build tooling for tracking exactly those vendor changes, thought it'd be good to connect. |
+| Marcin Rabiej | ChatLab | Hi Marcin — saw ChatLab's sub-processor page. I build tooling for tracking exactly those vendor changes, thought it'd be good to connect. |
+| Matouš Kučera | Amio | Hi Matouš — saw Amio's sub-processor page. I build tooling in that exact space, thought it'd be good to connect. |
+| Freddy Aurso | Fyr | Hi Freddy — saw Fyr's sub-processor page. I build tooling for tracking exactly those vendor changes, thought it'd be good to connect. |
 
-No note drafted for ChatLab (chatlab.com) / SFDevTools / Jetsend / Talis — decision-maker
-name unresolved even after a second search pass; find them on LinkedIn first (company page →
-People) if still worth pursuing. Amio / Fyr (Tier B) also undrafted — verify size/fit before
-spending a connect on them.
+Every prospect on the list now either has a connect note above or is explicitly excluded/dead-end
+(see the "Third pass" and "Excluded" notes in the prospect tables) — nothing left unresolved as
+of 2026-08-15. SFDevTools is the one deliberate skip (genuinely anonymous project, no name to
+address).
 
 ### Tier A email drafts (created 2026-08-15, sitting in Gmail Drafts — not sent)
 
