@@ -48,7 +48,9 @@
       "WebFetch(domain:chatlab.com)",
       "WebFetch(domain:www.talis.com)",
       "WebFetch(domain:www.chatlab.com)",
-      "WebFetch(domain:www.sfdevtools.com)"
+      "WebFetch(domain:www.sfdevtools.com)",
+      "mcp__claude_ai_Gmail__list_drafts",
+      "mcp__claude_ai_Gmail__send_message"
     ]
   }
 }
