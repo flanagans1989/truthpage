@@ -215,8 +215,8 @@ address).
 
 **⚠️ LinkedIn free-tier hard limit discovered 2026-08-15:** personalized connection notes are
 capped at **3 per calendar month** on a free account (LinkedIn shows the remaining count in the
-"Davetinize not eklensin mi?" dialog). Connects without a note have no such cap, but lose the
-personalization. **Sent this batch (used up the 3-note quota for this month):**
+"Davetinize not eklensin mi?" dialog). Connects without a note have no such cap. **Sent with a
+note (used the 3-note quota for this month):**
 
 | Name | Company |
 |---|---|
@@ -224,9 +224,27 @@ personalization. **Sent this batch (used up the 3-note quota for this month):**
 | Martin Donadieu | Capgo |
 | Thibault Le Ouay | OpenStatus |
 
-Remaining ~24 people in the table above are **not yet connected**. Options next month: (1) send
-the next 3 personalized once the quota resets, prioritizing by fit; (2) send the rest without a
-note (uncapped, but generic); (3) LinkedIn Premium removes the cap. Decide before the next batch.
+**Sent without a note 2026-08-15 (quota-free, rest of the list) — all pending acceptance:**
+
+Jane Portman (Userlist), Aravinth Chandrasekaran (SaasAnt), Ariel Camino (SalesQL), Nate Bolt
+(Ethnio), Roy Pereira (Unified.to), Chris Carver (Sessionboard), Shikhil Sharma (Astra Security),
+Johannes Karjula (Trustmary), Mo Naser (SmartSurvey), Johannes Dancker (Formbricks),
+François-Guillaume Ribreau (Cloud-IAM), Henrik Mattsson (Lookback), Göran Sandahl (Opper AI),
+David Sferruzza (Hook0), Louis-Victor Jadavji (Taloflow), Josh Padnick (Gruntwork — on
+sabbatical, may be slow to respond), Chris O'Reilly (AskYourTeam), João Fernandes (DocDigitizer),
+Andrew Jensen (CoSkip), J. Gaston Siri (SideDrawer), Drago Crnjac (SaaS Custom Domains), Marcin
+Rabiej (ChatLab), Freddy Aurso (Fyr) — **23 sent**.
+
+**Skipped — identity could not be confirmed on LinkedIn, would have connected with the wrong
+person:**
+- **Robby Macdonell (RescueTime)** — only match found is a different Robby Macdonell (Product
+  Designer/Cofounder at Clearbox Legal, immigration tech, Seattle) with zero mention of
+  RescueTime. Real RescueTime CEO's LinkedIn not found.
+- **Michael Esposito (Uptime.com)** — no matching profile in search results (only an unrelated
+  Cloud Engineer and a small-business owner, neither connected to Uptime.com).
+
+**All 26 connects across this list are now sent or accounted for** — 3 with a note, 23 without,
+2 skipped for a documented reason. Nothing left to send from the original prospect list.
 
 ### Tier A email drafts (created 2026-08-15)
 
