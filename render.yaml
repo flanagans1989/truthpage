@@ -39,7 +39,7 @@ services:
         value: /opt/playwright-browsers
       - key: PYTHONUNBUFFERED
         value: "1"
-      # - key: SENTRY_DSN
-      #   sync: false
+      - key: SENTRY_DSN
+        value: https://56e126ab8f6c7fce9783f665c4d8e100@o4511912176058368.ingest.de.sentry.io/4511912189624400
       - key: GA_MEASUREMENT_ID
         value: G-GCKYQVMXDY
