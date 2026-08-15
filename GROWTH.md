@@ -107,10 +107,10 @@ Verify company size + get email via LinkedIn or Hunter/Apollo before outreach.
 | Company | Subprocessor page | Product | Decision-maker | Note |
 |---|---|---|---|---|
 | Astra Security | help.getastra.com/articles/6386951398 | Security scanning | Shikhil Sharma (CEO) | funded, may be >50 employees |
-| RescueTime | help.rescuetime.com/article/122 | Time tracking | Robby Macdonell (CEO) | |
+| RescueTime | help.rescuetime.com/article/122 | Time tracking | Robby Macdonell (CEO) | LinkedIn identity unconfirmed (2026-08-15) — only match found is a different person; no connect sent, see "Skipped" note below |
 | Trustmary | trustmary.com/list-of-subprocessors | Testimonial marketing | Johannes Karjula (CEO) | raised $2.2M, Finland |
 | SmartSurvey | smartsurvey.com/company/sub-processors | Survey platform | Mo Naser (CEO) | $5.5M revenue, may be large |
-| Uptime.com | uptime.com/subprocessors | Website/uptime monitoring | Michael Esposito (CEO) | ~28 employees, borderline size |
+| Uptime.com | uptime.com/subprocessors | Website/uptime monitoring | Michael Esposito (CEO) | ~28 employees, borderline size; no matching LinkedIn profile found (2026-08-15) — no connect sent, see "Skipped" note below |
 | ChatLab | chatlab.com/subprocessors | AI chatbot for support/sales | Marcin Piotr Rabiej (Prezes Zarządu / President of the Board) | resolved 2026-08-15, see "Third pass" table below — Poland-registered (Kraków), not the Swiss/Kriens entity some aggregators index; also not chatlabs.com (Michel Tjoeng, NY, unrelated company) |
 | Lookback | help.lookback.io | User research | Henrik Mattsson (CEO) | resolved 2026-08-15 — current CEO per Crunchbase/Pillar VC; founders (Bengtsson/Littke) no longer run it |
 | Opper AI | producthunt.com/products/opper-ai | AI gateway (EU) | Göran Sandahl (CEO & Co-Founder) | resolved 2026-08-15; VC-backed (Luminar/Emblem/Greens Capital), still early enough to be worth a shot |
@@ -171,11 +171,12 @@ Deque, GoDaddy, Ivanti, Atlassian, SLB).
 subprocessor pages across all company sizes — faster than one-off Google dorks, worth checking
 weekly.
 
-### Ready-to-send LinkedIn connect notes
+### LinkedIn connect notes (sent 2026-08-15 — see quota/status section below)
 
 Drafted from the template above, personalized per company, kept under LinkedIn's
-~300-char connect-note limit. Copy, paste, send yourself — sending is your action, not
-something to automate.
+~300-char connect-note limit. All were sent on 2026-08-15 (3 with the note text below, the
+rest without a note due to the monthly cap — see "LinkedIn free-tier hard limit" below for
+which is which).
 
 | Name | Company | Connect note |
 |---|---|---|
@@ -262,8 +263,8 @@ Personalized per the Tier A template above, using emails found via web search (n
 | Jane Portman | Userlist | jane@uibreakfast.com | direct address, published on her personal site (UI Breakfast), not userlist.com |
 | Roy Pereira | Unified.to | roy@unified.to | direct, CEO |
 
-**Next up:** wait for replies (track in the Fri metrics retro), and start sending the LinkedIn
-connect notes above — that's still a manual step.
+**Next up:** wait for replies/accepts (track in the Fri metrics retro). Both the emails and the
+LinkedIn connects from this batch are fully sent — nothing left to send from this list.
 
 ### Unclear / needs more digging
 
