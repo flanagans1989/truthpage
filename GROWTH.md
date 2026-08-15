@@ -171,6 +171,15 @@ Deque, GoDaddy, Ivanti, Atlassian, SLB).
 subprocessor pages across all company sizes — faster than one-off Google dorks, worth checking
 weekly.
 
+#### Fourth pass 2026-08-15 (re-checked sub-processors.com/recent, same page — still slow-moving)
+
+| Company | Subprocessor page | Product | Decision-maker | Note |
+|---|---|---|---|---|
+| Syngency | syngency.com/gdpr/subprocessors/ | Software for modeling/talent agencies | Glen Ward (CEO) | 11 employees, LA — good fit |
+| Cyfox | help.cyfox.com/en/articles/10131049-list-of-sub-processors | AI-driven XDR/security compliance | Yossi Tal (CEO) | 11–50 employees, funded — Tier B, security angle should land well |
+
+**Excluded:** LeaveLogic — acquired by Unum Group in 2018, no longer an independent company.
+
 ### LinkedIn connect notes (sent 2026-08-15 — see quota/status section below)
 
 Drafted from the template above, personalized per company, kept under LinkedIn's
