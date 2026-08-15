@@ -36,6 +36,16 @@ async def refunds(request: Request):
     return _templates.TemplateResponse(request, "refunds.html", {})
 
 
+_INDEXNOW_KEY = "90b3cb9be9beb629e594522fb498dd60"
+
+
+@router.get(f"/{_INDEXNOW_KEY}.txt", response_class=PlainTextResponse)
+async def indexnow_key():
+    # Verifies domain ownership for IndexNow (Bing/Yandex instant-indexing
+    # ping) — no account needed, just this key file at the domain root.
+    return _INDEXNOW_KEY
+
+
 @router.get("/robots.txt", response_class=PlainTextResponse)
 async def robots_txt():
     base = settings.APP_URL.rstrip("/")
