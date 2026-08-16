@@ -39,6 +39,14 @@ python run_sweep.py                    # manual sweep trigger
 ./tools/tailwindcss.exe -o static/tailwind.css --minify --content "./templates/**/*.html,./app/**/*.py"
 ```
 
+## Claude Code GitHub integration
+
+`.github/workflows/claude.yml` runs the official `anthropics/claude-code-action` — mention
+`@claude` in an issue (title/body) or PR/issue comment to have Claude pick up the task and push
+commits/open a PR. Auth: repo secret `ANTHROPIC_API_KEY` (or `CLAUDE_CODE_OAUTH_TOKEN` for a
+subscription token — swap the input name in the workflow if used instead). Requires the
+[Claude GitHub App](https://github.com/apps/claude) installed on the repo.
+
 ## Required env vars
 
 `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `PADDLE_API_KEY`, `PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_ID_GROWTH`, `APP_URL`  
