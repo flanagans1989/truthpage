@@ -280,6 +280,76 @@ LinkedIn connects from this batch are fully sent — nothing left to send from t
 - ~~SaaS Custom Domains~~ — resolved 2026-08-15, see "More resolved" table above (Drago Crnjac)
 - ~~Conduktor~~ — excluded, raised $52M, enterprise-scale now, not a fit
 
+## New prospect batch (2026-08-16, Round 1 + Round 2 — not yet contacted)
+
+Fresh discovery pass, disjoint from every company above. Round 1 used Google dorks +
+sub-processors.com directory + niche-vertical search (~40 queries). Round 2 aimed for
+8-15 more but hit the session's WebSearch quota cap (200/200) very early and had to fall
+back to guessed-URL WebFetch, which yielded far fewer verifiable leads — only 1 new
+company survived full verification. **Round 3 (resume broader discovery once quota resets)
+is still open** — see "Next up" below.
+
+### Round 1 — 6 verified (quality bar met)
+
+| Company | Website | Subprocessor page | Type | Employees | B2B evidence | Trust-center | Recent activity | Contact | LinkedIn | Email | Tier |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Swantide | swantide.com | swantide.com/subprocessors | Static HTML | ~12 | AI agents for Salesforce ops, sold to B2B RevOps/IT | None | Page updated Jul 2026 | Taylor Lint (Founder & CEO) | linkedin.com/in/taylorelizabethlint | not found | A |
+| Cometly | cometly.com | cometly.com/sub-processors | Static HTML | 6-11 | Marketing attribution for B2B SaaS | None | Page updated Aug 2026 | Matt Pattoli (Co-founder, DPO) | linkedin.com/in/mattpattoli | privacy@cometly.com — role-based/DPO alias, not a clean personal address | A |
+| Botdoc | botdoc.io | botdoc.io/botdoc-subprocessors/ | Static HTML | 16-19 | Secure doc/ID transport for dealerships/lenders | None | May 2026 Trust Stamp partnership | Karl Falk (Founder & CEO) | linkedin.com/in/karlfalk | not found | A |
+| Hunter.io | hunter.io | hunter.io/subprocessors | Static HTML | 36-38 | Email-finding SaaS, customers incl. Google/IBM/Microsoft | None (own page, not managed) | Active 2026 changelog | Matthew Tharp (CEO) | linkedin.com/in/matttharp | **matt@hunter.io — direct, verified** | A |
+| GaggleAMP | gaggleamp.com | gaggleamp.com/subprocessors | Static HTML | 22-28 | Employee advocacy platform for B2B brands | None | Jun 2026 UI refresh (Capterra) | Glenn Gaudet (Founder & CEO) | linkedin.com/in/glenng | not found | A |
+| Zapiet | zapiet.com | Intercom article (support.zapiet.com/.../zapiet-s-subprocessors) | Static/Intercom | 22 | Shopify pickup/delivery app, sold to merchants (not enterprise-buyer profile) | None | May 2026 blog/changelog | Andrew Cargill (Founder & CEO) | linkedin.com/in/cargi | not found | B |
+
+**Round 1 excluded (do not re-research):** Chameleon, Knak, Knit (goknit.com), ZeroBounce, Oliv AI
+— all use SafeBase/Vanta/Drata/Sprinto trust centers. Composio, Maxio, Julius AI, Twingate, Vendr,
+Lokalise — managed trust center and/or too large. Scratchpad, GrowthX AI, Spekit, Zeplin, Reprise,
+Timely, Sylvera, Binary Defense, Lob, Paragon, Sona/getsona.com, Suzy, BigTime Software, Digistorm,
+Aloware — 50+ employees. Featurebase — ~3 employees, too small. CheckThat.ai — good page but
+employee count/founder unverifiable. ProValet, WP Hercules — SMB buyer, not enterprise/security
+profile. Gleam.io, Fathom Analytics — subprocessor page stale (2021/2022). Yesware — absorbed into
+Vendasta, not independent.
+
+### Round 2 — 1 new verified (WebSearch quota cut the pass short)
+
+| Company | Website | Subprocessor page | Type | Employees | B2B evidence | Trust-center | Recent activity | Contact | LinkedIn | Email | Tier |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Loops | loops.so | tryloops.notion.site/tryloops/Loops-Subprocessor-List-f391cb8ee6f841a7aa7db9a1c14b3037 | Notion | ~12 | Email platform for B2B SaaS, YC W22 | None detected | 2026: shipped Claude Code/Cursor/Codex integrations, PH 4.9/132 | Chris Frantz (Co-founder) | personal LinkedIn unconfirmed (only company page + X @frantzfries) | not found (only an obfuscated site contact) | A (LinkedIn-ready once personal LinkedIn confirmed) |
+
+**Round 2 excluded (do not re-research):** Orbiit.ai (acquired by Hivebrite, now 143 employees),
+Gatheround (acquired by Donut, no current contact verifiable), Cap Orbit (2-10 employees, no
+founder name found), Aleph/getaleph.com (105 employees), ZenML (trust-center status ambiguous,
+excluded out of caution), June.so (team absorbed into Amplitude Aug 2025, page stale since Jul
+2023), Loom Analytics/Claudio (subprocessor names only in a downloadable Word doc — unmonitorable;
+2-10 employees), Moesif (WSO2 subsidiary, no verifiable personal contact), Wiza.co (LinkedIn name
+collision with an unrelated Zimbabwean company), Depot.dev (employee count unverifiable, only
+generic help@ found), Data Zoo (trust.datazoo.com reads as a managed trust-center domain).
+pganalyze, MaestroQA, Common Room, Granola, AirOps, Baseten — no subprocessor page found at
+guessed URLs (undiscoverable this session, not confirmed excluded).
+
+### Combined shortlists (Round 1 + Round 2, Tier A only, Zapiet excluded as Tier B)
+
+**A) EMAIL-READY** (verified direct personal email, not a generic/role inbox):
+
+| Company | Contact | Direct email | Subprocessor page |
+|---|---|---|---|
+| Hunter.io | Matthew Tharp, CEO | matt@hunter.io | hunter.io/subprocessors |
+
+**B) LINKEDIN-READY** (strong fit, no verified direct email):
+
+| Company | Contact | LinkedIn | Subprocessor page |
+|---|---|---|---|
+| Swantide | Taylor Lint, CEO | linkedin.com/in/taylorelizabethlint | swantide.com/subprocessors |
+| Cometly | Matt Pattoli, Co-founder/DPO | linkedin.com/in/mattpattoli | cometly.com/sub-processors — only email found is role-based (privacy@), treated as no-direct-email |
+| Botdoc | Karl Falk, CEO | linkedin.com/in/karlfalk | botdoc.io/botdoc-subprocessors/ |
+| GaggleAMP | Glenn Gaudet, CEO | linkedin.com/in/glenng | gaggleamp.com/subprocessors |
+| Loops | Chris Frantz, Co-founder | personal LinkedIn URL needs confirming before outreach (company page: linkedin.com/company/sendwithloops) | tryloops.notion.site/... |
+
+**Next up (2026-08-16):** Prospect research paused here per user decision — priority moved to
+GitHub Actions/Claude Code infra setup. Nothing from this batch has been contacted yet. When
+resumed: (1) optionally run Round 3 once the session WebSearch quota resets, target still 12-15
+total; (2) confirm Chris Frantz's personal LinkedIn URL before contacting Loops; (3) start
+outreach with the EMAIL-READY row (Hunter.io) and the 4 confirmed LINKEDIN-READY rows.
+
 ### Competitive/content signal (not prospects — observe only)
 
 - **Registora** (registora.com) — "The Subprocessor Registry for B2B SaaS", adjacent concept
