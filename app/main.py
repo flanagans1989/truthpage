@@ -57,17 +57,26 @@ _scheduler = AsyncIOScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- startup ---
+    # Every sweep wakes the Neon compute, which then stays up for its 5-minute
+    # scale-to-zero window whether or not anything was due. At 30-minute ticks
+    # that is 48 wake-ups a day, roughly 4 compute-hours daily and ~124 a month
+    # — structurally over the 100-hour free-tier allowance, which is what
+    # exhausted the quota on 2026-08-24 and took the site down for a week.
+    # Subprocessors default to check_interval_minutes=1440 (daily), so a
+    # 3-hour tick loses nothing real: 8 wake-ups a day, ~20 compute-hours a
+    # month. The trade-off is that a subprocessor configured at the 60-minute
+    # minimum can now be checked up to 3 hours late.
     _scheduler.add_job(
         sweep_due_subprocessors,
         trigger="interval",
-        minutes=30,
+        hours=3,
         args=[AsyncSessionLocal],
         id="sweep_due_subprocessors",
         replace_existing=True,
         max_instances=1,  # never overlap; one sweep at a time
     )
     _scheduler.start()
-    logger.info("Zamanlayıcı tetiklendi — sweep job her 30 dakikada bir çalışacak")
+    logger.info("Zamanlayıcı tetiklendi — sweep job her 3 saatte bir çalışacak")
 
     yield
 

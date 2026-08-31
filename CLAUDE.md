@@ -7,7 +7,7 @@ Privacy policy sub-processor monitoring SaaS. Tenants add URLs to monitor; the a
 - **Backend:** FastAPI + SQLAlchemy async + PostgreSQL (Neon)
 - **Templates:** Jinja2 + HTMX + Tailwind CDN
 - **LLM:** Gemini 2.5 Flash (`google-genai`)
-- **Scheduler:** APScheduler (30-min sweep — kept long to stay within Neon free-tier compute quota; see incident 2026-07-19)
+- **Scheduler:** APScheduler (3-hour sweep — every tick wakes the Neon compute for its 5-min scale-to-zero window, so tick frequency, not work done, drives the bill. 30-min ticks burned ~124 compute-hours/month against a 100-hour free-tier cap and took the site down for a week on 2026-08-24; see incidents 2026-07-19 and 2026-08-31. Do not shorten this without re-doing the arithmetic.)
 - **Auth:** Magic link → JWT cookie (30-day session)
 - **Billing:** Paddle (Merchant of Record — Stripe doesn't support Turkey-based sellers)
 - **Email:** Resend
