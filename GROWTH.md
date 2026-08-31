@@ -320,10 +320,25 @@ free, using infrastructure already in place:
 - No conflict with Resend: Resend sends from the `send.usetrustpages.com` subdomain and has its
   own MX/SPF there, untouched. Root had no MX before this.
 
-**Left to the user (credential entry is out of scope for Claude):** Gmail → Settings → Accounts →
-"Send mail as" → add `denizhan@usetrustpages.com` (name: Denizhan Koçakgöl, uncheck "Treat as
-alias"), SMTP host `smtp.resend.com`, port 587 TLS, username `resend`, password = a Resend API
-key. The confirmation code arrives at studiominhagen via the routing above.
+**Gmail send-as: DONE 2026-08-31.** `Denizhan Koçakgöl <denizhan@usetrustpages.com>` is added and
+verified on studiominhagen@gmail.com, sending through Resend SMTP. Working config:
+
+| Field | Value |
+|---|---|
+| SMTP server | `smtp.resend.com` |
+| Port | 465 (SSL) |
+| Username | `resend` |
+| Password | Resend API key (`gmail-send-as-2`, Sending access, usetrustpages.com) |
+| Treat as alias | unchecked |
+
+Two failures on the way, both worth remembering: the first Resend key was lost before use, and the
+"authentication error" that followed was **not** an auth problem at all — the SMTP host had been
+typed as `rsmtp.resend.com`, and Gmail's error text buried the real cause in a DNS NXDOMAIN line.
+Read the full server error string before assuming credentials are wrong.
+
+The Gmail send-as wizard and its confirmation dialog open in separate browser windows that
+automation cannot reach; the confirmation email's link can be opened directly in a normal tab
+instead, which is how verification was completed.
 
 **Known follow-up:** the root SPF only authorizes Cloudflare. Mail sent through Resend SMTP with a
 `@usetrustpages.com` From will fail SPF but pass DKIM (resend._domainkey covers the root domain),
@@ -410,9 +425,9 @@ total; (2) confirm Chris Frantz's personal LinkedIn URL before contacting Loops;
 outreach with the EMAIL-READY row (Hunter.io) and the 4 confirmed LINKEDIN-READY rows.
 
 **Update 2026-08-31 — still uncontacted, deliberately held:**
-- **Hunter.io (matt@hunter.io)** — email was drafted and then held back rather than sent from the
-  personal gmail. Send it once `denizhan@usetrustpages.com` send-as is live (see "Sender identity"
-  above). New prospect, first impression matters.
+- ~~**Hunter.io (matt@hunter.io)**~~ — **SENT 2026-08-31**, Tier A template, and the first outreach
+  email ever sent from `denizhan@usetrustpages.com`. It had been held back rather than go out from
+  the personal gmail.
 - **The 4 LinkedIn-ready rows** (Swantide/Taylor Lint, Cometly/Matt Pattoli, Botdoc/Karl Falk,
   GaggleAMP/Glenn Gaudet) — held for **2026-09-01**, when the free-tier personalized-note quota
   resets (3/month; August's was spent on 2026-08-15). Plan: notes for the 3 strongest, the 4th
