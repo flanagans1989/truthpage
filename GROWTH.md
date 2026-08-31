@@ -340,10 +340,26 @@ The Gmail send-as wizard and its confirmation dialog open in separate browser wi
 automation cannot reach; the confirmation email's link can be opened directly in a normal tab
 instead, which is how verification was completed.
 
-**Known follow-up:** the root SPF only authorizes Cloudflare. Mail sent through Resend SMTP with a
-`@usetrustpages.com` From will fail SPF but pass DKIM (resend._domainkey covers the root domain),
-and DMARC is `p=none`, so it still delivers. Worth adding `include:amazonses.com` to the root SPF
-record for full alignment.
+**Deliverability: CLOSED 2026-08-31.** The root SPF authorized only Cloudflare, so every message
+sent through Resend SMTP with a `@usetrustpages.com` From took an SPF softfail. It still delivered
+— DKIM passed and DMARC is `p=none` — but each send carried a negative signal, which is a real
+handicap for a domain with no sending history doing cold outreach. The root TXT record is now:
+
+```
+v=spf1 include:_spf.mx.cloudflare.net include:amazonses.com ~all
+```
+
+Verified from both 1.1.1.1 and 8.8.8.8. SPF, DKIM and DMARC all pass now. The Cloudflare include
+must stay — inbound routing depends on it.
+
+Full DNS picture, confirmed by lookup rather than assumed: `resend._domainkey.usetrustpages.com`
+exists **at the root**, so Resend signs as `d=usetrustpages.com` and DMARC aligns.
+`send.usetrustpages.com` carries its own `include:amazonses.com` SPF and was left alone.
+
+Worth stating plainly: this does not explain the 0/7 reply rate on its own. Seven emails is far
+too small a sample to draw conclusions from, and the messages themselves may simply not have
+landed with the right people. The SPF gap was a real defect worth closing before the next batch,
+not a diagnosis.
 
 **Mailbox consolidation decision:** TrustPages identity now centers on studiominhagen@gmail.com
 (LinkedIn + Paddle already there, plus denizhan@usetrustpages.com routing). Existing email threads
