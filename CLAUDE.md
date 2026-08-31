@@ -1,69 +1,45 @@
 # TrustPages
 
-Privacy policy sub-processor monitoring SaaS. Tenants add URLs to monitor; the app scrapes them every N minutes, diffs HTML, classifies changes via Gemini as MATERIAL/COSMETIC/UNCERTAIN, auto-publishes cosmetic changes, queues material ones for manual approval, and notifies email subscribers.
+Sub-processor monitoring SaaS. Tenants add vendor policy URLs; a sweep scrapes → diffs → Gemini
+classifies MATERIAL/COSMETIC/UNCERTAIN → cosmetic auto-publishes, material queues for approval →
+subscribers get email.
 
-## Stack
-
-- **Backend:** FastAPI + SQLAlchemy async + PostgreSQL (Neon)
-- **Templates:** Jinja2 + HTMX + Tailwind CDN
-- **LLM:** Gemini 2.5 Flash (`google-genai`)
-- **Scheduler:** APScheduler (3-hour sweep — every tick wakes the Neon compute for its 5-min scale-to-zero window, so tick frequency, not work done, drives the bill. 30-min ticks burned ~124 compute-hours/month against a 100-hour free-tier cap and took the site down for a week on 2026-08-24; see incidents 2026-07-19 and 2026-08-31. Do not shorten this without re-doing the arithmetic.)
-- **Auth:** Magic link → JWT cookie (30-day session)
-- **Billing:** Paddle (Merchant of Record — Stripe doesn't support Turkey-based sellers)
-- **Email:** Resend
-- **Deploy:** Render (render.yaml; migrations run via preDeployCommand)
-- **Package manager:** uv
-
-## Key files
-
-```
-app/main.py                  # FastAPI app + scheduler startup
-app/core/config.py           # Settings (pydantic-settings, reads .env)
-app/core/llm/analyzer.py     # Gemini diff classification
-app/core/templating.py       # Shared Jinja2Templates instance (injects ga_measurement_id global)
-app/core/scraper/            # fetcher (httpx+Playwright), normalizer, hasher, detector
-app/services/monitoring.py   # Sweep orchestration: fetch→normalize→hash→diff→LLM→persist
-app/scheduler/jobs.py        # APScheduler job (calls monitoring.py)
-app/routers/                 # auth, dashboard, subprocessors, billing, webhooks, public
-app/db/models/               # Tenant, Subprocessor, ChangeEvent, Subscriber
-```
+FastAPI · async SQLAlchemy · Postgres (Neon free tier) · Jinja2/HTMX · Gemini 2.5 Flash ·
+APScheduler · Paddle (MoR — Stripe won't take Turkey-based sellers) · Resend · Render · uv
 
 ## Commands
 
 ```bash
-uv run uvicorn app.main:app --reload   # local dev
-alembic upgrade head                   # run migrations
-python run_sweep.py                    # manual sweep trigger
-
-# Rebuild compiled CSS after any template/class change (CLI vendored in tools/, gitignored):
+uv run uvicorn app.main:app --reload   # dev
+uv run pytest                          # tests, no DB needed
+python run_sweep.py                    # manual sweep
 ./tools/tailwindcss.exe -o static/tailwind.css --minify --content "./templates/**/*.html,./app/**/*.py"
 ```
 
-## Claude Code GitHub integration
+## Traps
 
-`.github/workflows/claude.yml` runs the official `anthropics/claude-code-action` — mention
-`@claude` in an issue (title/body) or PR/issue comment to have Claude pick up the task and push
-commits/open a PR. Auth: repo secret `ANTHROPIC_API_KEY` (or `CLAUDE_CODE_OAUTH_TOKEN` for a
-subscription token — swap the input name in the workflow if used instead). Requires the
-[Claude GitHub App](https://github.com/apps/claude) installed on the repo.
+- **Sweep interval is a billing knob, not a latency knob.** Every tick wakes the Neon compute for
+  its 5-min scale-to-zero window whether or not work is due. 30-min ticks burn ~124 compute-hours
+  a month against a 100-hour cap — that took the site down for a week (2026-08-24). It is 3h now.
+  Don't shorten it without redoing the arithmetic.
+- **CSS is compiled, not CDN.** Rerun the Tailwind command above after any class change, and note
+  it scans `app/**/*.py` too because routers contain inline HTML.
+- **`preDeployCommand` is silently ignored on Render free.** Migrations run from the Dockerfile
+  `CMD` (`alembic upgrade head && uvicorn ...`). Moving them back breaks production silently.
+- **Chromium is COPYed from `mcr.microsoft.com/playwright:<ver>`** because cdn.playwright.dev
+  geo-blocks Render's builder. Bump that tag whenever playwright is upgraded.
+- **Use the shared `templates` from `app/core/templating.py`** — it injects the
+  `ga_measurement_id` global. A router that builds its own `Jinja2Templates` loses it.
 
-## Required env vars
+## Rules that aren't visible in a quick read
 
-`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `PADDLE_API_KEY`, `PADDLE_CLIENT_TOKEN`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRICE_ID_GROWTH`, `APP_URL`  
-Optional: `SENTRY_DSN`, `GA_MEASUREMENT_ID` (GA4, e.g. `G-XXXXXXX` — blank disables analytics)
+- Auto-publish iff `COSMETIC && confidence > 0.85`; everything else → `pending_review`
+- Diff sent to the LLM is capped at 12 000 chars
+- Tier-1 httpx, Tier-2 Playwright per `subprocessor.requires_browser`
+- Trial is 14 days; expired tenants are skipped by sweeps and bounced to checkout at login
+- tenant ↔ email is exact-match and unique; magic links are single-use, 3/min per IP and per email
+- DB pool `size=3, overflow=1` (Neon free tier)
+- Plan cap `MAX_SUBPROCESSORS_PER_TENANT`, default 25
+- Public trust page shows the last 20 approved + auto-published changes
 
-## Business logic
-
-- **Auto-publish:** `classification == COSMETIC && confidence > 0.85` → `ChangeStatus.auto_published`
-- **Manual review:** everything else → `ChangeStatus.pending_review`
-- **Diff cap:** 12 000 chars sent to LLM (~3k tokens)
-- **Scraper tiers:** Tier-1 httpx; Tier-2 Playwright fallback (per `subprocessor.requires_browser`)
-- **Rate limit:** 3 magic link requests / minute per IP and per email
-- **DB pool:** `pool_size=3, max_overflow=1` (Neon free tier)
-- **Subscription statuses:** `trialing | active | past_due | canceled | unpaid`
-- **Trial:** 14 days (`tenant.trial_ends_at`); expired trials are excluded from sweeps and redirected to checkout on login
-- **Auth:** tenant ↔ email is exact-match (`tenant.email`, unique); magic links are single-use
-- **Tenant alerts:** pending-review changes email the tenant owner (`mailer.send_review_needed`)
-- **Plan cap:** `MAX_SUBPROCESSORS_PER_TENANT` (default 25)
-- **Public trust page:** shows approved + auto-published change history (last 20)
-- **Tests:** `uv run pytest` (unit tests, no DB needed); CI via GitHub Actions
+Env vars: see `.env.example`. `SENTRY_DSN` and `GA_MEASUREMENT_ID` are optional.
