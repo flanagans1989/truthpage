@@ -272,8 +272,67 @@ Personalized per the Tier A template above, using emails found via web search (n
 | Jane Portman | Userlist | jane@uibreakfast.com | direct address, published on her personal site (UI Breakfast), not userlist.com |
 | Roy Pereira | Unified.to | roy@unified.to | direct, CEO |
 
+**Sender correction (found 2026-08-31):** these 7 were sent from **deraksizolasyon@gmail.com**,
+not studiominhagen@gmail.com as earlier notes claimed. Replies land in that inbox. This is also a
+likely contributor to the 0% reply rate — a personal gmail carrying an unrelated insulation
+business's name is weak sender identity for B2B cold email. Fixed going forward, see
+"Sender identity" below.
+
 **Next up:** wait for replies/accepts (track in the Fri metrics retro). Both the emails and the
 LinkedIn connects from this batch are fully sent — nothing left to send from this list.
+
+## Outreach status check + follow-ups (2026-08-31)
+
+First status check since the 2026-08-15 send. Day+3/+7/+14 follow-ups had all been missed.
+
+**Results of the 2026-08-15 batch (16 days in):**
+- **Email: 7 sent, 0 replies, 0 bounces.** Only inbound was a SaasAnt support auto-ack ticket
+  (##339815##). All 7 were delivered.
+- **LinkedIn: 26 connects sent, 5 accepted (19%), 21 still pending.** Accepted: Marcin Rabiej
+  (ChatLab, 21 Aug), Martin Donadieu (Capgo, 19 Aug), Göran Sandahl (Opper AI, 15 Aug), Drago
+  Crnjac (SaaS Custom Domains, 15 Aug), Thibault Le Ouay (OpenStatus, 15 Aug).
+- **Gap found:** of the 5 who accepted, only 2 (Martin, Thibault) had ever been messaged — and
+  those 2 got no reply. Three warm, accepted connections sat untouched for two weeks.
+
+**Sent 2026-08-31:**
+- LinkedIn first DM to the 3 unmessaged accepted connections: Marcin (ChatLab), Göran (Opper AI),
+  Drago (SaaS Custom Domains).
+- LinkedIn single follow-up to Martin (Capgo) and Thibault (OpenStatus).
+- Email thread follow-up ("close the loop" variant, offers a 3-month check-back) to 6 of the 7:
+  Roy (Unified.to), Jane (Userlist), SaasAnt support, Chris (Sessionboard), Nate (Ethnio),
+  Ariel (SalesQL).
+- **OpenStatus email deliberately skipped** — Thibault got a LinkedIn follow-up the same day;
+  a second channel on the same day would be over-contact.
+
+## Sender identity: denizhan@usetrustpages.com (set up 2026-08-31)
+
+Cold email was going out from a personal gmail. Fixed by putting outreach on the product domain,
+free, using infrastructure already in place:
+
+**Done (Cloudflare, deraksizolasyon@gmail.com account, zone usetrustpages.com):**
+- Email Routing enabled. Destination address `studiominhagen@gmail.com` added and verified.
+- Routing rule `denizhan@usetrustpages.com` → `studiominhagen@gmail.com`, Active. Catch-all left
+  Disabled (drop) on purpose.
+- DNS records added and locked: 3 MX (route1/2/3.mx.cloudflare.net), Cloudflare DKIM TXT
+  (cf2024-1._domainkey), and root SPF `v=spf1 include:_spf.mx.cloudflare.net ~all`.
+- **Inbound verified end to end** — test mail to denizhan@usetrustpages.com landed in
+  studiominhagen's inbox within a minute.
+- No conflict with Resend: Resend sends from the `send.usetrustpages.com` subdomain and has its
+  own MX/SPF there, untouched. Root had no MX before this.
+
+**Left to the user (credential entry is out of scope for Claude):** Gmail → Settings → Accounts →
+"Send mail as" → add `denizhan@usetrustpages.com` (name: Denizhan Koçakgöl, uncheck "Treat as
+alias"), SMTP host `smtp.resend.com`, port 587 TLS, username `resend`, password = a Resend API
+key. The confirmation code arrives at studiominhagen via the routing above.
+
+**Known follow-up:** the root SPF only authorizes Cloudflare. Mail sent through Resend SMTP with a
+`@usetrustpages.com` From will fail SPF but pass DKIM (resend._domainkey covers the root domain),
+and DMARC is `p=none`, so it still delivers. Worth adding `include:amazonses.com` to the root SPF
+record for full alignment.
+
+**Mailbox consolidation decision:** TrustPages identity now centers on studiominhagen@gmail.com
+(LinkedIn + Paddle already there, plus denizhan@usetrustpages.com routing). Existing email threads
+from the 2026-08-15 batch stay on deraksizolasyon@gmail.com, since replies would go there.
 
 ### Unclear / needs more digging
 
@@ -349,6 +408,16 @@ GitHub Actions/Claude Code infra setup. Nothing from this batch has been contact
 resumed: (1) optionally run Round 3 once the session WebSearch quota resets, target still 12-15
 total; (2) confirm Chris Frantz's personal LinkedIn URL before contacting Loops; (3) start
 outreach with the EMAIL-READY row (Hunter.io) and the 4 confirmed LINKEDIN-READY rows.
+
+**Update 2026-08-31 — still uncontacted, deliberately held:**
+- **Hunter.io (matt@hunter.io)** — email was drafted and then held back rather than sent from the
+  personal gmail. Send it once `denizhan@usetrustpages.com` send-as is live (see "Sender identity"
+  above). New prospect, first impression matters.
+- **The 4 LinkedIn-ready rows** (Swantide/Taylor Lint, Cometly/Matt Pattoli, Botdoc/Karl Falk,
+  GaggleAMP/Glenn Gaudet) — held for **2026-09-01**, when the free-tier personalized-note quota
+  resets (3/month; August's was spent on 2026-08-15). Plan: notes for the 3 strongest, the 4th
+  without a note. User chose this over sending all 4 note-less on 08-31.
+- Loops/Chris Frantz still needs his personal LinkedIn URL confirmed before any contact.
 
 ### Competitive/content signal (not prospects — observe only)
 
