@@ -38,6 +38,11 @@ class ChangeEvent(TimestampMixin, Base):
     old_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     new_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     raw_diff: Mapped[str] = mapped_column(Text, nullable=False)
+    # Full page text on both sides of the change. The diff alone cannot answer
+    # "what did this page say in March?" — an auditor asks for the document,
+    # not the delta. Nullable because events written before 0006 have neither.
+    old_content_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_content_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     llm_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     llm_classification: Mapped[str | None] = mapped_column(String(100), nullable=True)
     llm_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)

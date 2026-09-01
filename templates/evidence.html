@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Evidence record — TrustPages{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/dashboard/queue" class="text-sm text-slate-500 hover:text-slate-900">&larr; Back to queue</a>
+            <span class="text-blue-600 font-bold text-lg tracking-tight">TrustPages</span>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-10">
+        <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Evidence record</p>
+        <h1 class="text-2xl font-bold text-slate-900 mb-1">{{ event.subprocessor.name }}</h1>
+        <p class="text-sm text-slate-500 mb-8">
+            <a href="{{ event.subprocessor.monitored_url }}" target="_blank" rel="noopener"
+               class="text-blue-600 hover:underline break-all">{{ event.subprocessor.monitored_url }}</a>
+        </p>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Change detected</dt>
+                    <dd class="text-slate-900 font-medium">{{ event.created_at.strftime('%d %b %Y, %H:%M') }} UTC</dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Classification</dt>
+                    <dd class="text-slate-900 font-medium">
+                        {{ event.llm_classification or 'not classified' }}
+                        {% if event.llm_confidence is not none %}
+                        <span class="text-slate-400 font-normal">({{ "%.0f"|format(event.llm_confidence * 100) }}% confidence)</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Status</dt>
+                    <dd class="text-slate-900 font-medium">{{ event.status.replace('_', ' ') }}</dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Decision</dt>
+                    <dd class="text-slate-900 font-medium">
+                        {% if event.approved_at %}
+                        {{ event.approved_by or 'unknown' }} · {{ event.approved_at.strftime('%d %b %Y, %H:%M') }} UTC
+                        {% else %}
+                        <span class="text-slate-400 font-normal">no decision recorded</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Subscribers notified</dt>
+                    <dd class="text-slate-900 font-medium">
+                        {% if event.notified_at %}
+                        {{ event.notified_at.strftime('%d %b %Y, %H:%M') }} UTC
+                        {% else %}
+                        <span class="text-slate-400 font-normal">not notified</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Content hash (before &rarr; after)</dt>
+                    <dd class="text-slate-900 font-mono text-xs break-all">{{ event.old_hash }}<br>{{ event.new_hash }}</dd>
+                </div>
+            </dl>
+            {% if event.llm_summary %}
+            <p class="mt-6 pt-6 border-t border-slate-100 text-sm text-slate-600 leading-relaxed">{{ event.llm_summary }}</p>
+            {% endif %}
+        </div>
+
+        <h2 class="text-base font-semibold text-slate-900 mb-4">Captured page text</h2>
+        {% if event.old_content_text or event.new_content_text %}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+                <p class="text-xs font-medium text-slate-500 mb-2">Before &middot; hash {{ event.old_hash[:12] }}…</p>
+                <pre class="bg-white border border-slate-200 rounded-xl p-4 text-xs text-slate-700 whitespace-pre-wrap break-words max-h-[32rem] overflow-y-auto">{{ event.old_content_text or 'Not captured.' }}</pre>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-slate-500 mb-2">After &middot; hash {{ event.new_hash[:12] }}…</p>
+                <pre class="bg-white border border-slate-200 rounded-xl p-4 text-xs text-slate-700 whitespace-pre-wrap break-words max-h-[32rem] overflow-y-auto">{{ event.new_content_text or 'Not captured.' }}</pre>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl border border-slate-200 border-dashed p-8 text-center">
+            <p class="text-slate-500 text-sm">No page text was stored for this change.</p>
+            <p class="text-slate-400 text-xs mt-1">Changes recorded before 1 Sep 2026 kept only the diff below.</p>
+        </div>
+        {% endif %}
+
+        <h2 class="text-base font-semibold text-slate-900 mt-8 mb-4">Diff</h2>
+        <div class="bg-slate-900 rounded-xl p-4 font-mono text-xs leading-relaxed overflow-x-auto max-h-[32rem] overflow-y-auto">
+            {% for line in event.raw_diff.splitlines() %}
+                {% if line.startswith('+++') or line.startswith('---') %}
+                <div class="text-slate-500">{{ line }}</div>
+                {% elif line.startswith('+') %}
+                <div class="text-green-400">{{ line }}</div>
+                {% elif line.startswith('-') %}
+                <div class="text-red-400">{{ line }}</div>
+                {% elif line.startswith('@@') %}
+                <div class="text-blue-400">{{ line }}</div>
+                {% else %}
+                <div class="text-slate-400">{{ line }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </main>
+</div>
+{% endblock %}

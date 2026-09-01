@@ -147,6 +147,8 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         old_hash=subprocessor.last_content_hash or "",
         new_hash=new_hash,
         raw_diff=raw_diff,
+        old_content_text=subprocessor.last_content_text,
+        new_content_text=canonical_text,
         llm_summary=analysis.summary,
         llm_classification=analysis.classification,
         llm_confidence=analysis.confidence,
