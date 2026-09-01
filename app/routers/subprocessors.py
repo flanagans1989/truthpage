@@ -77,11 +77,17 @@ async def create_subprocessor(
     count_result = await db.execute(
         select(func.count()).select_from(Subprocessor).where(Subprocessor.tenant_id == tenant.id)
     )
-    if count_result.scalar_one() >= settings.MAX_SUBPROCESSORS_PER_TENANT:
+    limit = tenant.subprocessor_limit
+    if count_result.scalar_one() >= limit:
         raise HTTPException(
             status_code=422,
-            detail=f"Plan limit reached ({settings.MAX_SUBPROCESSORS_PER_TENANT} monitored URLs). "
-            "Contact support to increase it.",
+            detail=(
+                f"Free plan limit reached ({limit} monitored URLs). "
+                "Upgrade to Growth for 25."
+                if tenant.is_free_plan
+                else f"Plan limit reached ({limit} monitored URLs). "
+                "Contact support to increase it."
+            ),
         )
 
     # DNS resolution inside is blocking — run off the event loop

@@ -1,16 +1,66 @@
 import logging
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import selectinload
 
+from app.core.config import settings
 from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
-from app.db.models.tenant import Tenant
+from app.db.models.tenant import MONITORED_STATUSES, Tenant
 from app.services.monitoring import run_subprocessor_check
+from app.services.plans import free_plan_split
 
 logger = logging.getLogger(__name__)
 
+
+
+async def downgrade_expired_trials(session_factory: async_sessionmaker[AsyncSession]) -> None:
+    """Move trials that have run out onto the permanent free plan.
+
+    Runs before the sweep so a tenant who expired overnight is charged no
+    scrapes beyond their free allowance in the same tick. Pages above the
+    free limit are switched off rather than deleted — upgrading turns them
+    back on with their history intact.
+    """
+    now = utc_now()
+    async with session_factory() as session:
+        result = await session.execute(
+            select(Tenant)
+            .where(
+                Tenant.subscription_status == "trialing",
+                Tenant.trial_ends_at != None,  # noqa: E711
+                Tenant.trial_ends_at <= now,
+            )
+            .options(selectinload(Tenant.subprocessors))
+        )
+        expired = list(result.scalars().all())
+        if not expired:
+            return
+
+        for tenant in expired:
+            # The operator's own tenant is the showcase trust page, not a
+            # customer on a trial. Downgrading it would switch off half the
+            # vendors on the page we hand to prospects.
+            if tenant.email and tenant.email.lower() in settings.admin_email_set:
+                logger.info("Trial expiry: skipping admin tenant %s", tenant.slug)
+                continue
+            tenant.subscription_status = "free"
+            _, dropped = free_plan_split(
+                tenant.subprocessors, settings.FREE_TIER_MAX_SUBPROCESSORS
+            )
+            switched_off = 0
+            for sp in dropped:
+                if sp.monitoring_enabled:
+                    sp.monitoring_enabled = False
+                    switched_off += 1
+            logger.info(
+                "Trial expired for tenant %s — moved to free plan, %d page(s) switched off",
+                tenant.slug,
+                switched_off,
+            )
+
+        await session.commit()
 
 
 async def sweep_due_subprocessors(session_factory: async_sessionmaker[AsyncSession]) -> None:
@@ -27,13 +77,13 @@ async def sweep_due_subprocessors(session_factory: async_sessionmaker[AsyncSessi
             .join(Subprocessor.tenant)
             .where(
                 Subprocessor.monitoring_enabled == True,  # noqa: E712
+                Tenant.subscription_status.in_(MONITORED_STATUSES),
                 or_(
-                    Tenant.subscription_status == "active",
-                    and_(
-                        Tenant.subscription_status == "trialing",
-                        # Legacy rows without a trial end keep working until claimed
-                        (Tenant.trial_ends_at == None) | (Tenant.trial_ends_at > now),  # noqa: E711
-                    ),
+                    Tenant.subscription_status != "trialing",
+                    # Legacy rows without a trial end keep working until claimed;
+                    # a lapsed trial is moved to "free" by downgrade_expired_trials
+                    # before this query runs.
+                    (Tenant.trial_ends_at == None) | (Tenant.trial_ends_at > now),  # noqa: E711
                 ),
                 (Subprocessor.next_check_at <= now) | (Subprocessor.next_check_at == None),  # noqa: E711
             )
@@ -56,3 +106,13 @@ async def sweep_due_subprocessors(session_factory: async_sessionmaker[AsyncSessi
                 logger.exception(
                     "Sweep: unhandled error for subprocessor %s — skipping", subprocessor.id
                 )
+
+
+async def run_sweep_cycle(session_factory: async_sessionmaker[AsyncSession]) -> None:
+    """One tick of the monitor: settle plan transitions, then check what is due.
+
+    Order matters — a trial that lapsed since the last tick must land on the
+    free plan first, or this tick would still scrape its whole vendor list.
+    """
+    await downgrade_expired_trials(session_factory)
+    await sweep_due_subprocessors(session_factory)

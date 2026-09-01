@@ -95,7 +95,8 @@
                 {% if trial_days_left <= 3 %}bg-amber-50 border-amber-200{% else %}bg-blue-50 border-blue-200{% endif %}">
                 <p class="text-sm {% if trial_days_left <= 3 %}text-amber-800{% else %}text-blue-800{% endif %}">
                     {% if trial_days_left == 0 %}
-                    Your free trial ends today — monitoring stops when it expires.
+                    Your free trial ends today — after that you keep monitoring your
+                    {{ free_limit }} oldest pages on the free plan.
                     {% else %}
                     Your free trial ends in <strong>{{ trial_days_left }} day{{ 's' if trial_days_left != 1 }}</strong>.
                     {% endif %}
@@ -104,6 +105,18 @@
                    class="text-sm font-semibold px-4 py-2 rounded-lg text-white transition
                        {% if trial_days_left <= 3 %}bg-amber-600 hover:bg-amber-700{% else %}bg-blue-600 hover:bg-blue-700{% endif %}">
                     Upgrade now
+                </a>
+            </div>
+            {% elif tenant.is_free_plan %}
+            <div class="mb-6 rounded-xl border bg-slate-50 border-slate-200 px-5 py-4 flex items-center justify-between">
+                <p class="text-sm text-slate-700">
+                    You're on the <strong>free plan</strong> — {{ free_limit }} pages monitored daily.
+                    Pages above the limit are switched off, not deleted; upgrading turns them back on
+                    with their history intact.
+                </p>
+                <a href="/dashboard/billing/checkout"
+                   class="shrink-0 ml-4 text-sm font-semibold px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
+                    Upgrade to 25
                 </a>
             </div>
             {% endif %}

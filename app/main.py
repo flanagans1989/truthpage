@@ -12,7 +12,7 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.db.session import AsyncSessionLocal, engine
 from app.routers import admin, auth, billing, dashboard, pages, public, subprocessors, webhooks
-from app.scheduler.jobs import sweep_due_subprocessors
+from app.scheduler.jobs import run_sweep_cycle
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging.config.dictConfig({
@@ -67,11 +67,11 @@ async def lifespan(app: FastAPI):
     # month. The trade-off is that a subprocessor configured at the 60-minute
     # minimum can now be checked up to 3 hours late.
     _scheduler.add_job(
-        sweep_due_subprocessors,
+        run_sweep_cycle,
         trigger="interval",
         hours=3,
         args=[AsyncSessionLocal],
-        id="sweep_due_subprocessors",
+        id="sweep_cycle",
         replace_existing=True,
         max_instances=1,  # never overlap; one sweep at a time
     )
@@ -123,5 +123,5 @@ async def healthz():
 async def trigger_sweep(x_admin_secret: str = Header(...)):
     if not hmac.compare_digest(x_admin_secret, settings.JWT_SECRET):
         raise HTTPException(status_code=403, detail="Forbidden")
-    await sweep_due_subprocessors(AsyncSessionLocal)
+    await run_sweep_cycle(AsyncSessionLocal)
     return {"status": "sweep triggered"}

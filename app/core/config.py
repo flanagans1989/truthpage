@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     GA_MEASUREMENT_ID: str = ""
     # Growth plan cap; raise per-tenant later if plans diversify
     MAX_SUBPROCESSORS_PER_TENANT: int = 25
+    # Permanent free plan. Every free tenant still costs a scrape per page per
+    # day, so this is a compute knob as much as a packaging one — see the sweep
+    # note in CLAUDE.md before raising it.
+    FREE_TIER_MAX_SUBPROCESSORS: int = 3
     # Comma-separated emails allowed to open /admin (matched against tenant.email)
     ADMIN_EMAILS: str = ""
 

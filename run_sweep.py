@@ -17,13 +17,13 @@ from sqlalchemy import func, select, text
 
 from app.db.models.change_event import ChangeEvent, ChangeStatus
 from app.db.models.subprocessor import Subprocessor
-from app.db.models.tenant import Tenant
+from app.db.models.tenant import MONITORED_STATUSES, Tenant
 from app.db.session import AsyncSessionLocal
-from app.scheduler.jobs import sweep_due_subprocessors
+from app.scheduler.jobs import run_sweep_cycle
 from app.db.models.mixins import utc_now
 
-# jobs.py inlines these into its query; kept here for the pre-check display only.
-_BILLABLE_STATUSES = ("active", "trialing")
+# jobs.py filters on these; re-used here for the pre-check display only.
+_BILLABLE_STATUSES = MONITORED_STATUSES
 
 
 async def _pre_check() -> None:
@@ -84,11 +84,14 @@ async def main() -> None:
     await _pre_check()
 
     print("\n=== Manuel Sweep Başlatıldı ===\n")
-    await sweep_due_subprocessors(AsyncSessionLocal)
+    await run_sweep_cycle(AsyncSessionLocal)
 
     print("\n=== Son 5 ChangeEvent ===")
     await _post_check()
     print("\n=== Tamamlandı — Onay kuyruğu: http://localhost:8000/dashboard/queue ===\n")
 
 
-asyncio.run(main())
+# Guard, not ceremony: without it `import run_sweep` runs a real sweep against
+# whatever DATABASE_URL is set — and the local .env points at production.
+if __name__ == "__main__":
+    asyncio.run(main())

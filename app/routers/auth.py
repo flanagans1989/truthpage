@@ -220,6 +220,8 @@ async def verify_magic_link(
     # New tenants → onboarding checkout; returning paid/trialing tenants → dashboard
     if is_new_tenant:
         destination = "/dashboard/billing/checkout"
+    elif tenant.is_free_plan:
+        destination = "/dashboard"
     elif tenant.subscription_status in ("canceled", "unpaid", "past_due") or tenant.trial_expired:
         destination = "/dashboard/billing/checkout"
     else:

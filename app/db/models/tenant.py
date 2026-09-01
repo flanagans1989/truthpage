@@ -7,7 +7,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from app.db.models.mixins import TimestampMixin, utc_now
 
-SUBSCRIPTION_STATUSES = ("trialing", "active", "past_due", "canceled", "unpaid")
+# "free" is the permanent free plan, not a billing state Paddle ever sends:
+# it is where an expired trial lands instead of being switched off.
+SUBSCRIPTION_STATUSES = ("trialing", "active", "past_due", "canceled", "unpaid", "free")
+
+# Statuses whose pages the sweeper still checks.
+MONITORED_STATUSES = ("active", "trialing", "free")
 
 
 class Tenant(TimestampMixin, Base):
@@ -43,6 +48,20 @@ class Tenant(TimestampMixin, Base):
             self.subscription_status == "trialing"
             and self.trial_ends_at is not None
             and self.trial_ends_at <= utc_now()
+        )
+
+    @property
+    def is_free_plan(self) -> bool:
+        return self.subscription_status == "free"
+
+    @property
+    def subprocessor_limit(self) -> int:
+        from app.core.config import settings
+
+        return (
+            settings.FREE_TIER_MAX_SUBPROCESSORS
+            if self.is_free_plan
+            else settings.MAX_SUBPROCESSORS_PER_TENANT
         )
 
     subprocessors: Mapped[list["Subprocessor"]] = relationship(  # noqa: F821

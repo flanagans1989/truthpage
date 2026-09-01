@@ -47,6 +47,8 @@ async def dashboard(
             "tenant": tenant,
             "rows": rows,
             "trial_days_left": trial_days_left,
+            "subprocessor_limit": tenant.subprocessor_limit,
+            "free_limit": settings.FREE_TIER_MAX_SUBPROCESSORS,
             "is_admin": bool(tenant.email) and tenant.email.lower() in settings.admin_email_set,
         },
     )
