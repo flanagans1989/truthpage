@@ -448,7 +448,7 @@ outreach with the EMAIL-READY row (Hunter.io) and the 4 confirmed LINKEDIN-READY
   GaggleAMP/Glenn Gaudet) — held for **2026-09-01**, when the free-tier personalized-note quota
   resets (3/month; August's was spent on 2026-08-15). Plan: notes for the 3 strongest, the 4th
   without a note. User chose this over sending all 4 note-less on 08-31.
-- Loops/Chris Frantz still needs his personal LinkedIn URL confirmed before any contact.
+- ~~Loops/Chris Frantz needs his personal LinkedIn URL confirmed~~ — **confirmed 2026-09-01**: `linkedin.com/in/ctfrantz` (see "LinkedIn batch 2" below; he is 2nd-degree via Thibault Le Ouay).
 
 ### Competitive/content signal (not prospects — observe only)
 
@@ -476,3 +476,31 @@ outreach with the EMAIL-READY row (Hunter.io) and the 4 confirmed LINKEDIN-READY
 
 Everything else: "Would talking to 20 more prospects create more value than building
 this?" — Yes. Talk to prospects.
+
+## LinkedIn batch 2 — sent 2026-09-01
+
+All 4 held rows went out today, the day the free-tier personalized-note quota reset. Verified
+in the sent-invitations manager afterwards; 25 invitations now pending in total.
+
+| Contact | Company | Note? | Connect note |
+|---|---|---|---|
+| Matt Pattoli | Cometly | yes | Hi Matt - saw Cometly's sub-processor page, and that you're DPO as well as co-founder. I build tooling in that exact space: monitoring vendor sub-processor changes. Good to connect. |
+| Karl Falk | Botdoc | yes | Hi Karl - saw Botdoc's sub-processor page. I build tooling for tracking vendor sub-processor changes; figured a secure-transfer company would get the problem instantly. Good to connect. |
+| Taylor Lint | Swantide | yes | Hi Taylor - saw Swantide's sub-processor page, rare for a team your size. I work on tooling in that exact space, monitoring vendor sub-processor changes. Thought it'd be good to connect. |
+| Glenn Gaudet | GaggleAMP | no | — (quota exhausted; ranked 4th of the 4 on fit) |
+
+Ranking used for the 3 notes: Pattoli first (co-founder **and** DPO — the sub-processor list is
+literally his responsibility), then Falk (secure-transfer company, gets the problem instantly),
+then Lint (CEO, keeps a sub-processor page at a size where most teams don't).
+
+**⚠️ The connect-note limit is 200 characters, not ~300.** The 2026-08-15 notes were drafted
+against a wrong assumption and all three of today's had to be re-cut at the dialog. Draft to 200.
+
+**Chris Frantz (Loops) — URL confirmed: `linkedin.com/in/ctfrantz`.** He is a **2nd-degree**
+connection and the shared connection is **Thibault Le Ouay-Ducasse (OpenStatus)**, who is already
+an accepted connection. That makes Loops a warm path rather than a cold one — worth considering an
+intro request through Thibault instead of a cold connect, especially as Thibault has not replied
+to either of the two messages sent to him.
+
+**Reply status as of 2026-09-01:** no replies to any of the 2026-08-31 follow-ups (6 email
+threads + 5 LinkedIn DMs) — 1 day elapsed, too early to read anything into it.
