@@ -38,6 +38,9 @@ sub-processor names that are not in the material you are given.
 [OBJECTION WINDOW] for the number of days and [CONTACT] for the address to write to. \
 Those two are the only placeholders permitted.
 - Plain text, no markdown, no bullet characters. Six to twelve sentences.
+- Put the greeting on its own line and separate paragraphs with a blank line. The text is \
+pasted straight into an email; a wall of prose with the greeting run into the first \
+sentence is the giveaway that nobody read it.
 - If the change carries no Article 28 consequence, say so in one short paragraph rather \
 than inventing an obligation.\
 """
