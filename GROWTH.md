@@ -719,3 +719,40 @@ Read off their live sites on 2026-09-01. Two things in the tables above were wro
 4. **Programmatic `/providers/*`.** Unchanged and still blocked on the Neon compute arithmetic.
 5. **Multi-user / roles.** DPAFlow gates this at €999; we cannot serve a two-person privacy team
    at all.
+
+## Re-contact with the free-tier hook — written 2026-09-01, DO NOT SEND BEFORE ~15 SEPT
+
+The free tier is a legitimate reason to write again: it is a product change, not a re-pitch.
+But the 2026-08-31 follow-up said, in all six email threads, *"quick bump on this, then I'll
+leave you alone."* A third message two days later breaks that sentence in front of the person
+who read it. **Wait roughly two weeks.** The five accepted LinkedIn connections were messaged on
+the same day, so the same timing applies there.
+
+Inbox checked 2026-09-01: still zero replies from any prospect, so the premise holds.
+
+### Email (reply in the existing thread, keeps the history visible)
+
+> Hi {name} — last thing from me on this, and it's a change rather than a pitch.
+>
+> When I wrote, TrustPages was a 14-day trial. It now has a permanent free plan: 3 vendor
+> sub-processor pages, checked daily, no card, no expiry. If you ever wanted the answer to
+> "did any of our vendors change their sub-processors" without buying anything, that's the
+> version to take: https://usetrustpages.com/pricing
+>
+> Either way, thanks for the read.
+
+### LinkedIn (to the five who accepted)
+
+> Following up once with something concrete rather than another question: we opened a permanent
+> free tier — 3 vendor pages monitored daily, no card. If you've ever wondered whether one of
+> your vendors quietly changed their sub-processor list, that's enough to find out.
+> usetrustpages.com
+
+Both are deliberately terminal: they give something and ask for nothing, so a non-reply costs
+nothing on either side.
+
+### Second hook, for new prospects only
+
+The comparison pages (`/vs/registora`, `/vs/dpaflow`) are for people already shopping the
+category — inbound, not outreach. Do not send them to a cold prospect who has never heard of
+either product; it argues against a competitor they were not considering.
