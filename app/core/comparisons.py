@@ -1,14 +1,15 @@
-"""Comparison page content.
+"""Content for /compare.
 
-Every claim here was read off the competitor's own live site on 1 September
-2026 and each page says so. Prices in this category move, and a comparison
-page that is quietly wrong is worse than none — it is the first thing a
-prospect checks. `verified_on` is shown to the reader; update it and the
-figures together, never one alone.
+Deliberately nameless. Naming a competitor of our own size on our own site
+advertises them to a visitor who had not heard of them — the tactic only pays
+when you are renting the search volume of someone far bigger. So this page
+describes the shapes of tool a buyer actually meets and says plainly which
+one to pick, without turning our page into their billboard.
 
-The honest column matters as much as the flattering one: `they_win` is not
-decoration. A buyer who finds the weakness themselves stops believing the
-rest of the page.
+The figures are category ranges read off live vendor sites on the date below,
+not quotes attributed to anyone. Update `VERIFIED_ON` and the numbers
+together; a stale price on a comparison page is the first thing a reader
+catches. Names for our own reference stay in GROWTH.md, not here.
 """
 from dataclasses import dataclass, field
 
@@ -17,131 +18,157 @@ VERIFIED_ON = "1 September 2026"
 OURS = {
     "free": "3 vendor pages, permanently",
     "paid": "$99/month for 25 pages",
-    "monitoring": "Daily, with a browser fallback for JavaScript-rendered pages",
 }
 
 
 @dataclass(frozen=True)
-class Comparison:
+class Category:
     slug: str
     name: str
-    url: str
-    tagline: str
-    # One-line answer to "should I read on?"
-    verdict: str
-    pricing: str
-    rows: list[tuple[str, str, str]] = field(default_factory=list)
-    they_win: list[str] = field(default_factory=list)
-    we_win: list[str] = field(default_factory=list)
+    # What the buyer sees when they land on one of these.
+    shape: str
+    price: str
+    strengths: list[str] = field(default_factory=list)
+    limits: list[str] = field(default_factory=list)
+    pick_them_when: str = ""
 
 
-COMPARISONS: dict[str, Comparison] = {
-    "registora": Comparison(
-        slug="registora",
-        name="Registora",
-        url="https://registora.com/",
-        tagline="The subprocessor page that keeps itself current",
-        verdict=(
-            "The closest product to ours, and cheaper. Choose Registora if you want unlimited "
-            "vendors on a small budget; choose TrustPages if the review trail matters more than "
-            "the vendor count."
+CATEGORIES: list[Category] = [
+    Category(
+        slug="lightweight-registries",
+        name="Lightweight subprocessor registries",
+        shape=(
+            "A hosted page listing your sub-processors, refreshed by daily checks of the "
+            "vendors you name. The closest neighbours to what we do."
         ),
-        pricing="Free for 5 (with their wordmark on your page), $19/month for 15, $49/month unlimited",
-        rows=[
-            ("Permanent free tier", "5 pages, page carries their wordmark", "3 pages, no wordmark"),
-            ("Paid price", "$19 or $49 per month", "$99 per month for 25 pages"),
-            ("Monitoring frequency", "Daily", "Daily"),
-            ("Public trust page", "Yes, on a custom subdomain from $19", "Yes, on a usetrustpages.com path"),
-            ("Article 28(2) notice", "Yes, drafted automatically", "Yes, drafted per change on the Growth plan"),
-            ("Review before publishing", "Notices are drafted for approval", "Every material change queues for approval; only high-confidence cosmetic edits auto-publish"),
-            ("Stored page text", "Not published on their site", "Both documents kept per change, with hashes"),
-            ("Audit export", "CSV on the $49 tier", "CSV on every plan, free included"),
-            ("Slack alerts", "Yes, on the $49 tier", "No — email only"),
-            ("API", "Yes", "No"),
-            ("DORA XBRL export", "Listed as coming soon", "No"),
+        price="Free for a handful of vendors, roughly $19-$49/month for more or unlimited",
+        strengths=[
+            "Cheapest route to unlimited vendors, by a wide margin",
+            "Custom subdomain for the public page at the lower paid tiers",
+            "Free tiers exist, though they usually carry the vendor's own mark on your page",
         ],
-        they_win=[
-            "Unlimited vendors for $49 — we cap Growth at 25 for $99.",
-            "A custom subdomain from $19; our trust page lives on a usetrustpages.com path.",
-            "Slack alerts and an API, neither of which we have.",
-            "A far larger published library of vendor pages and guides.",
+        limits=[
+            "The record is generally the current state plus alerts, not a dated document per change",
+            "Review before publishing is thin or absent — updates tend to flow automatically",
+            "Coverage is limited to the vendors the tool already tracks",
         ],
-        we_win=[
-            "Every change is classified material or cosmetic before it reaches you, and only "
-            "high-confidence cosmetic edits publish themselves. You review the rest.",
-            "The full page text is kept on both sides of every change, with content hashes — "
-            "so “what did this page say in March” has an answer, not just a diff.",
-            "CSV export of the whole history is on the free plan, not held back for a paid tier.",
-            "Any URL can be monitored, with a real browser when the page needs one. Vendor "
-            "coverage is not limited to a curated list.",
-        ],
-    ),
-    "dpaflow": Comparison(
-        slug="dpaflow",
-        name="DPAFlow",
-        url="https://dpaflow.com/",
-        tagline="Vendor and subprocessor changes, detected the moment they happen",
-        verdict=(
-            "Same job, aimed at a privacy team with a budget and a headcount. If several people "
-            "review changes and you need RoPA and TIA modules alongside, DPAFlow is built for "
-            "that. If one person owns this, their review workflow costs €299 and ours is $99."
+        pick_them_when=(
+            "You have a long vendor list, a small budget, and nobody is going to ask you to "
+            "prove what a page said last quarter."
         ),
-        pricing="€99/month Starter, €299/month Professional, €999/month Business; 7-day trial",
-        rows=[
-            ("Permanent free tier", "None — 7-day trial", "3 pages, permanently"),
-            ("Entry price", "€99/month, monitoring and evidence only", "$99/month, everything below included"),
-            ("Review workflow", "€299/month tier", "Included"),
-            ("Audit export", "€299/month tier", "Included on every plan"),
-            ("Public trust page", "No — the evidence faces inward", "Yes, with customer subscriptions"),
-            ("Article 28(2) notice", "Not offered", "Drafted per change"),
-            ("Multiple users and roles", "Yes, on the €999 tier", "No — one owner per account"),
-            ("RoPA / TIA modules", "Yes, on the €999 tier", "No"),
-            ("EU data residency", "Yes, stated", "Hosted in Frankfurt, not contractually offered"),
-        ],
-        they_win=[
-            "Role-based access for a privacy, legal and procurement team; we have one login per account.",
-            "RoPA and Transfer Impact Assessment modules — we do not touch either.",
-            "Stated EU-first hosting and a DPA available before purchase.",
-        ],
-        we_win=[
-            "The review queue and the audit export are in the $99 plan. Theirs start at €299.",
-            "A public trust page your customers can subscribe to — DPAFlow's evidence faces "
-            "inward, at the auditor, not at your buyers.",
-            "A drafted Article 28(2) customer notice for each change.",
-            "A permanent free tier instead of a 7-day trial.",
-        ],
     ),
-    "pagecrawl": Comparison(
-        slug="pagecrawl",
-        name="PageCrawl.io",
-        url="https://pagecrawl.io/",
-        tagline="Monitor web pages, get AI summaries of what changed",
-        verdict=(
-            "A good general page-change monitor that many teams point at a sub-processor list. "
-            "It will tell you the page moved. It will not give you anything to hand an auditor."
+    Category(
+        slug="privacy-suites",
+        name="Privacy-team evidence suites",
+        shape=(
+            "Built for a privacy function with several people in it: monitoring plus review "
+            "queues, evidence capture, and records-of-processing and transfer-assessment modules."
         ),
-        pricing="Free for 6 pages at hourly checks, $13.33/month for 200, up to $83.25/month for 1,000",
-        rows=[
-            ("What it is", "General page-change monitoring", "Sub-processor compliance monitoring"),
-            ("Free tier", "6 pages, checked hourly", "3 pages, checked daily"),
-            ("Price for volume", "200 pages for $13.33/month", "25 pages for $99/month"),
-            ("Change classification", "AI importance score, 0-100", "Material / cosmetic / uncertain, with an approval queue"),
-            ("Alert channels", "Slack, Teams, Discord, Telegram, email, webhook", "Email"),
-            ("Public trust page", "No", "Yes, with customer subscriptions"),
-            ("Evidence for an audit", "No", "Both page documents, hashes, decision trail, CSV export"),
-            ("Article 28(2) notice", "No", "Drafted per change"),
+        price="Around €99/month entry, €299 for the review workflow, €999 for roles and modules",
+        strengths=[
+            "Role-based access for privacy, legal and procurement working the same queue",
+            "RoPA and Transfer Impact Assessment alongside the monitoring",
+            "Stated EU data residency and a DPA available before purchase",
         ],
-        they_win=[
-            "Far cheaper per page, and far more of them — 200 pages for the price of a lunch.",
-            "Six alert channels to our one.",
-            "Element-level selectors and auto-discovery of new pages.",
+        limits=[
+            "The review workflow and audit export sit two tiers up, not in the entry plan",
+            "The evidence faces inward, at your auditor — there is no public page for your customers",
+            "Trials are short and there is no permanent free plan",
         ],
-        we_win=[
-            "The output is compliance evidence, not a notification: dated documents, hashes, "
-            "who approved what, exportable as CSV.",
-            "A public trust page that answers the question your customers' security "
-            "questionnaires ask.",
-            "A drafted Article 28(2) customer notice for each change.",
-        ],
+        pick_them_when=(
+            "More than one person reviews vendor changes, or you need RoPA and TIA in the "
+            "same tool. We cannot serve a two-person privacy team; they can."
+        ),
     ),
-}
+    Category(
+        slug="page-monitors",
+        name="General page-change monitors",
+        shape=(
+            "Not compliance products. They watch any URL and tell you it moved, with an AI "
+            "summary and an importance score."
+        ),
+        price="Free for a handful of pages, roughly $13-$85/month for hundreds",
+        strengths=[
+            "Far cheaper per page, and hundreds of pages rather than dozens",
+            "Alerts anywhere — Slack, Teams, Discord, webhooks",
+            "Element-level selectors and automatic discovery of new pages",
+        ],
+        limits=[
+            "The output is a notification, not evidence: no decision trail, no audit export",
+            "Nothing to show a customer — no public page, no subscriber notice",
+            "Nothing drafts the Article 28(2) message your DPA promises",
+        ],
+        pick_them_when=(
+            "You want to know when pages change and you will handle the compliance side "
+            "yourself, in a spreadsheet you already keep."
+        ),
+    ),
+    Category(
+        slug="trust-platforms",
+        name="Trust centre and GRC platforms",
+        shape=(
+            "The enterprise end: a full trust centre with questionnaire automation, "
+            "certifications, NDA-gated documents, and sub-processors as one section of many."
+        ),
+        price="Typically annual contracts, four to five figures",
+        strengths=[
+            "Answers the entire security review, not only the sub-processor part",
+            "Document libraries, access controls, integrations with the rest of the stack",
+            "The name on the page carries weight with an enterprise buyer",
+        ],
+        limits=[
+            "Priced and scoped for a company with a compliance function",
+            "Sub-processor monitoring is a feature, not the focus, and is often manual",
+            "Weeks to deploy rather than an afternoon",
+        ],
+        pick_them_when=(
+            "Security questionnaires are a recurring cost across your whole company and you "
+            "have the budget to solve all of it at once."
+        ),
+    ),
+]
+
+# What we actually do differently, stated without reference to anyone else.
+OUR_POSITION: list[tuple[str, str]] = [
+    (
+        "The documents, not just the diff",
+        "Every detected change stores the vendor's page as it read before and after, each with "
+        "a content hash and a timestamp, plus who reviewed it and when. “What did this page "
+        "say in March” has an answer.",
+    ),
+    (
+        "Nothing publishes without you",
+        "Changes are classified material or cosmetic, and only high-confidence cosmetic edits "
+        "publish themselves. Everything else waits in a queue with a side-by-side diff.",
+    ),
+    (
+        "Export on every plan",
+        "The whole history leaves as one CSV — dates, vendors, classifications, hashes, "
+        "decisions — including on the free plan. It is the file you actually get asked for.",
+    ),
+    (
+        "The customer notice, drafted",
+        "Your DPA promises customers a heads-up under Article 28(2). We draft it from the "
+        "change itself, so the step that usually gets skipped is a review rather than a "
+        "blank page.",
+    ),
+    (
+        "Any URL, including the awkward ones",
+        "Pages that only render with JavaScript are fetched with a real browser, so coverage "
+        "is not limited to a list of vendors we happen to track.",
+    ),
+]
+
+# Where we are honestly weaker. A comparison page that only flatters us does
+# not survive the reader checking one line of it.
+OUR_GAPS: list[str] = [
+    "25 pages on the paid plan, where cheaper tools offer unlimited.",
+    "The public trust page lives on a usetrustpages.com address; there is no custom domain yet.",
+    "Email alerts only — no Slack, no webhooks, no API.",
+    "One login per account: no roles for a privacy team working together.",
+    "No RoPA, no Transfer Impact Assessments, no questionnaire automation.",
+]
+
+# The old per-competitor URLs, kept as redirects so links and any indexed
+# pages do not 404.
+LEGACY_SLUGS = ("registora", "dpaflow", "pagecrawl")

@@ -59,8 +59,10 @@ python run_sweep.py                    # manual sweep
   path — that tenant is the showcase trust page
 - Article 28(2) notice drafts are stored on the change event and only redrawn on request; the
   tenant may already have sent the earlier wording
-- Competitor figures on `/vs/*` live in `app/core/comparisons.py` with a `VERIFIED_ON` date shown
-  on the page — update the date and the numbers together
+- `/compare` describes competitor *categories*, never names: naming a rival our own size on our
+  own site advertises them. Figures are ranges in `app/core/comparisons.py` with a `VERIFIED_ON`
+  date shown on the page — update the date and the numbers together. A test asserts no competitor
+  name appears in the copy. The old `/vs/{slug}` URLs 301 to `/compare`
 - Public trust page shows the last 20 approved + auto-published changes
 
 Env vars: see `.env.example`. `SENTRY_DSN` and `GA_MEASUREMENT_ID` are optional.
