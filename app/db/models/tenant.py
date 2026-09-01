@@ -57,6 +57,16 @@ class Tenant(TimestampMixin, Base):
         Boolean, nullable=False, default=False, server_default="false"
     )
 
+    # Set when the onboarding wizard is finished. NULL routes a fresh signup
+    # into the wizard; tenants who predate it were backfilled in 0011.
+    onboarded_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    @property
+    def needs_onboarding(self) -> bool:
+        return self.onboarded_at is None
+
     @property
     def is_free_plan(self) -> bool:
         return self.subscription_status == "free"

@@ -1,0 +1,65 @@
+{# What the importer found. Nothing here is saved yet — the tenant is the one
+   who decides which of these end up on a page their customers will read. #}
+{% if error %}
+<div class="px-6 py-4 bg-amber-50 text-sm text-amber-800">{{ error }}</div>
+{% elif result %}
+
+{% if result.ready %}
+<form hx-post="/onboarding/library" hx-target="#wizard-state" hx-swap="outerHTML" class="px-6 py-5">
+    <p class="text-sm font-medium text-slate-900 mb-1">
+        Found {{ result.ready | length }} vendor{{ 's' if result.ready | length != 1 }} we can monitor right away
+    </p>
+    <p class="text-xs text-slate-500 mb-4">We know where each of these publishes its sub-processor list.</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
+        {% for c in result.ready %}
+        <label class="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3 cursor-pointer transition
+                      hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+            <input type="checkbox" name="slugs" value="{{ c.slug }}" checked
+                   class="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 shrink-0">
+            <span class="min-w-0">
+                <span class="block text-sm font-medium text-slate-900 truncate">{{ c.name }}</span>
+                {% if c.purpose %}<span class="block text-xs text-slate-500 truncate">{{ c.purpose }}</span>{% endif %}
+            </span>
+        </label>
+        {% endfor %}
+    </div>
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+        Add checked to my page
+    </button>
+</form>
+{% endif %}
+
+{% if result.needs_url %}
+<div class="px-6 py-5 {% if result.ready %}border-t border-slate-100{% endif %}">
+    <p class="text-sm font-medium text-slate-900 mb-1">
+        {{ result.needs_url | length }} more we found but can't monitor yet
+    </p>
+    <p class="text-xs text-slate-500 mb-4">
+        We need the page where each one publishes its own sub-processors. We won't guess a URL —
+        the wrong one would quietly monitor the wrong company.
+    </p>
+    <div class="space-y-2.5">
+        {% for c in result.needs_url %}
+        <form hx-post="/onboarding/custom" hx-target="#wizard-state" hx-swap="outerHTML"
+              class="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+            <input type="hidden" name="name" value="{{ c.name }}">
+            <span class="sm:w-44 shrink-0 text-sm font-medium text-slate-800 truncate">{{ c.name }}</span>
+            <input type="url" name="monitored_url" required placeholder="https://vendor.com/subprocessors"
+                   class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit"
+                    class="shrink-0 border border-slate-200 text-slate-700 hover:bg-slate-50 text-sm font-medium px-4 py-2 rounded-lg transition">
+                Add
+            </button>
+        </form>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if result.already_added %}
+<p class="px-6 py-4 text-xs text-slate-500 border-t border-slate-100">
+    Already on your list: {{ result.already_added | map(attribute='name') | join(', ') }}.
+</p>
+{% endif %}
+
+{% endif %}

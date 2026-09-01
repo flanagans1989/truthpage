@@ -217,9 +217,12 @@ async def verify_magic_link(
     else:
         logger.info("verify_magic_link: existing tenant slug='%s' for email='%s'", tenant.slug, email)
 
-    # New tenants → onboarding checkout; returning paid/trialing tenants → dashboard
-    if is_new_tenant:
-        destination = "/dashboard/billing/checkout"
+    # A brand-new tenant goes to the wizard, not to a payment form: the trial
+    # is already running, and asking for a card before they have seen the
+    # product is the step that lost them. Checkout is one click away in the
+    # dashboard, and the trial banner keeps asking.
+    if is_new_tenant or tenant.needs_onboarding:
+        destination = "/onboarding"
     elif tenant.is_free_plan:
         destination = "/dashboard"
     elif tenant.subscription_status in ("canceled", "unpaid", "past_due") or tenant.trial_expired:

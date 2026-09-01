@@ -1,0 +1,183 @@
+{# Everything the wizard re-renders after a write: the picker (so added
+   vendors stop offering themselves), the list, and the publish step. One
+   HTMX target, so a single swap can never leave two halves disagreeing. #}
+<div id="wizard-state" class="space-y-6">
+
+    {% if add_result %}
+    <div class="rounded-xl border px-5 py-4 text-sm
+        {% if add_result.added %}bg-green-50 border-green-200 text-green-800{% else %}bg-slate-50 border-slate-200 text-slate-700{% endif %}">
+        {% if add_result.added %}
+        <p class="font-medium">Added {{ add_result.added | length }} vendor{{ 's' if add_result.added | length != 1 }} — now monitored daily.</p>
+        {% endif %}
+        {% if add_result.skipped %}
+        <p class="mt-1 text-xs">Already on your list: {{ add_result.skipped | join(', ') }}.</p>
+        {% endif %}
+        {% if add_result.refused %}
+        <p class="mt-1 text-xs">
+            Not added — your plan covers {{ limit }} pages: {{ add_result.refused | join(', ') }}.
+            <a href="/dashboard/billing/checkout" class="underline font-medium">Upgrade</a> to monitor them too.
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">{{ error }}</div>
+    {% endif %}
+
+    <!-- ── Step 1 · pick from the library ───────────────────────────────── -->
+    <section class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">1</span>
+                    <h2 class="text-base font-semibold text-slate-900">Pick the services you use</h2>
+                </div>
+                <p class="text-sm text-slate-500 mt-1.5 ml-8">
+                    We already know where each one publishes its sub-processors. Tick and add — no URLs to find.
+                </p>
+            </div>
+            <span class="text-xs text-slate-400">{{ rows | length }} / {{ limit }} used</span>
+        </div>
+
+        <form hx-post="/onboarding/library" hx-target="#wizard-state" hx-swap="outerHTML"
+              hx-indicator="#library-spinner">
+            <div class="px-6 py-5 space-y-6 max-h-[26rem] overflow-y-auto">
+                {% for category, providers in groups %}
+                <div>
+                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5">{{ category }}</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+                        {% for p in providers %}
+                        {% set added = p.slug in chosen %}
+                        <label class="group relative flex items-start gap-3 rounded-xl border px-3.5 py-3 transition
+                            {% if added %}border-slate-200 bg-slate-50 cursor-default
+                            {% else %}border-slate-200 bg-white hover:border-blue-400 hover:shadow-sm cursor-pointer
+                            has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 has-[:checked]:ring-1 has-[:checked]:ring-blue-500{% endif %}">
+                            {% if not added %}
+                            <input type="checkbox" name="slugs" value="{{ p.slug }}"
+                                   class="peer mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 shrink-0">
+                            {% else %}
+                            <svg class="mt-0.5 h-4 w-4 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            {% endif %}
+                            <span class="w-8 h-8 rounded-lg {{ p.accent }} flex items-center justify-center text-xs font-bold shrink-0">
+                                {{ p.name[0] }}
+                            </span>
+                            <span class="min-w-0">
+                                <span class="block text-sm font-medium text-slate-900 truncate">{{ p.name }}</span>
+                                <span class="block text-xs text-slate-500 truncate">{{ p.description }}</span>
+                            </span>
+                            {% if p.verified %}
+                            {# Not decoration: this URL is one our own directory sweep has
+                               actually read a list off, as opposed to a best-effort guess. #}
+                            <span title="We monitor this page in our public directory — the URL is confirmed working"
+                                  class="absolute top-2 right-2 text-[10px] font-medium text-green-700 bg-green-50 px-1.5 py-0.5 rounded">verified</span>
+                            {% endif %}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center gap-3">
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                    Add selected
+                </button>
+                <span id="library-spinner" class="htmx-indicator text-xs text-slate-500">Adding…</span>
+                <span class="text-xs text-slate-400 ml-auto">{{ remaining }} slot{{ 's' if remaining != 1 }} left on your plan</span>
+            </div>
+        </form>
+    </section>
+
+    <!-- ── Step 2 · import from your own policy ─────────────────────────── -->
+    <section class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+                <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">2</span>
+                <h2 class="text-base font-semibold text-slate-900">Or import from your privacy policy</h2>
+            </div>
+            <p class="text-sm text-slate-500 mt-1.5 ml-8">
+                Give us your policy URL, or paste the vendor list. We read the names out of it —
+                nothing is added until you say so.
+            </p>
+        </div>
+        <form hx-post="/onboarding/import" hx-target="#import-results" hx-swap="innerHTML"
+              hx-indicator="#import-spinner" class="px-6 py-5 space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-slate-500 mb-1.5">Privacy policy URL</label>
+                <input type="url" name="policy_url" placeholder="https://yourcompany.com/privacy"
+                       class="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-100"></div></div>
+                <div class="relative flex justify-center"><span class="bg-white px-3 text-[11px] uppercase tracking-wider text-slate-400">or paste</span></div>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-slate-500 mb-1.5">Vendor list / policy text</label>
+                <textarea name="policy_text" rows="4" placeholder="Paste the sub-processor table or the whole policy…"
+                          class="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="flex items-center gap-3">
+                <button type="submit"
+                        class="bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition">
+                    Find my sub-processors
+                </button>
+                <span id="import-spinner" class="htmx-indicator text-xs text-slate-500">Reading the page…</span>
+            </div>
+        </form>
+        <div id="import-results" class="empty:hidden border-t border-slate-100"></div>
+    </section>
+
+    <!-- ── Step 3 · publish ─────────────────────────────────────────────── -->
+    <section class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+                <span class="w-6 h-6 rounded-full {% if rows %}bg-blue-600{% else %}bg-slate-300{% endif %} text-white text-xs font-bold flex items-center justify-center">3</span>
+                <h2 class="text-base font-semibold text-slate-900">Publish your trust page</h2>
+            </div>
+            <p class="text-sm text-slate-500 mt-1.5 ml-8">
+                {% if rows %}
+                {{ rows | length }} page{{ 's' if rows | length != 1 }} monitored. Your customers will see this list,
+                and every approved change, at the address below.
+                {% else %}
+                Add at least one vendor above first.
+                {% endif %}
+            </p>
+        </div>
+
+        {% if rows %}
+        <ul class="px-6 py-4 divide-y divide-slate-100">
+            {% for row in rows %}
+            <li class="py-2.5 flex items-center gap-3">
+                <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold shrink-0">{{ row.name[0] }}</span>
+                <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-medium text-slate-900 truncate">{{ row.name }}</span>
+                    <span class="block text-xs text-slate-400 truncate">{{ row.monitored_url }}</span>
+                </span>
+                <button hx-post="/onboarding/remove/{{ row.id }}"
+                        hx-target="#wizard-state" hx-swap="outerHTML"
+                        class="text-xs text-slate-400 hover:text-red-600 transition shrink-0">Remove</button>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <form method="post" action="/onboarding/publish" class="px-6 py-5 bg-slate-50 border-t border-slate-100">
+            <label class="block text-xs font-medium text-slate-500 mb-1.5">Company name shown on the page</label>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" name="company_name" value="{{ tenant.name }}" required maxlength="255"
+                       class="flex-1 border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" {% if not rows %}disabled{% endif %}
+                        class="shrink-0 text-sm font-semibold px-6 py-2.5 rounded-lg transition text-white
+                            {% if rows %}bg-green-600 hover:bg-green-700{% else %}bg-slate-300 cursor-not-allowed{% endif %}">
+                    Publish trust page
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 mt-2.5">
+                Goes live at <span class="font-medium text-slate-500">{{ app_url }}/trust/{{ tenant.slug }}</span>
+            </p>
+        </form>
+    </section>
+</div>

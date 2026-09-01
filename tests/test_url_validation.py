@@ -1,8 +1,8 @@
 import pytest
 from fastapi import HTTPException
 
-from app.routers import subprocessors as sp_mod
-from app.routers.subprocessors import _validate_monitored_url
+from app.core import urlguard as sp_mod
+from app.core.urlguard import _validate_monitored_url
 
 
 def _fake_resolver(ip: str):

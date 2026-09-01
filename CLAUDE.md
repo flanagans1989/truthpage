@@ -59,6 +59,23 @@ python run_sweep.py                    # manual sweep
   path — that tenant is the showcase trust page
 - Article 28(2) notice drafts are stored on the change event and only redrawn on request; the
   tenant may already have sent the earlier wording
+- **A trust page is 404 until `tenants.onboarded_at` is set.** The onboarding wizard's Publish
+  button is what sets it; migration 0011 backfilled every pre-wizard tenant to `created_at` so
+  no live page went dark. `/trust/{slug}` and its subscribe endpoint both check it — a list
+  someone is halfway through building is not something to hand a crawler
+- **A new signup lands on `/onboarding`, not on the checkout form.** The trial is already
+  running; asking for a card before they have seen a page was the step that lost them.
+  `tenant.needs_onboarding` (i.e. `onboarded_at IS NULL`) is what routes them
+- The 32 providers in `app/core/provider_library.py` carry a `verified` flag, and it means one
+  thing: the public directory sweep has actually read a sub-processor list off that URL. Do not
+  set it by eye. Monogram tiles, not hotlinked logos — third-party image requests from the
+  dashboard, and trademark use we don't need
+- The policy importer never guesses a monitoring URL from a name. A name it cannot match in the
+  library comes back as "give us the URL"; `match_provider` is alias + normalised-name only, no
+  fuzzy distance, because a near-miss silently monitors the wrong company's page
+- The importer fetches Tier-1 only (`fetch_html_fast`) — a human is waiting on that request, and
+  a cold Playwright escalation takes longer than they will wait. A bot wall becomes "paste the
+  text instead", which is faster than the escalation would have been
 - `/compare` describes competitor *categories*, never names: naming a rival our own size on our
   own site advertises them. Figures are ranges in `app/core/comparisons.py` with a `VERIFIED_ON`
   date shown on the page — update the date and the numbers together. A test asserts no competitor

@@ -16,6 +16,7 @@ from app.routers import (
     auth,
     billing,
     dashboard,
+    onboarding,
     pages,
     public,
     subprocessors,
@@ -116,6 +117,7 @@ app.include_router(pages.router)
 app.include_router(auth.router)
 app.include_router(dashboard.router)
 app.include_router(subprocessors.router)
+app.include_router(onboarding.router)
 app.include_router(billing.router)
 app.include_router(webhooks.router)
 app.include_router(public.router)

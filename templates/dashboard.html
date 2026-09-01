@@ -27,6 +27,14 @@
                 </svg>
                 Sub-processors
             </a>
+            <a href="/onboarding"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Quick import
+            </a>
             <a href="/dashboard/queue"
                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,9 +153,21 @@
                 <div class="flex items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
                     <div>
                         <p class="text-sm font-semibold text-slate-900">Your public trust page</p>
+                        {% if tenant.needs_onboarding %}
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Not published yet — nobody can open it until you finish setting up.
+                        </p>
+                        {% else %}
                         <a href="/trust/{{ tenant.slug }}" target="_blank" rel="noopener"
                            class="text-xs text-blue-600 hover:underline break-all">{{ app_url }}/trust/{{ tenant.slug }}</a>
+                        {% endif %}
                     </div>
+                    {% if tenant.needs_onboarding %}
+                    <a href="/onboarding"
+                       class="shrink-0 text-sm font-semibold px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition">
+                        Finish setup
+                    </a>
+                    {% endif %}
                 </div>
                 {% include "partials/badge_setting.html" %}
             </div>

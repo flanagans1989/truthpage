@@ -98,6 +98,12 @@ async def trust_page(
     tenant = result.scalar_one_or_none()
     if tenant is None:
         raise HTTPException(status_code=404, detail="Trust page not found")
+    # A tenant halfway through the wizard has a half-built list. Publishing is
+    # their decision, so until they press it the page does not exist — the
+    # same 404 as an unknown slug, since "exists but unfinished" is nobody
+    # else's business. Pre-wizard tenants were backfilled in migration 0011.
+    if tenant.needs_onboarding:
+        raise HTTPException(status_code=404, detail="Trust page not found")
 
     sp_result = await db.execute(
         select(Subprocessor)
@@ -166,7 +172,7 @@ async def subscribe(
 
     result = await db.execute(select(Tenant).where(Tenant.slug == slug))
     tenant = result.scalar_one_or_none()
-    if tenant is None:
+    if tenant is None or tenant.needs_onboarding:
         raise HTTPException(status_code=404, detail="Trust page not found")
 
     existing = await db.execute(

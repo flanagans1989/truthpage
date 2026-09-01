@@ -161,3 +161,22 @@ async def fetch_raw_html(
         await on_escalate()
 
     return html
+
+
+class BotWallError(RuntimeError):
+    """Tier-1 was blocked and the caller cannot afford Tier-2."""
+
+
+async def fetch_html_fast(url: str) -> str:
+    """Tier-1 only, for requests a human is waiting on.
+
+    The onboarding importer runs inside a page load, and Playwright takes
+    twenty to thirty seconds on a cold container — long enough that the
+    tenant assumes it broke. Raising here is the better outcome: the importer
+    can tell them to paste the text, which they can do faster than we could
+    have escalated.
+    """
+    html, blocked = await _fetch_tier1(url)
+    if blocked:
+        raise BotWallError(f"Tier-1 blocked for {url}")
+    return html

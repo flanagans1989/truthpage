@@ -1,8 +1,4 @@
-import asyncio
-import ipaddress
 import logging
-import socket
-from urllib.parse import urlparse
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
@@ -10,46 +6,11 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.templating import templates as _templates
+from app.core.urlguard import validate_url
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
-
-_RESERVED_HOSTNAMES = frozenset({"localhost", "metadata.google.internal"})
-
-
-def _is_forbidden_ip(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
-    return addr.is_private or addr.is_link_local or addr.is_loopback or addr.is_reserved
-
-
-def _validate_monitored_url(url: str) -> None:
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https"):
-        raise HTTPException(status_code=422, detail="Only http/https URLs are allowed")
-    host = parsed.hostname or ""
-    if not host:
-        raise HTTPException(status_code=422, detail="Invalid URL: missing host")
-    if host in _RESERVED_HOSTNAMES:
-        raise HTTPException(status_code=422, detail="Reserved hostname not allowed")
-    try:
-        addr = ipaddress.ip_address(host)
-        if _is_forbidden_ip(addr):
-            raise HTTPException(status_code=422, detail="Private/reserved IP addresses are not allowed")
-        return
-    except ValueError:
-        pass  # hostname, not a raw IP — resolve it below
-
-    # Resolve the hostname so e.g. 169.254.169.254.nip.io can't reach cloud
-    # metadata. Not airtight against DNS rebinding, but blocks the easy path.
-    try:
-        infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
-    except socket.gaierror:
-        raise HTTPException(status_code=422, detail="Hostname could not be resolved")
-    for info in infos:
-        resolved = ipaddress.ip_address(info[4][0])
-        if _is_forbidden_ip(resolved):
-            raise HTTPException(status_code=422, detail="Hostname resolves to a private/reserved address")
 
 logger = logging.getLogger(__name__)
 
@@ -90,8 +51,7 @@ async def create_subprocessor(
             ),
         )
 
-    # DNS resolution inside is blocking — run off the event loop
-    await asyncio.to_thread(_validate_monitored_url, monitored_url)
+    await validate_url(monitored_url)
     subprocessor = Subprocessor(
         tenant_id=tenant.id,
         name=name,
