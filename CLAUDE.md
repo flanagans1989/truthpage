@@ -30,10 +30,13 @@ python run_sweep.py                    # manual sweep
   geo-blocks Render's builder. Bump that tag whenever playwright is upgraded.
 - **Use the shared `templates` from `app/core/templating.py`** — it injects the
   `ga_measurement_id` global. A router that builds its own `Jinja2Templates` loses it.
-- **`RESEND_FROM_EMAIL` must be on a Resend-verified domain.** `onboarding@resend.dev` is a
-  shared sandbox sender that only delivers to the account owner — magic links to yourself work,
-  so it looks fine while every subscriber notification is dropped. Set it in the Render
-  dashboard too; `render.yaml` alone did not take effect.
+- **`render.yaml` is not a mirror of production.** Values there are the blueprint's, not what
+  the service actually runs: `RESEND_FROM_EMAIL` read `onboarding@resend.dev` in the file while
+  the dashboard had `noreply@usetrustpages.com`. Reveal the dashboard value before concluding
+  anything about production from this file.
+- **`RESEND_FROM_EMAIL` must be on a Resend-verified domain** (`usetrustpages.com`).
+  `onboarding@resend.dev` is a shared sandbox sender that only delivers to the account owner, so
+  magic links to yourself would still work while every subscriber notification is dropped.
 
 ## Rules that aren't visible in a quick read
 
