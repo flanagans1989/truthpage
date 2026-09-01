@@ -12,18 +12,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.models.tenant import Tenant
 from app.db.session import get_db_session
+from app.services.plans import move_tenant_to_free
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
+# Paddle keeps a subscription "active" until a scheduled cancellation takes
+# effect, so "canceled" here already means the paid period is over. It maps to
+# the free plan rather than to a dead account: the same landing place as an
+# expired trial, and the tenant's public trust page keeps working.
 _SUBSCRIPTION_STATUS_MAP = {
     "active": "active",
     "trialing": "trialing",
     "past_due": "past_due",
-    "paused": "canceled",  # treat paused as canceled for gating purposes
-    "canceled": "canceled",
+    "paused": "free",
+    "canceled": "free",
 }
+
+# Statuses that mean "no paid subscription any more" and therefore need the
+# free-plan page limit applied, not just a status write.
+_ENDS_THE_SUBSCRIPTION = frozenset({"free"})
 
 
 # Reject webhooks whose signature timestamp is too old — otherwise a captured
@@ -107,12 +116,20 @@ async def _handle_subscription_updated(data: dict, db: AsyncSession) -> None:
 
     if paddle_subscription_id:
         tenant.paddle_subscription_id = paddle_subscription_id
-    tenant.subscription_status = mapped_status
+
+    if mapped_status in _ENDS_THE_SUBSCRIPTION:
+        switched_off = await move_tenant_to_free(tenant, db)
+        logger.info(
+            "webhook subscription.updated: tenant %s → free plan, %d page(s) switched off",
+            tenant.id, switched_off,
+        )
+    else:
+        tenant.subscription_status = mapped_status
+        logger.info(
+            "webhook subscription.updated: tenant %s status → %s",
+            tenant.id, mapped_status,
+        )
     await db.commit()
-    logger.info(
-        "webhook subscription.updated: tenant %s status → %s",
-        tenant.id, mapped_status,
-    )
 
 
 async def _handle_subscription_canceled(data: dict, db: AsyncSession) -> None:
@@ -125,9 +142,12 @@ async def _handle_subscription_canceled(data: dict, db: AsyncSession) -> None:
         )
         return
 
-    tenant.subscription_status = "canceled"
+    switched_off = await move_tenant_to_free(tenant, db)
     await db.commit()
-    logger.info("webhook subscription.canceled: tenant %s canceled", tenant.id)
+    logger.info(
+        "webhook subscription.canceled: tenant %s → free plan, %d page(s) switched off",
+        tenant.id, switched_off,
+    )
 
 
 @router.post("/paddle")

@@ -9,7 +9,7 @@ from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.db.models.tenant import MONITORED_STATUSES, Tenant
 from app.services.monitoring import run_subprocessor_check
-from app.services.plans import free_plan_split
+from app.services.plans import move_tenant_to_free
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,6 @@ async def downgrade_expired_trials(session_factory: async_sessionmaker[AsyncSess
                 Tenant.trial_ends_at != None,  # noqa: E711
                 Tenant.trial_ends_at <= now,
             )
-            .options(selectinload(Tenant.subprocessors))
         )
         expired = list(result.scalars().all())
         if not expired:
@@ -45,15 +44,7 @@ async def downgrade_expired_trials(session_factory: async_sessionmaker[AsyncSess
             if tenant.email and tenant.email.lower() in settings.admin_email_set:
                 logger.info("Trial expiry: skipping admin tenant %s", tenant.slug)
                 continue
-            tenant.subscription_status = "free"
-            _, dropped = free_plan_split(
-                tenant.subprocessors, settings.FREE_TIER_MAX_SUBPROCESSORS
-            )
-            switched_off = 0
-            for sp in dropped:
-                if sp.monitoring_enabled:
-                    sp.monitoring_enabled = False
-                    switched_off += 1
+            switched_off = await move_tenant_to_free(tenant, session)
             logger.info(
                 "Trial expired for tenant %s — moved to free plan, %d page(s) switched off",
                 tenant.slug,

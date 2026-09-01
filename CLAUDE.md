@@ -52,9 +52,11 @@ python run_sweep.py                    # manual sweep
 - Plan cap `MAX_SUBPROCESSORS_PER_TENANT`, default 25; free plan `FREE_TIER_MAX_SUBPROCESSORS`,
   default 3 — read the sweep-interval trap above before raising it, every free tenant costs a
   scrape per page per day
-- An expired trial becomes `subscription_status="free"` (not a dead account) at the top of each
-  sweep tick; pages above the free cap are disabled oldest-first-kept, never deleted. Tenants in
-  `ADMIN_EMAILS` are exempt — that tenant is the showcase trust page
+- A subscription that ends becomes `subscription_status="free"`, never a dead account: an
+  expired trial at the top of each sweep tick, a cancellation via the Paddle webhook. Both go
+  through `services.plans.move_tenant_to_free`, which disables pages above the free cap
+  (oldest kept) without deleting them. Tenants in `ADMIN_EMAILS` are exempt from the trial
+  path — that tenant is the showcase trust page
 - Article 28(2) notice drafts are stored on the change event and only redrawn on request; the
   tenant may already have sent the earlier wording
 - Competitor figures on `/vs/*` live in `app/core/comparisons.py` with a `VERIFIED_ON` date shown

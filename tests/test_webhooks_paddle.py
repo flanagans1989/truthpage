@@ -61,8 +61,20 @@ def test_subscription_status_map_known_values():
     assert _SUBSCRIPTION_STATUS_MAP["active"] == "active"
     assert _SUBSCRIPTION_STATUS_MAP["trialing"] == "trialing"
     assert _SUBSCRIPTION_STATUS_MAP["past_due"] == "past_due"
-    assert _SUBSCRIPTION_STATUS_MAP["paused"] == "canceled"
-    assert _SUBSCRIPTION_STATUS_MAP["canceled"] == "canceled"
+    # Both mean "no paid subscription any more", and that lands on the free
+    # plan rather than on a switched-off account.
+    assert _SUBSCRIPTION_STATUS_MAP["paused"] == "free"
+    assert _SUBSCRIPTION_STATUS_MAP["canceled"] == "free"
+
+
+def test_ending_statuses_are_the_ones_that_need_the_free_limit_applied():
+    from app.routers.webhooks import _ENDS_THE_SUBSCRIPTION
+
+    # A status write alone is not enough for these: the page limit has to be
+    # applied too, or a former subscriber keeps 25 pages monitored for free.
+    assert _ENDS_THE_SUBSCRIPTION == {"free"}
+    ending = {v for v in _SUBSCRIPTION_STATUS_MAP.values() if v == "free"}
+    assert ending <= _ENDS_THE_SUBSCRIPTION
 
 
 def test_subscription_status_map_unknown_falls_back_to_past_due():
