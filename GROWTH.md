@@ -535,15 +535,36 @@ That is out of date. Direct competitors now exist:
 | **DPAFlow** | Scheduled checks of subprocessor lists, DPAs and trust-center pages; diffs; dated evidence (page text + screenshots); email alerts; review workflow; audit export | Near-identical to TrustPages. Targets "privacy teams that don't need a full enterprise GRC suite" — our exact segment |
 | **PageCrawl.io** | Daily subprocessor-list change monitoring; publishes SEO content on the term | Adjacent, moving in |
 | **Apify actor** "Subprocessor Change Monitor" | Watches a vendor page, alerts on Art. 28 changes | Commodity/DIY floor |
-| **Registora** | Catalogue scraping 18 major SaaS providers' subprocessor pages daily | Directory play |
+| **Registora** | Daily monitoring of upstream vendors, auto-updates *your public subprocessor page*, drafts the Art. 28(2) customer notice. Free 5 / $19 for 15 / **$49 unlimited**. DORA XBRL export listed "coming soon" | **The closest competitor of all — see correction below** |
 | **Relyance AI** | Automatic subprocessor discovery, data-flow tracking, audit-ready lists | Enterprise ceiling |
-| **OrbiqHQ** | Not a monitor — publishes the Art. 28 / DORA guides that rank for our terms | SEO competitor |
+| **OrbiqHQ** | A full Trust Center platform (NIS2/DORA framing) with 10 customer logos and testimonials. The Art. 28/DORA guides are its SEO arm, not the product | Ahead of us on proof |
 
 **"We monitor sub-processor pages" is now the category definition, not a differentiator.**
 
-**The one thing none of them have: the public trust page.** DPAFlow and PageCrawl look inward
-(watch *your* vendors). Our public trust page looks outward — it shows *your customers* the
-evidence. That is a real difference and it is currently not the headline anywhere in our copy.
+#### CORRECTION (2026-09-01, later the same day)
+
+An earlier version of this section claimed *"the one thing none of them have is the public trust
+page — DPAFlow and PageCrawl look inward, ours looks outward."* **That was wrong, and it was
+wrong because the competitor pass stopped at DPAFlow's blog instead of reading Registora's home
+page.** Registora's headline is literally:
+
+> "The subprocessor page that keeps itself current — Your vendors (Stripe, AWS, OpenAI) change
+> their own subprocessors without telling you. Registora watches them every day, updates your
+> public page, and drafts the Article 28(2) customer notice."
+
+That is TrustPages, plus a notice generator we don't have. Orbiq is a Trust Center platform with
+customer logos. The outward-facing trust page is **not** an unclaimed differentiator.
+
+**This also weakens the $29 → $99 pricing argument as it was originally made.** That argument
+rested on DPAFlow's €99/25-vendors/weekly-scan tier alone. Registora sells *unlimited*
+subprocessors for **$49** and gives 5 away free forever. There is no settled price in this
+category; $99 sits defensibly between the two, but "DPAFlow charges €99, so we can" was a
+one-sided read. The price stays for now — the packaging problem below matters more.
+
+**Packaging gap that follows from this:** a permanent free tier is table stakes here (Registora
+free 5, PageCrawl free 6). We have only a 14-day trial. Combined with the move to $99 that puts
+us in the worst quadrant — more expensive than the closest twin *and* harder to try. A free tier
+of 3-5 vendors is the obvious fix and costs almost nothing per user.
 
 ### 3. DORA is the sharpest 2026 wedge, sharper than GDPR Art. 28
 
@@ -587,3 +608,75 @@ is where the channel is: buying the query costs ~$200, earning it costs a blog p
 ever tried, the only defensible slice is competitor names plus very narrow long-tail
 ("dora register of information subcontractors", "article 28 subprocessor notification tracking"),
 small budget, and only after the price moves up.
+
+## How the competitors actually market themselves (2026-09-01, deep pass)
+
+Read their live sites rather than their blog posts. Four distinct playbooks.
+
+### Registora — the machine worth copying
+
+Four legs, all free-channel:
+
+1. **Programmatic SEO** — `/providers/*`, one page per monitored vendor. Catches "AWS
+   subprocessors", "Stripe subprocessors" style queries. They monitor ~18 vendors, so the surface
+   is small; this is the leg most open to being beaten on volume.
+2. **Comparison pages targeting bigger brands** — `/compare/vanta`, `/compare/drata`,
+   `/compare/safebase`, `/compare/onetrust`. Title pattern: *"[Competitor] alternative for
+   subprocessor pages"*. They rent the search volume of companies 100× their size with a narrow
+   wedge.
+3. **Free tools as lead magnets** — a free audit tool and an Art. 28(2) notice generator.
+4. **Permanent free tier** (5 subprocessors, no expiry) plus a research report ("Inside the
+   Subprocessor Chain 2026"), a public changelog and an API.
+
+### DPAFlow — pure product marketing, no content at all
+
+No blog or guides in the navigation. Headline: *"Vendor and subprocessor changes, detected the
+moment they happen."* Opens on **evidence**, not fear:
+
+> "Spreadsheets, calendar reminders, and ad-hoc screenshots feel like a process — until you have
+> to prove oversight."
+
+Four named pains follow: pages change silently, evidence is captured too late, reviews scatter
+across tools, changes can't be proven to an auditor. Demo uses recognisable names (Microsoft
+Trust Center, Google Workspace, AWS) as proof-by-specificity. Roles are named explicitly:
+Privacy/DPO, Legal, Vendor Risk/Procurement, Compliance Operators. CTA is a 7-day trial plus
+"Talk to sales". **No customer logos and no testimonials — they are as early as we are.**
+
+### Orbiq — furthest along on proof
+
+Trust Center platform framed on NIS2/DORA. 10 customer logos, 2 testimonials, an ROI section.
+Zero articles on the home page; the `/eu-regulations/*` guides are a separate SEO arm.
+
+### PageCrawl — the commodity floor
+
+Generic page-change monitoring, free tier of 6 pages, $13-83/month. Not a compliance product,
+but it anchors the price a prospect has in mind.
+
+### The category is "Trust Center", not "subprocessor monitoring"
+
+Look at who Registora writes comparison pages against: Vanta, Drata, SafeBase, OneTrust. That is
+where the budget and the search volume are. Subprocessor monitoring is a wedge *into* that
+category. We currently name ourselves after the wedge, not the category.
+
+### What to do about it, ranked
+
+1. **Open a permanent free tier (3-5 vendors).** Table stakes, and the fix for the packaging gap
+   created by moving to $99. Cheapest change on this list.
+2. **Programmatic directory, but at 10× their volume.** Registora covers ~18 vendors; our engine
+   already does the work, so 150-200 vendor pages is a difference of degree they can't quickly
+   match. **Blocked on arithmetic first:** Neon free-tier compute already took the site down for
+   a week (2026-08-24). Do the sums before scheduling anything.
+3. **Ship a free tool.** An Art. 28(2) notice generator or a one-shot "scan my vendors" report.
+   Registora runs both, which is evidence they convert. Most of the machinery exists already.
+4. **Comparison pages for the slots Registora left empty** — DPAFlow, PageCrawl, and Registora
+   itself. Low volume, pure intent.
+5. **German.** All four are English-only, and Germany is both the strictest enforcement
+   jurisdiction and the largest EU B2B SaaS market. For a solo operator this is the most
+   plausible unfair advantage available.
+6. **Beat Registora to the DORA XBRL export** they list as "coming soon". It is exactly the wedge
+   the positioning section argues for.
+
+**Honest summary:** the category filled in while we were building, and the nearest competitor is
+better positioned than we are. But all of them are small, none has overwhelming distribution, and
+DPAFlow does not have a single customer testimonial. The market is not closed — the "we finished
+the product, now we sell it" phase is simply over.
