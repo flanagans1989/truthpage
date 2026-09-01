@@ -19,8 +19,11 @@ from app.db.models.change_event import ChangeEvent, ChangeStatus
 from app.db.models.subprocessor import Subprocessor
 from app.db.models.tenant import Tenant
 from app.db.session import AsyncSessionLocal
-from app.scheduler.jobs import _BILLABLE_STATUSES, sweep_due_subprocessors
+from app.scheduler.jobs import sweep_due_subprocessors
 from app.db.models.mixins import utc_now
+
+# jobs.py inlines these into its query; kept here for the pre-check display only.
+_BILLABLE_STATUSES = ("active", "trialing")
 
 
 async def _pre_check() -> None:
