@@ -504,3 +504,86 @@ to either of the two messages sent to him.
 
 **Reply status as of 2026-09-01:** no replies to any of the 2026-08-31 follow-ups (6 email
 threads + 5 LinkedIn DMs) — 1 day elapsed, too early to read anything into it.
+
+## Positioning research (2026-09-01) — paid search, competitors, DORA
+
+Triggered by "should we run Google Ads?". Three findings, in order of how much they change the
+plan.
+
+### 1. Paid search is closed at the current price
+
+2026 benchmarks for the compliance/security category: **$16–22 CPC** on category terms,
+**$80–200+** on purchase-intent queries; **cost per SQL $87–200** in SMB SaaS. TrustPages ACV is
+**$348/year** ($29 × 12). One customer costs more than their first year even on optimistic
+assumptions, before counting SQL→customer drop-off.
+
+**Implication that matters more than the ads question: $29 is probably the wrong price.** A buyer
+with a compliance budget does not purchase a $29 tool; they purchase a $200–500/month tool with an
+audit story. Raising the price is what decides which acquisition channels exist at all. Revisit
+before spending anything on ads.
+
+(Separately: a Google Ads account requires a payment method, which we don't have. But the maths
+above is the real blocker — the card is not the reason to skip this.)
+
+### 2. The category is no longer empty
+
+As of 2026-08 the file listed only Registora and PageCrawl as "competitive signal, observe only".
+That is out of date. Direct competitors now exist:
+
+| Product | What it does | Position |
+|---|---|---|
+| **DPAFlow** | Scheduled checks of subprocessor lists, DPAs and trust-center pages; diffs; dated evidence (page text + screenshots); email alerts; review workflow; audit export | Near-identical to TrustPages. Targets "privacy teams that don't need a full enterprise GRC suite" — our exact segment |
+| **PageCrawl.io** | Daily subprocessor-list change monitoring; publishes SEO content on the term | Adjacent, moving in |
+| **Apify actor** "Subprocessor Change Monitor" | Watches a vendor page, alerts on Art. 28 changes | Commodity/DIY floor |
+| **Registora** | Catalogue scraping 18 major SaaS providers' subprocessor pages daily | Directory play |
+| **Relyance AI** | Automatic subprocessor discovery, data-flow tracking, audit-ready lists | Enterprise ceiling |
+| **OrbiqHQ** | Not a monitor — publishes the Art. 28 / DORA guides that rank for our terms | SEO competitor |
+
+**"We monitor sub-processor pages" is now the category definition, not a differentiator.**
+
+**The one thing none of them have: the public trust page.** DPAFlow and PageCrawl look inward
+(watch *your* vendors). Our public trust page looks outward — it shows *your customers* the
+evidence. That is a real difference and it is currently not the headline anywhere in our copy.
+
+### 3. DORA is the sharpest 2026 wedge, sharper than GDPR Art. 28
+
+- **GDPR Art. 28(2)** is the baseline: under general authorisation the processor must inform the
+  controller of intended sub-processor additions/replacements and give a genuine chance to object.
+  Typical DPA objection window is **10–30 days** — that window is the thing customers miss.
+- **DORA** is the urgent one. EU financial entities must maintain a **Register of Information**
+  covering ICT providers *and their subcontractors*, submitted to the competent authority
+  annually by **31 March**. As of March 2026 only **~40%** of obliged entities had submitted.
+  Dated, penalised, specific, and exactly what this product produces.
+- NIS2 (supply-chain security) points the same way but with less specific paperwork.
+
+### Message to use
+
+- ❌ "We monitor your vendors' sub-processor pages and alert you when they change." (mechanism)
+- ✅ "**Keeps your DORA Register of Information and Art. 28 evidence current automatically** —
+  dated records for the audit, alerts before the objection window closes." (outcome)
+
+### Geography
+
+Split the pain from the money — they are not in the same place.
+
+**Where the obligation bites (ranked on enforcement severity × SaaS density):**
+
+1. **Germany** — strictest interpretations in the EU; 16 state DPAs plus the federal BfDI; largest
+   EU B2B SaaS market
+2. **Netherlands** — aggressive DPA (€290M Uber fine over transfers); strong SaaS scene, English-
+   language business culture
+3. **Ireland** — lead authority for most big tech, dense concentration of EU SaaS HQs, English
+4. **Nordics** — high SaaS density plus high compliance maturity, receptive to cold outreach
+5. **UK** — UK GDPR Art. 28 is near-identical; no DORA, but the FCA has its own third-party regime
+
+**Where the buyer actually sits:** any SaaS company *selling into* EU regulated sectors — largely
+US- and UK-headquartered. They are the ones answering the security questionnaires. Target
+"companies selling to a German bank", not "companies in Germany".
+
+### Channel conclusion
+
+Content, not search ads. All four competitors publish guides on exactly these terms because that
+is where the channel is: buying the query costs ~$200, earning it costs a blog post. If ads are
+ever tried, the only defensible slice is competitor names plus very narrow long-tail
+("dora register of information subcontractors", "article 28 subprocessor notification tracking"),
+small budget, and only after the price moves up.
