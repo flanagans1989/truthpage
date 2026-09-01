@@ -46,7 +46,7 @@ python run_sweep.py                    # manual sweep
 - Auto-publish iff `COSMETIC && confidence > 0.85`; everything else → `pending_review`
 - Diff sent to the LLM is capped at 12 000 chars
 - Tier-1 httpx, Tier-2 Playwright per `subprocessor.requires_browser`
-- Trial is 14 days; expired tenants are skipped by sweeps and bounced to checkout at login
+- Trial is 14 days; on expiry the tenant drops to the free plan (see below), keeps signing in
 - tenant ↔ email is exact-match and unique; magic links are single-use, 3/min per IP and per email
 - DB pool `size=3, overflow=1` (Neon free tier)
 - Plan cap `MAX_SUBPROCESSORS_PER_TENANT`, default 25; free plan `FREE_TIER_MAX_SUBPROCESSORS`,
