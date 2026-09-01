@@ -63,6 +63,17 @@ python run_sweep.py                    # manual sweep
   own site advertises them. Figures are ranges in `app/core/comparisons.py` with a `VERIFIED_ON`
   date shown on the page — update the date and the numbers together. A test asserts no competitor
   name appears in the copy. The old `/vs/{slug}` URLs 301 to `/compare`
-- Public trust page shows the last 20 approved + auto-published changes
+- Public trust page shows the last 20 approved + auto-published changes, and carries a
+  "Powered by TrustPages" badge with UTM parameters. `tenants.hide_powered_by` removes it, but
+  only while `may_hide_badge` (i.e. not on the free plan) — a downgrade restores the badge
+  without a cleanup job
+- **The directory (`vendors`) is not the tenant `subprocessors` table.** One canonical page per
+  vendor, monitored by the platform, published to everyone. Rows are inserted unpublished by
+  `seed_vendors.py` and become public only when a check reads a list off the page, so a wrong
+  seed URL costs a failed fetch, never a broken public page
+- Vendor entries come from a Gemini extraction pass per detected change (`llm/extractor.py`);
+  `diff_entries` compares names only, so a reworded purpose column is not reported as an addition
+- `fetch_raw_html` takes an `on_escalate` callback for the Tier-2 escalation write — it does not
+  know whether a URL belongs to a subprocessor or a vendor
 
 Env vars: see `.env.example`. `SENTRY_DSN` and `GA_MEASUREMENT_ID` are optional.
