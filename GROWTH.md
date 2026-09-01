@@ -680,3 +680,42 @@ category. We currently name ourselves after the wedge, not the category.
 better positioned than we are. But all of them are small, none has overwhelming distribution, and
 DPAFlow does not have a single customer testimonial. The market is not closed — the "we finished
 the product, now we sell it" phase is simply over.
+
+## Shipped against that list (2026-09-01, live)
+
+Items 1, 3 and 4 above are done and deployed; the ranking below is what is left.
+
+| Was | Now |
+|---|---|
+| 14-day trial only | **Permanent free tier, 3 vendor pages.** An expired trial lands there instead of dying; pages above the cap are switched off, not deleted |
+| Diff only | **Dated evidence**: both page documents stored per change with hashes, at `/dashboard/events/{id}` |
+| No export | **`/dashboard/evidence.csv`** on every plan, free included — Registora holds this back for $49 |
+| No notice generator | **Article 28(2) draft per change** (Growth plan), the half of Registora's headline we were missing |
+| No comparison pages | **`/vs/registora`, `/vs/dpaflow`, `/vs/pagecrawl`**, linked from the footer and in sitemap.xml |
+
+Verified end to end in production on 2026-09-01: planted change → MATERIAL classification →
+admin email → approve → subscriber notification → evidence record → notice draft → CSV → public
+trust page entry. The synthetic event was then deleted and the baseline restored — a fabricated
+change must not sit on a public compliance page.
+
+### Corrections to the competitor figures above
+
+Read off their live sites on 2026-09-01. Two things in the tables above were wrong:
+
+- **DPAFlow is €99 / €299 / €999, not a single €99 tier.** The review workflow and the audit
+  export — the things we sell — start at **€299**. The "$99 is defensible" argument is stronger
+  than it was written, not weaker.
+- **Registora's free tier carries their wordmark on your page**, and a custom subdomain starts
+  at $19. It is a funnel, not a gift. Orbiq also has a free plan (20 annual access grants).
+
+### What is still missing, ranked
+
+1. **Custom domain for the trust page.** Registora sells one from $19; ours lives on a
+   usetrustpages.com path. Blocked on infrastructure, not code — wildcard TLS on Render's free
+   tier.
+2. **Slack / webhook alerts.** Registora ($49), PageCrawl and Orbiq all have them; we send email
+   only.
+3. **German.** Still the most plausible unfair advantage available to a solo operator.
+4. **Programmatic `/providers/*`.** Unchanged and still blocked on the Neon compute arithmetic.
+5. **Multi-user / roles.** DPAFlow gates this at €999; we cannot serve a two-person privacy team
+   at all.
