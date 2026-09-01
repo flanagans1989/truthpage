@@ -52,6 +52,11 @@ class ChangeEvent(TimestampMixin, Base):
         default=ChangeStatus.pending_review.value,
         server_default=ChangeStatus.pending_review.value,
     )
+    # Article 28(2) notice drafted for this change. Stored so the tenant sees
+    # the same words every time they open it — regenerating on each view would
+    # quietly reword a document they may already have sent.
+    notice_subject: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    notice_body: Mapped[str | None] = mapped_column(Text, nullable=True)
     approved_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Customer notice — TrustPages{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/dashboard/events/{{ event.id }}" class="text-sm text-slate-500 hover:text-slate-900">&larr; Back to evidence record</a>
+            <span class="text-blue-600 font-bold text-lg tracking-tight">TrustPages</span>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-6 py-10">
+        <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Article 28(2) notice · draft</p>
+        <h1 class="text-2xl font-bold text-slate-900 mb-2">{{ event.subprocessor.name }}</h1>
+        <p class="text-sm text-slate-500 mb-8">
+            Change detected {{ event.created_at.strftime('%d %b %Y') }} · drafted for {{ tenant.name }} to send to its own customers.
+        </p>
+
+        {% if upgrade_required %}
+        <div class="bg-white rounded-xl border border-slate-200 p-8 text-center">
+            <p class="text-sm text-slate-700 mb-1">Drafting the customer notice is part of the Growth plan.</p>
+            <p class="text-xs text-slate-500 mb-5">Monitoring, evidence and CSV export stay on the free plan.</p>
+            <a href="/dashboard/billing/checkout"
+               class="inline-block text-sm font-semibold px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
+                Upgrade to Growth
+            </a>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="bg-white rounded-xl border border-amber-200 bg-amber-50 p-6 mb-8">
+            <p class="text-sm text-amber-800">{{ error }}</p>
+            <a href="/dashboard/events/{{ event.id }}/notice?regenerate=true"
+               class="inline-block mt-3 text-sm font-semibold px-4 py-2 rounded-lg text-white bg-amber-600 hover:bg-amber-700 transition">
+                Try again
+            </a>
+        </div>
+        {% endif %}
+
+        {% if event.notice_body %}
+        <div class="bg-white rounded-xl border border-slate-200 p-6 mb-4">
+            <p class="text-xs text-slate-400 mb-1">Subject</p>
+            <p class="text-sm font-medium text-slate-900 mb-6">{{ event.notice_subject }}</p>
+            <p class="text-xs text-slate-400 mb-1">Body</p>
+            <textarea id="notice-body" rows="18" readonly
+                      class="w-full text-sm text-slate-700 font-sans leading-relaxed bg-slate-50 border border-slate-200 rounded-lg p-4 resize-y">{{ event.notice_body }}</textarea>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="button" id="copy-notice"
+                    class="text-sm font-semibold px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
+                Copy body
+            </button>
+            <a href="/dashboard/events/{{ event.id }}/notice?regenerate=true"
+               class="text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:border-slate-400 transition">
+                Redraft
+            </a>
+            <span id="copy-state" class="text-xs text-slate-400"></span>
+        </div>
+
+        <p class="text-xs text-slate-500 mt-8 leading-relaxed">
+            This is a draft, not legal advice. Replace <strong>[OBJECTION WINDOW]</strong> with the
+            notice period your own DPA promises and <strong>[CONTACT]</strong> with the address
+            objections should reach, and read it against the change before sending. Redrafting
+            replaces the text above, including any wording you have already sent.
+        </p>
+        {% endif %}
+    </main>
+</div>
+
+<script>
+    document.getElementById('copy-notice')?.addEventListener('click', async () => {
+        const state = document.getElementById('copy-state');
+        try {
+            await navigator.clipboard.writeText(document.getElementById('notice-body').value);
+            state.textContent = 'Copied.';
+        } catch (err) {
+            state.textContent = 'Copy failed — select the text and copy manually.';
+        }
+    });
+</script>
+{% endblock %}

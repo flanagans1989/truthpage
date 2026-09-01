@@ -14,12 +14,15 @@ from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
+from app.core.llm.notice import ArticleNoticeDrafter
 from app.services.approval import approve_change_event, reject_change_event
 from app.services.evidence import evidence_csv
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["dashboard"])
+
+_notice_drafter = ArticleNoticeDrafter()
 
 
 
@@ -134,16 +137,7 @@ async def evidence_record(
     page serves the stored before/after documents with their hashes and the
     decision trail.
     """
-    result = await db.execute(
-        select(ChangeEvent)
-        .join(ChangeEvent.subprocessor)
-        .where(ChangeEvent.id == event_id, Subprocessor.tenant_id == tenant.id)
-        .options(selectinload(ChangeEvent.subprocessor))
-    )
-    event = result.scalar_one_or_none()
-    if event is None:
-        raise HTTPException(status_code=404)
-
+    event = await _event_for_tenant(event_id, tenant, db)
     return _templates.TemplateResponse(
         request, "evidence.html", {"tenant": tenant, "event": event}
     )
@@ -178,4 +172,74 @@ async def evidence_export(
         content=csv_text,
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+async def _event_for_tenant(event_id: UUID, tenant, db: AsyncSession) -> ChangeEvent:
+    result = await db.execute(
+        select(ChangeEvent)
+        .join(ChangeEvent.subprocessor)
+        .where(ChangeEvent.id == event_id, Subprocessor.tenant_id == tenant.id)
+        .options(selectinload(ChangeEvent.subprocessor))
+    )
+    event = result.scalar_one_or_none()
+    if event is None:
+        raise HTTPException(status_code=404)
+    return event
+
+
+@router.get("/dashboard/events/{event_id}/notice", response_class=HTMLResponse)
+async def notice_draft(
+    request: Request,
+    event_id: UUID,
+    tenant: CurrentTenant,
+    regenerate: bool = False,
+    db: AsyncSession = Depends(get_db_session),
+):
+    """The Article 28(2) notice the tenant owes their own customers.
+
+    Detecting the change is only half the obligation — the DPA promises the
+    customer a heads-up, and writing that from scratch is the part that gets
+    skipped. Drafted once and stored: a notice that quietly rewords itself
+    between views is worse than no notice, because the tenant may already
+    have sent the earlier wording.
+    """
+    event = await _event_for_tenant(event_id, tenant, db)
+
+    error: str | None = None
+    # Drafting costs a model call, so it stays on the paid plan. An already
+    # drafted notice remains readable after a downgrade — it may have been
+    # sent, and taking it away would leave the tenant without their own record.
+    if tenant.is_free_plan and event.notice_body is None:
+        return _templates.TemplateResponse(
+            request,
+            "notice.html",
+            {"tenant": tenant, "event": event, "error": None, "upgrade_required": True},
+        )
+
+    if event.notice_body is None or regenerate:
+        try:
+            draft = await _notice_drafter.draft(
+                company=tenant.name,
+                vendor=event.subprocessor.name,
+                vendor_url=event.subprocessor.monitored_url,
+                detected_on=event.created_at.strftime("%d %B %Y"),
+                summary=event.llm_summary or "A change was detected on the vendor's page.",
+                raw_diff=event.raw_diff[:12_000],
+            )
+            event.notice_subject = draft.subject
+            event.notice_body = draft.body
+            await db.commit()
+            logger.info("Notice draft generated for event %s (tenant %s)", event_id, tenant.slug)
+        except Exception:
+            logger.exception("Notice draft failed for event %s", event_id)
+            await db.rollback()
+            # Deliberately not filled with placeholder prose — the tenant would
+            # send it. An empty page with an error is the honest outcome.
+            error = "The draft could not be generated. Try again in a moment."
+
+    return _templates.TemplateResponse(
+        request,
+        "notice.html",
+        {"tenant": tenant, "event": event, "error": error, "upgrade_required": False},
     )

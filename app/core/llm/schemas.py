@@ -23,3 +23,19 @@ class DiffAnalysis(BaseModel):
         le=1.0,
         description="Confidence score for the classification, between 0.0 and 1.0.",
     )
+
+
+class NoticeDraft(BaseModel):
+    """A drafted Article 28(2) notification to the tenant's own customers."""
+
+    subject: str = Field(
+        description="Email subject line. Names the vendor and that a sub-processor change occurred."
+    )
+    body: str = Field(
+        description=(
+            "The notice body in plain text, ready to paste into an email. States what changed, "
+            "which vendor, the date it was detected, and that the customer may object within the "
+            "window their DPA provides. No markdown, no placeholders other than the ones listed "
+            "in the instructions."
+        )
+    )

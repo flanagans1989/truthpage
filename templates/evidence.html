@@ -19,6 +19,11 @@
                class="text-blue-600 hover:underline break-all">{{ event.subprocessor.monitored_url }}</a>
         </p>
 
+        <a href="/dashboard/events/{{ event.id }}/notice"
+           class="inline-block mb-6 text-sm font-semibold px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
+            {% if event.notice_body %}Open customer notice{% else %}Draft customer notice{% endif %}
+        </a>
+
         <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
                 <div>
