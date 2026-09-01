@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from functools import partial
 from datetime import UTC, timedelta
 from uuid import UUID
 
@@ -9,7 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.llm.analyzer import LLMDiffAnalyzer
 from app.core.scraper.detector import ChangeDetector
-from app.core.scraper.fetcher import fetch_raw_html
+from app.core.scraper.fetcher import fetch_raw_html, mark_subprocessor_requires_browser
 from app.core.scraper.hasher import ContentHasher
 from app.core.scraper.normalizer import HTMLNormalizer
 from app.db.models.change_event import ChangeEvent, ChangeStatus
@@ -56,9 +57,10 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         raw_html = await asyncio.wait_for(
             fetch_raw_html(
                 subprocessor.monitored_url,
-                subprocessor_id=subprocessor.id,
-                session=session,
                 use_browser=subprocessor.requires_browser,
+                on_escalate=partial(
+                    mark_subprocessor_requires_browser, subprocessor.id, session
+                ),
             ),
             timeout=90.0,
         )

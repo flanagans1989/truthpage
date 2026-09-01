@@ -2,5 +2,14 @@ from app.db.models.tenant import Tenant
 from app.db.models.subprocessor import Subprocessor
 from app.db.models.change_event import ChangeEvent, ChangeStatus
 from app.db.models.subscriber import Subscriber
+from app.db.models.vendor import Vendor, VendorChange
 
-__all__ = ["Tenant", "Subprocessor", "ChangeEvent", "ChangeStatus", "Subscriber"]
+__all__ = [
+    "Tenant",
+    "Subprocessor",
+    "ChangeEvent",
+    "ChangeStatus",
+    "Subscriber",
+    "Vendor",
+    "VendorChange",
+]

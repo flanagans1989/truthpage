@@ -1,5 +1,6 @@
 import logging
 import random
+from collections.abc import Awaitable, Callable
 from uuid import UUID
 
 import httpx
@@ -111,7 +112,9 @@ async def _fetch_tier2(url: str) -> str:
     return html
 
 
-async def _mark_requires_browser(subprocessor_id: UUID, session: AsyncSession) -> None:
+async def mark_subprocessor_requires_browser(
+    subprocessor_id: UUID, session: AsyncSession
+) -> None:
     """Caches the fact that this URL needs Playwright so future checks skip Tier-1."""
     await session.execute(
         update(Subprocessor)
@@ -124,17 +127,17 @@ async def _mark_requires_browser(subprocessor_id: UUID, session: AsyncSession) -
 async def fetch_raw_html(
     url: str,
     *,
-    subprocessor_id: UUID,
-    session: AsyncSession,
     use_browser: bool = False,
+    on_escalate: Callable[[], Awaitable[None]] | None = None,
 ) -> str:
     """
     Multi-tier fetcher:
       Tier-1 — httpx + HTTP/2 + UA rotation (fast, cheap)
       Tier-2 — Playwright headless Chromium (heavy, bot-proof)
 
-    If Tier-1 is bot-blocked, escalates to Tier-2 and persists
-    requires_browser=True so the next cycle skips Tier-1 entirely.
+    If Tier-1 is bot-blocked, escalates to Tier-2 and calls `on_escalate` so
+    the caller can persist that fact — the fetcher does not know whether the
+    URL belongs to a tenant's subprocessor or to a directory vendor.
     """
     if not use_browser:
         try:
@@ -152,8 +155,9 @@ async def fetch_raw_html(
 
     html = await _fetch_tier2(url)
 
-    if not use_browser:
-        # Tier-1 was blocked; cache result so next run goes directly to Tier-2
-        await _mark_requires_browser(subprocessor_id, session)
+    if not use_browser and on_escalate is not None:
+        # Tier-1 was blocked; let the caller record it against whatever table
+        # owns this URL, so the next run goes straight to Tier-2.
+        await on_escalate()
 
     return html

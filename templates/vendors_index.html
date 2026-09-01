@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Sub-processor lists for {{ vendors | length }} vendors, monitored daily | TrustPages{% endblock %}
+{% block meta_description %}A directory of vendor sub-processor lists — who each provider uses, and what changed. Every page here is re-checked daily against the vendor's own source.{% endblock %}
+{% block content %}
+<div class="min-h-screen flex flex-col bg-slate-50">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="text-blue-600 font-bold text-xl">TrustPages</a>
+            <div class="flex items-center gap-4">
+                <a href="/pricing" class="text-sm text-slate-600 hover:text-slate-900">Pricing</a>
+                <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">Sign in</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
+        <h1 class="text-3xl font-bold text-slate-900 mb-3">Vendor sub-processor directory</h1>
+        <p class="text-slate-600 leading-relaxed mb-10 max-w-2xl">
+            Who your vendors hand your data to, and when that last changed. Every page here is
+            re-read daily from the vendor's own published list — the same engine our customers
+            point at their own suppliers.
+        </p>
+
+        {% if vendors %}
+        <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
+            {% for vendor in vendors %}
+            <a href="/vendors/{{ vendor.slug }}" class="flex items-center justify-between gap-4 px-5 py-4 hover:bg-slate-50 transition">
+                <div class="min-w-0">
+                    <p class="font-medium text-slate-900">{{ vendor.name }}</p>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        {{ vendor.entries | length }} sub-processor{{ 's' if (vendor.entries | length) != 1 }}
+                        {%- if vendor.entries_updated_at %} · updated {{ vendor.entries_updated_at.strftime('%d %b %Y') }}{% endif %}
+                    </p>
+                </div>
+                <span class="shrink-0 text-xs text-slate-400">View &rarr;</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white border border-slate-200 border-dashed rounded-xl p-10 text-center">
+            <p class="text-slate-600 text-sm">The directory is being populated — pages appear here once their first list has been read.</p>
+        </div>
+        {% endif %}
+
+        <div class="mt-12 bg-white border border-slate-200 rounded-xl p-6">
+            <h2 class="font-semibold text-slate-900 mb-2">Want this for your own vendors?</h2>
+            <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                Point TrustPages at the suppliers you actually use. We watch their pages, tell you
+                when something material changes, keep dated evidence, and publish a trust page your
+                own customers can subscribe to.
+            </p>
+            <a href="/auth/login?utm_source=directory&amp;utm_medium=index" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg">
+                Start free — 3 vendors, no card
+            </a>
+        </div>
+    </main>
+
+    {% include "_footer.html" %}
+</div>
+{% endblock %}

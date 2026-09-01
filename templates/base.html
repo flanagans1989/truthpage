@@ -23,6 +23,8 @@
         gtag('config', '{{ ga_measurement_id }}');
     </script>
     {% endif %}
+    {% block head_extra %}{% endblock %}
+    {% block canonical %}{% endblock %}
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased">
     {% block content %}{% endblock %}

@@ -39,3 +39,24 @@ class NoticeDraft(BaseModel):
             "in the instructions."
         )
     )
+
+
+class SubProcessorEntry(BaseModel):
+    """One row of a vendor's published sub-processor table."""
+
+    name: str = Field(description="The sub-processor's name, exactly as written on the page.")
+    purpose: str = Field(
+        default="",
+        description="What the page says this sub-processor is used for, in a few words. Empty if the page does not say.",
+    )
+    location: str = Field(
+        default="",
+        description="Country or region as given on the page. Empty if the page does not say.",
+    )
+
+
+class SubProcessorList(BaseModel):
+    entries: list[SubProcessorEntry] = Field(
+        default_factory=list,
+        description="Every sub-processor listed on the page, in the order they appear. Empty if the page lists none.",
+    )

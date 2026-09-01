@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ vendor.name }} sub-processors — monitored daily | TrustPages{% endblock %}
+{% block meta_description %}The sub-processors {{ vendor.name }} publishes{% if entries %} — {{ entries | length }} entries{% endif %}, with the change history recorded since monitoring began. Checked daily against {{ vendor.name }}'s own page.{% endblock %}
+{% block head_extra %}
+<script type="application/ld+json">{{ json_ld | safe }}</script>
+{% endblock %}
+{% block content %}
+<div class="min-h-screen flex flex-col bg-slate-50">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="text-blue-600 font-bold text-xl">TrustPages</a>
+            <div class="flex items-center gap-4">
+                <a href="/vendors" class="text-sm text-slate-600 hover:text-slate-900">Directory</a>
+                <a href="/pricing" class="text-sm text-slate-600 hover:text-slate-900">Pricing</a>
+                <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">Sign in</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sticky ask: specific to the vendor being read, not a house ad -->
+    <div class="sticky top-0 z-20 bg-blue-600 text-white">
+        <div class="max-w-4xl mx-auto px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm">
+                Using <strong>{{ vendor.name }}</strong> in your product? Automate the DPA
+                notifications you owe your own customers when this list changes.
+            </p>
+            <a href="/auth/login?vendor={{ vendor.slug }}&amp;utm_source=directory&amp;utm_medium=banner&amp;utm_content={{ vendor.slug }}"
+               class="shrink-0 bg-white text-blue-700 hover:bg-blue-50 font-semibold text-sm px-4 py-2 rounded-lg transition">
+                Add {{ vendor.name }} to TrustPages
+            </a>
+        </div>
+    </div>
+
+    <main class="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
+        <nav class="text-xs text-slate-500 mb-4">
+            <a href="/vendors" class="hover:text-slate-900">Vendor directory</a> &rsaquo; {{ vendor.name }}
+        </nav>
+
+        <h1 class="text-3xl font-bold text-slate-900 mb-3">{{ vendor.name }} sub-processors</h1>
+        <p class="text-slate-600 leading-relaxed mb-6">
+            {{ vendor.name }} publishes the list below on its own site. We check that page daily
+            and record what moves, so this page shows the current list and what changed before it.
+        </p>
+
+        <div class="flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-xl px-5 py-4 mb-10">
+            <span><span class="text-slate-400">Entries:</span> <strong class="text-slate-900">{{ entries | length }}</strong></span>
+            {% if vendor.entries_updated_at %}
+            <span><span class="text-slate-400">List updated:</span> <strong class="text-slate-900">{{ vendor.entries_updated_at.strftime('%d %b %Y') }}</strong></span>
+            {% endif %}
+            {% if vendor.last_checked_at %}
+            <span><span class="text-slate-400">Last checked:</span> <strong class="text-slate-900">{{ vendor.last_checked_at.strftime('%d %b %Y') }}</strong></span>
+            {% endif %}
+            <span><span class="text-slate-400">Source:</span>
+                <a href="{{ vendor.monitored_url }}" target="_blank" rel="noopener nofollow"
+                   class="text-blue-600 hover:underline break-all">{{ vendor.name }}'s page</a>
+            </span>
+        </div>
+
+        <h2 class="text-lg font-semibold text-slate-900 mb-4">Current sub-processors</h2>
+        {% if entries %}
+        <div class="overflow-x-auto mb-12">
+            <table class="w-full text-sm bg-white border border-slate-200 rounded-xl overflow-hidden">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="text-left font-semibold text-slate-500 px-4 py-3">Sub-processor</th>
+                        <th class="text-left font-semibold text-slate-500 px-4 py-3">Purpose</th>
+                        <th class="text-left font-semibold text-slate-500 px-4 py-3">Location</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for entry in entries %}
+                    <tr>
+                        <td class="px-4 py-3 font-medium text-slate-900">{{ entry.name }}</td>
+                        <td class="px-4 py-3 text-slate-600">{{ entry.purpose or '—' }}</td>
+                        <td class="px-4 py-3 text-slate-600">{{ entry.location or '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-500 bg-white border border-slate-200 border-dashed rounded-xl p-6 mb-12">
+            No entries could be read from the page on the last check.
+        </p>
+        {% endif %}
+
+        <h2 class="text-lg font-semibold text-slate-900 mb-4">Change history</h2>
+        {% if changes %}
+        <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 mb-12">
+            {% for change in changes %}
+            <div class="px-5 py-4">
+                <div class="flex items-center justify-between gap-4 mb-1">
+                    <span class="text-xs font-medium px-2 py-0.5 rounded-full
+                        {% if change.classification == 'MATERIAL' %}bg-amber-50 text-amber-700{% else %}bg-slate-100 text-slate-500{% endif %}">
+                        {{ change.classification | lower | capitalize }}
+                    </span>
+                    <span class="text-xs text-slate-400">{{ change.created_at.strftime('%d %b %Y') }}</span>
+                </div>
+                {% if change.added %}
+                <p class="text-sm text-slate-700 mt-2"><span class="text-green-600 font-medium">Added:</span> {{ change.added | join(', ') }}</p>
+                {% endif %}
+                {% if change.removed %}
+                <p class="text-sm text-slate-700"><span class="text-red-600 font-medium">Removed:</span> {{ change.removed | join(', ') }}</p>
+                {% endif %}
+                {% if change.summary %}
+                <p class="text-xs text-slate-500 mt-2 leading-relaxed">{{ change.summary }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white border border-slate-200 border-dashed rounded-xl p-6 text-center mb-12">
+            <p class="text-sm text-slate-600">No changes since monitoring began.</p>
+            {% if vendor.created_at %}
+            <p class="text-xs text-slate-400 mt-1">Watching this page daily since {{ vendor.created_at.strftime('%d %b %Y') }}.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="bg-white border border-slate-200 rounded-xl p-6">
+            <h2 class="font-semibold text-slate-900 mb-2">Why this matters if you use {{ vendor.name }}</h2>
+            <p class="text-sm text-slate-600 leading-relaxed mb-4">
+                Under GDPR Article 28(2), your own customers are usually entitled to notice before
+                you add or replace a sub-processor — and {{ vendor.name }}'s sub-processors are
+                part of that chain. The notice period in a typical DPA is 10 to 30 days, and it
+                starts when the vendor updates their page, not when you notice.
+            </p>
+            <a href="/auth/login?vendor={{ vendor.slug }}&amp;utm_source=directory&amp;utm_medium=footer&amp;utm_content={{ vendor.slug }}"
+               class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg">
+                Monitor {{ vendor.name }} on your own trust page — free
+            </a>
+            <p class="text-xs text-slate-400 mt-3">3 vendors free, permanently. No card.</p>
+        </div>
+    </main>
+
+    {% include "_footer.html" %}
+</div>
+{% endblock %}

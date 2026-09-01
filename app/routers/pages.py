@@ -1,7 +1,9 @@
 """Public marketing/legal pages (no auth): landing, pricing, terms, privacy, refunds."""
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse, Response
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.comparisons import (
     CATEGORIES,
@@ -13,10 +15,12 @@ from app.core.comparisons import (
 )
 from app.core.config import settings
 from app.core.templating import templates as _templates
+from app.db.models.vendor import Vendor
+from app.db.session import get_db_session
 
 router = APIRouter(tags=["pages"])
 
-_STATIC_PATHS = ["/", "/pricing", "/compare", "/terms", "/privacy", "/refunds"]
+_STATIC_PATHS = ["/", "/pricing", "/compare", "/vendors", "/terms", "/privacy", "/refunds"]
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -89,11 +93,25 @@ async def robots_txt():
 
 
 @router.get("/sitemap.xml")
-async def sitemap_xml():
+async def sitemap_xml(db: AsyncSession = Depends(get_db_session)):
     base = settings.APP_URL.rstrip("/")
-    urls = "\n".join(
-        f"  <url><loc>{base}{path}</loc></url>" for path in _STATIC_PATHS
-    )
+    # Directory pages are most of the reason to have a sitemap at all: there
+    # are more of them than of everything else together, and they change.
+    published = (
+        await db.execute(
+            select(Vendor.slug, Vendor.entries_updated_at)
+            .where(Vendor.is_published == True)  # noqa: E712
+            .order_by(Vendor.slug)
+        )
+    ).all()
+
+    lines = [f"  <url><loc>{base}{path}</loc></url>" for path in _STATIC_PATHS]
+    for slug, updated_at in published:
+        lastmod = (
+            f"<lastmod>{updated_at.strftime('%Y-%m-%d')}</lastmod>" if updated_at else ""
+        )
+        lines.append(f"  <url><loc>{base}/vendors/{slug}</loc>{lastmod}</url>")
+    urls = "\n".join(lines)
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'

@@ -11,7 +11,17 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.session import AsyncSessionLocal, engine
-from app.routers import admin, auth, billing, dashboard, pages, public, subprocessors, webhooks
+from app.routers import (
+    admin,
+    auth,
+    billing,
+    dashboard,
+    pages,
+    public,
+    subprocessors,
+    vendors,
+    webhooks,
+)
 from app.scheduler.jobs import run_sweep_cycle
 
 # ── Logging ──────────────────────────────────────────────────────────────────
@@ -109,6 +119,7 @@ app.include_router(subprocessors.router)
 app.include_router(billing.router)
 app.include_router(webhooks.router)
 app.include_router(public.router)
+app.include_router(vendors.router)
 app.include_router(admin.router)
 
 

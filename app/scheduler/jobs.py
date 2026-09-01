@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.db.models.tenant import MONITORED_STATUSES, Tenant
+from app.services.directory import sweep_due_vendors
 from app.services.monitoring import run_subprocessor_check
 from app.services.plans import move_tenant_to_free
 
@@ -104,6 +105,9 @@ async def run_sweep_cycle(session_factory: async_sessionmaker[AsyncSession]) -> 
 
     Order matters — a trial that lapsed since the last tick must land on the
     free plan first, or this tick would still scrape its whole vendor list.
+    Customers come before the public directory: if the tick runs long, the
+    pages someone is paying for are the ones already done.
     """
     await downgrade_expired_trials(session_factory)
     await sweep_due_subprocessors(session_factory)
+    await sweep_due_vendors(session_factory)
