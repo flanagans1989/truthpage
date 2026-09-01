@@ -31,7 +31,21 @@ _USER_AGENTS = [
 ]
 
 _BOT_WALL_STATUS_CODES = frozenset([403, 429, 503])
-_BOT_WALL_KEYWORDS = ("cloudflare", "just a moment", "ddos", "access denied", "please wait")
+# Markers unique to an interstitial challenge page. Do NOT match on bare vendor
+# names: the pages this product monitors are sub-processor lists, so almost all
+# of them legitimately contain the word "Cloudflare" — matching it flagged every
+# healthy page as bot-walled and pinned it to Tier-2 forever.
+_BOT_WALL_KEYWORDS = (
+    "just a moment...",
+    "checking your browser",
+    "cf-browser-verification",
+    "__cf_chl",
+    "attention required! | cloudflare",
+    "enable javascript and cookies to continue",
+)
+# Challenge interstitials are tiny; a real policy page is not. Guards against a
+# page that merely quotes one of the phrases above.
+_BOT_WALL_MAX_BODY_CHARS = 20_000
 
 _TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
@@ -51,6 +65,8 @@ def _random_headers() -> dict[str, str]:
 def _is_bot_protected(status_code: int, body: str) -> bool:
     if status_code in _BOT_WALL_STATUS_CODES:
         return True
+    if len(body) > _BOT_WALL_MAX_BODY_CHARS:
+        return False
     body_lower = body.lower()
     return any(kw in body_lower for kw in _BOT_WALL_KEYWORDS)
 
