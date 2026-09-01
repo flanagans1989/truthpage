@@ -140,6 +140,18 @@
                 </div>
             </div>
 
+            <!-- Trust page settings -->
+            <div class="bg-white rounded-xl border border-slate-200 p-5 mb-8">
+                <div class="flex items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">Your public trust page</p>
+                        <a href="/trust/{{ tenant.slug }}" target="_blank" rel="noopener"
+                           class="text-xs text-blue-600 hover:underline break-all">{{ app_url }}/trust/{{ tenant.slug }}</a>
+                    </div>
+                </div>
+                {% include "partials/badge_setting.html" %}
+            </div>
+
             <!-- Sub-processors section -->
             <div id="subprocessors" class="bg-white rounded-xl border border-slate-200 overflow-hidden">
 

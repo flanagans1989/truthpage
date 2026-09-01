@@ -1,0 +1,27 @@
+<div id="badge-setting" class="flex items-center justify-between gap-4">
+    <div>
+        <p class="text-sm font-medium text-slate-900">"Powered by TrustPages" badge</p>
+        <p class="text-xs text-slate-500 mt-0.5">
+            {% if tenant.shows_powered_by %}
+            Shown at the bottom of your public trust page.
+            {% else %}
+            Hidden — your trust page carries no TrustPages branding.
+            {% endif %}
+        </p>
+    </div>
+    {% if tenant.may_hide_badge %}
+    <button type="button"
+            hx-post="/dashboard/settings/badge"
+            hx-target="#badge-setting"
+            hx-swap="outerHTML"
+            class="shrink-0 text-sm font-medium px-4 py-2 rounded-lg border transition
+                {% if tenant.shows_powered_by %}border-slate-300 text-slate-700 hover:border-slate-400{% else %}border-blue-300 text-blue-700 hover:border-blue-400{% endif %}">
+        {{ 'Hide badge' if tenant.shows_powered_by else 'Show badge' }}
+    </button>
+    {% else %}
+    <a href="/dashboard/billing/checkout"
+       class="shrink-0 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 text-slate-600 hover:border-slate-400 transition">
+        Upgrade to remove
+    </a>
+    {% endif %}
+</div>

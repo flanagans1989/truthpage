@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, String, Uuid
+from sqlalchemy import Boolean, CheckConstraint, DateTime, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -50,9 +50,25 @@ class Tenant(TimestampMixin, Base):
             and self.trial_ends_at <= utc_now()
         )
 
+    # White-label switch for the public trust page. Only honoured on a paid
+    # plan, so a downgrade brings the badge back on its own rather than
+    # leaving a former subscriber permanently white-labelled.
+    hide_powered_by: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+
     @property
     def is_free_plan(self) -> bool:
         return self.subscription_status == "free"
+
+    @property
+    def may_hide_badge(self) -> bool:
+        """Removing the badge is a paid feature. A trial is the paid plan."""
+        return not self.is_free_plan
+
+    @property
+    def shows_powered_by(self) -> bool:
+        return not (self.hide_powered_by and self.may_hide_badge)
 
     @property
     def subprocessor_limit(self) -> int:

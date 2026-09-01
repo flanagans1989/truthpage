@@ -130,6 +130,13 @@ async def trust_page(
     # since when it has been watching. Cheapest source is the oldest vendor row.
     monitoring_since = min((sp.created_at for sp in subprocessors), default=None)
 
+    # The badge is the referral channel, so the link has to say which trust
+    # page it came from — the slug is the attribution.
+    badge_url = (
+        f"{settings.APP_URL.rstrip('/')}/?utm_source=trustpage&utm_medium=badge"
+        f"&utm_campaign=powered_by&utm_content={tenant.slug}"
+    )
+
     return _templates.TemplateResponse(
         request,
         "public_trust.html",
@@ -138,6 +145,8 @@ async def trust_page(
             "subprocessors": subprocessors,
             "change_events": change_events,
             "monitoring_since": monitoring_since,
+            "show_badge": tenant.shows_powered_by,
+            "badge_url": badge_url,
         },
     )
 

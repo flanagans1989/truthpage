@@ -52,6 +52,7 @@ async def dashboard(
             "trial_days_left": trial_days_left,
             "subprocessor_limit": tenant.subprocessor_limit,
             "free_limit": settings.FREE_TIER_MAX_SUBPROCESSORS,
+            "app_url": settings.APP_URL.rstrip("/"),
             "is_admin": bool(tenant.email) and tenant.email.lower() in settings.admin_email_set,
         },
     )
@@ -242,4 +243,31 @@ async def notice_draft(
         request,
         "notice.html",
         {"tenant": tenant, "event": event, "error": error, "upgrade_required": False},
+    )
+
+
+@router.post("/dashboard/settings/badge", response_class=HTMLResponse)
+async def toggle_badge(
+    request: Request,
+    tenant: CurrentTenant,
+    db: AsyncSession = Depends(get_db_session),
+):
+    """White-label switch for the trust page badge.
+
+    Gated at write time as well as at render time: a free tenant who posts
+    here directly gets a 402 rather than a silently ignored setting.
+    """
+    if not tenant.may_hide_badge:
+        raise HTTPException(
+            status_code=402,
+            detail="Removing the TrustPages badge is part of the Growth plan.",
+        )
+
+    tenant.hide_powered_by = not tenant.hide_powered_by
+    await db.commit()
+    logger.info(
+        "Badge setting: tenant %s hide_powered_by=%s", tenant.slug, tenant.hide_powered_by
+    )
+    return _templates.TemplateResponse(
+        request, "partials/badge_setting.html", {"tenant": tenant}
     )
