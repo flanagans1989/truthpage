@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}TrustPages vs {{ c.name }} — sub-processor monitoring compared{% endblock %}
+{% block meta_description %}An honest comparison of TrustPages and {{ c.name }} for sub-processor monitoring: pricing, free tiers, evidence, review workflow and where {{ c.name }} is the better choice. Figures checked {{ verified_on }}.{% endblock %}
+{% block content %}
+<div class="min-h-screen flex flex-col">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="text-blue-600 font-bold text-xl">TrustPages</a>
+            <div class="flex items-center gap-4">
+                <a href="/pricing" class="text-sm text-slate-600 hover:text-slate-900">Pricing</a>
+                <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">Sign in</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl mx-auto px-6 py-16 w-full">
+        <h1 class="text-3xl font-bold text-slate-900 mb-3">TrustPages vs {{ c.name }}</h1>
+        <p class="text-slate-600 mb-2">{{ c.name }}: <em>{{ c.tagline }}</em></p>
+        <p class="text-slate-700 leading-relaxed mb-8">{{ c.verdict }}</p>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-10">
+            <p class="text-sm text-slate-700"><strong>{{ c.name }} pricing:</strong> {{ c.pricing }}</p>
+            <p class="text-sm text-slate-700 mt-1"><strong>TrustPages pricing:</strong> {{ ours.free }} free, or {{ ours.paid }}.</p>
+            <p class="text-xs text-slate-400 mt-3">
+                Read off {{ c.name }}'s own site on {{ verified_on }}. Prices in this category move —
+                <a href="{{ c.url }}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">check theirs</a> before deciding.
+            </p>
+        </div>
+
+        <div class="overflow-x-auto mb-12">
+            <table class="w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="text-left font-semibold text-slate-500 px-4 py-3 w-1/4"></th>
+                        <th class="text-left font-semibold text-slate-900 px-4 py-3">{{ c.name }}</th>
+                        <th class="text-left font-semibold text-blue-700 px-4 py-3">TrustPages</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for label, theirs, mine in c.rows %}
+                    <tr class="align-top">
+                        <td class="px-4 py-3 text-slate-500">{{ label }}</td>
+                        <td class="px-4 py-3 text-slate-700">{{ theirs }}</td>
+                        <td class="px-4 py-3 text-slate-900">{{ mine }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div class="bg-white border border-slate-200 rounded-xl p-6">
+                <h2 class="font-semibold text-slate-900 mb-3">Choose {{ c.name }} if</h2>
+                <ul class="space-y-2 text-sm text-slate-600">
+                    {% for item in c.they_win %}<li>· {{ item }}</li>{% endfor %}
+                </ul>
+            </div>
+            <div class="bg-white border-2 border-blue-500 rounded-xl p-6">
+                <h2 class="font-semibold text-slate-900 mb-3">Choose TrustPages if</h2>
+                <ul class="space-y-2 text-sm text-slate-600">
+                    {% for item in c.we_win %}<li>· {{ item }}</li>{% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg text-sm">Start free — 3 pages, no card</a>
+            <p class="text-xs text-slate-500 mt-3">New accounts get 14 days of Growth first. <a href="/pricing" class="text-blue-600 hover:underline">See pricing</a>.</p>
+        </div>
+
+        {% if others %}
+        <p class="text-sm text-slate-500 text-center mt-12">
+            Also compared:
+            {% for o in others %}<a href="/vs/{{ o.slug }}" class="text-blue-600 hover:underline">{{ o.name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+        </p>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

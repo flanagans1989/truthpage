@@ -1,14 +1,17 @@
 """Public marketing/legal pages (no auth): landing, pricing, terms, privacy, refunds."""
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 
+from app.core.comparisons import COMPARISONS, OURS, VERIFIED_ON
 from app.core.config import settings
 from app.core.templating import templates as _templates
 
 router = APIRouter(tags=["pages"])
 
-_STATIC_PATHS = ["/", "/pricing", "/terms", "/privacy", "/refunds"]
+_STATIC_PATHS = ["/", "/pricing", "/terms", "/privacy", "/refunds"] + [
+    f"/vs/{slug}" for slug in COMPARISONS
+]
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -34,6 +37,26 @@ async def privacy(request: Request):
 @router.get("/refunds", response_class=HTMLResponse)
 async def refunds(request: Request):
     return _templates.TemplateResponse(request, "refunds.html", {})
+
+
+@router.get("/vs/{slug}", response_class=HTMLResponse)
+async def comparison(request: Request, slug: str):
+    """Head-to-head pages against the products a prospect is already reading
+    about. The competitors publish comparisons against platforms 100x their
+    size; these are the slots none of them fills."""
+    entry = COMPARISONS.get(slug.lower())
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Comparison not found")
+    return _templates.TemplateResponse(
+        request,
+        "comparison.html",
+        {
+            "c": entry,
+            "ours": OURS,
+            "verified_on": VERIFIED_ON,
+            "others": [v for k, v in COMPARISONS.items() if k != entry.slug],
+        },
+    )
 
 
 _INDEXNOW_KEY = "90b3cb9be9beb629e594522fb498dd60"
