@@ -30,7 +30,7 @@ services:
 
       # ── Varsayılan değerleri olan opsiyonel değişkenler ──────────────────
       - key: RESEND_FROM_EMAIL
-        value: TrustPages <onboarding@resend.dev>
+        value: TrustPages <notifications@usetrustpages.com>
       - key: PADDLE_PRICE_ID_GROWTH
         sync: false
       - key: PADDLE_ENVIRONMENT
