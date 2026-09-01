@@ -98,7 +98,16 @@
                     </div>
                     {% else %}
                     <div class="bg-white rounded-xl border border-slate-200 border-dashed p-8 text-center">
-                        <p class="text-slate-400 text-sm">No published changes yet.</p>
+                        <p class="text-slate-600 text-sm font-medium">No changes detected yet.</p>
+                        <p class="text-slate-400 text-xs mt-1">
+                            {% if monitoring_since %}
+                            Monitoring {{ subprocessors | length }} sub-processor page{{ 's' if subprocessors | length != 1 }}
+                            daily since {{ monitoring_since.strftime('%d %b %Y') }}.
+                            {% else %}
+                            Monitoring has not started yet.
+                            {% endif %}
+                            Every check is recorded whether or not the page moved.
+                        </p>
                     </div>
                     {% endif %}
                 </div>

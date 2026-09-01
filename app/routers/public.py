@@ -126,10 +126,19 @@ async def trust_page(
     )
     change_events = list(ev_result.scalars().all())
 
+    # An empty history reads as "the monitor is broken" unless the page says
+    # since when it has been watching. Cheapest source is the oldest vendor row.
+    monitoring_since = min((sp.created_at for sp in subprocessors), default=None)
+
     return _templates.TemplateResponse(
         request,
         "public_trust.html",
-        {"tenant": tenant, "subprocessors": subprocessors, "change_events": change_events},
+        {
+            "tenant": tenant,
+            "subprocessors": subprocessors,
+            "change_events": change_events,
+            "monitoring_since": monitoring_since,
+        },
     )
 
 
