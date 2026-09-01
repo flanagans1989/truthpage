@@ -13,7 +13,9 @@ dependencies = [
     "python-multipart>=0.0.18",
     "jinja2>=3.1.0",
     "google-genai>=2.0.0",
-    "httpx[http2]>=0.28.0",
+    # brotli/zstd: the scraper advertises them in Accept-Encoding, so the
+    # decoders must be installed or httpx hands back undecoded bytes.
+    "httpx[http2,brotli,zstd]>=0.28.0",
     "playwright>=1.44.0",
     "selectolax>=0.3.0",
     "pyjwt>=2.10.0",
