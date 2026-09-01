@@ -34,6 +34,9 @@ python run_sweep.py                    # manual sweep
   the service actually runs: `RESEND_FROM_EMAIL` read `onboarding@resend.dev` in the file while
   the dashboard had `noreply@usetrustpages.com`. Reveal the dashboard value before concluding
   anything about production from this file.
+- **`run_sweep.py` must be run, never imported.** Its `asyncio.run(main())` is now behind a
+  `__main__` guard because importing the module ran a real sweep against the `.env` DATABASE_URL
+  — which points at production.
 - **`RESEND_FROM_EMAIL` must be on a Resend-verified domain** (`usetrustpages.com`).
   `onboarding@resend.dev` is a shared sandbox sender that only delivers to the account owner, so
   magic links to yourself would still work while every subscriber notification is dropped.
@@ -46,7 +49,16 @@ python run_sweep.py                    # manual sweep
 - Trial is 14 days; expired tenants are skipped by sweeps and bounced to checkout at login
 - tenant ↔ email is exact-match and unique; magic links are single-use, 3/min per IP and per email
 - DB pool `size=3, overflow=1` (Neon free tier)
-- Plan cap `MAX_SUBPROCESSORS_PER_TENANT`, default 25
+- Plan cap `MAX_SUBPROCESSORS_PER_TENANT`, default 25; free plan `FREE_TIER_MAX_SUBPROCESSORS`,
+  default 3 — read the sweep-interval trap above before raising it, every free tenant costs a
+  scrape per page per day
+- An expired trial becomes `subscription_status="free"` (not a dead account) at the top of each
+  sweep tick; pages above the free cap are disabled oldest-first-kept, never deleted. Tenants in
+  `ADMIN_EMAILS` are exempt — that tenant is the showcase trust page
+- Article 28(2) notice drafts are stored on the change event and only redrawn on request; the
+  tenant may already have sent the earlier wording
+- Competitor figures on `/vs/*` live in `app/core/comparisons.py` with a `VERIFIED_ON` date shown
+  on the page — update the date and the numbers together
 - Public trust page shows the last 20 approved + auto-published changes
 
 Env vars: see `.env.example`. `SENTRY_DSN` and `GA_MEASUREMENT_ID` are optional.
