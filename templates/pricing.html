@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Pricing — TrustPages{% endblock %}
-{% block meta_description %}TrustPages pricing: one Growth plan at $99/month with a free 14-day trial. Monitor up to 25 sub-processor pages with AI change classification and a public trust page.{% endblock %}
+{% block meta_description %}TrustPages pricing: one Growth plan at $99/month. Keep a dated, auditable record of every change your vendors make to their sub-processor lists, and publish it on a trust page your customers can subscribe to.{% endblock %}
 {% block content %}
 <div class="min-h-screen flex flex-col">
     <header class="border-b border-slate-200 bg-white">
@@ -11,20 +11,21 @@
     </header>
 
     <main class="flex-1 max-w-5xl mx-auto px-6 py-16 w-full">
-        <h1 class="text-3xl font-bold text-slate-900 text-center mb-3">Simple pricing</h1>
-        <p class="text-slate-600 text-center mb-12">One plan, everything included. Start with a free 14-day trial.</p>
+        <h1 class="text-3xl font-bold text-slate-900 text-center mb-3">One plan, priced for the work it replaces</h1>
+        <p class="text-slate-600 text-center mb-12">Checking your vendors' sub-processor pages by hand is somebody's recurring afternoon. This does it every day and leaves a record you can hand to an auditor.</p>
 
         <div class="max-w-md mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
             <h2 class="font-semibold text-slate-900 text-lg mb-1">Growth</h2>
             <p class="mb-6"><span class="text-4xl font-bold text-slate-900">$99</span><span class="text-slate-500"> / month</span></p>
             <ul class="space-y-3 text-sm text-slate-600 mb-8">
-                <li>✓ Monitor up to 25 sub-processor pages</li>
-                <li>✓ Automated change detection every sweep cycle</li>
-                <li>✓ AI classification of material vs. cosmetic changes</li>
-                <li>✓ Approval queue with diff viewer</li>
-                <li>✓ Public trust page with change history</li>
-                <li>✓ Email notifications for your subscribers</li>
-                <li>✓ 14-day free trial</li>
+                <li>✓ Track up to 25 vendor sub-processor pages</li>
+                <li>✓ Checked daily — you hear about a change from us, not from a customer</li>
+                <li>✓ Dated evidence for every change: what the page said before, what it says now, when it moved</li>
+                <li>✓ AI separates material changes from cosmetic edits, so you only review what matters</li>
+                <li>✓ Approval queue with a side-by-side diff — nothing reaches your trust page without you</li>
+                <li>✓ A public trust page your own customers can subscribe to</li>
+                <li>✓ Email notification to your subscribers on every published change</li>
+                <li>✓ 14-day free trial, no card required</li>
             </ul>
             <a href="/auth/login" class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg text-sm">Start free trial</a>
             <p class="text-xs text-slate-500 text-center mt-3">No credit card required · Cancel anytime · <a href="/refunds" class="text-blue-600 hover:underline">14-day money-back guarantee</a></p>
@@ -32,19 +33,41 @@
         </div>
 
         <div class="max-w-2xl mx-auto mt-16">
+            <h2 class="text-xl font-bold text-slate-900 text-center mb-8">Why teams pay for this</h2>
+            <div class="space-y-6">
+                <div>
+                    <h3 class="font-semibold text-slate-900 mb-1">The objection window is short and it starts without you</h3>
+                    <p class="text-sm text-slate-600">Under GDPR Article 28(2), a processor working from a general authorisation has to tell you before it adds or replaces a sub-processor, and you get a window to object — typically 10 to 30 days in a commercial DPA. In practice that notice is a quiet update to a page on their site. If nobody is watching the page, the window closes on its own.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-900 mb-1">"When did that change?" is a question you have to answer with a date</h3>
+                    <p class="text-sm text-slate-600">A screenshot taken the week of the audit proves nothing about what the page said three months ago. Every change here is stored with its diff and its timestamp, from the day you started monitoring.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-900 mb-1">Your customers ask you the same question you ask your vendors</h3>
+                    <p class="text-sm text-slate-600">The trust page turns your answer into something you publish once instead of writing out in every security questionnaire — a public, dated history of your sub-processor changes that customers can subscribe to.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-2xl mx-auto mt-16">
             <h2 class="text-xl font-bold text-slate-900 text-center mb-8">Questions</h2>
             <div class="space-y-6">
+                <div>
+                    <h3 class="font-semibold text-slate-900 mb-1">Does this help with DORA?</h3>
+                    <p class="text-sm text-slate-600">Partly, and it's worth being precise about which part. DORA requires EU financial entities to keep a Register of Information covering their ICT providers <em>and those providers' subcontractors</em>, filed with the regulator each year. TrustPages keeps the subcontractor half of that current and dated. It is not a filing tool and it does not produce the register for you.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-slate-900 mb-1">How does the AI tell material changes from cosmetic ones?</h3>
+                    <p class="text-sm text-slate-600">Every detected diff is classified as material or cosmetic. Cosmetic changes — typos, reformatting, a moved heading — publish automatically. Anything that could affect your customers, such as a new sub-processor or a new processing country, goes to your approval queue first. You always have the final say before it reaches your trust page.</p>
+                </div>
                 <div>
                     <h3 class="font-semibold text-slate-900 mb-1">What happens after the 14-day trial?</h3>
                     <p class="text-sm text-slate-600">You'll be prompted to add a payment method to keep your monitoring running. Nothing is charged automatically before then — no card is required to start the trial.</p>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">What if I need to monitor more than 25 pages?</h3>
-                    <p class="text-sm text-slate-600">25 covers the vendor list of most teams our size. If you need more, email us and we'll sort out a limit increase on the Growth plan.</p>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">How does the AI tell material changes from cosmetic ones?</h3>
-                    <p class="text-sm text-slate-600">Every detected diff is classified by AI as material or cosmetic. Cosmetic changes (typos, formatting) publish automatically; anything that could affect your customers goes to your approval queue first — you always have the final say before it reaches your trust page.</p>
+                    <h3 class="font-semibold text-slate-900 mb-1">What if I need to track more than 25 vendors?</h3>
+                    <p class="text-sm text-slate-600">25 covers the vendor list of most teams at this size. If you need more, email us and we'll sort out a limit increase on the Growth plan.</p>
                 </div>
                 <div>
                     <h3 class="font-semibold text-slate-900 mb-1">Can I cancel anytime?</h3>
