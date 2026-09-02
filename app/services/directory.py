@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.llm.analyzer import LLMDiffAnalyzer
 from app.core.llm.extractor import SubProcessorExtractor, diff_entries
+from app.core.scraper.content_health import content_health_issue
 from app.core.scraper.detector import ChangeDetector
 from app.core.scraper.fetcher import fetch_raw_html
 from app.core.scraper.hasher import ContentHasher
@@ -87,8 +88,25 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
         return
 
     canonical_text = _normalizer.normalize(raw_html)
-    if not canonical_text:
-        logger.warning("Empty content for vendor %s — treating as a fetch failure", vendor.slug)
+
+    # The same gate the tenant pipeline uses (monitoring.py), for the same
+    # reason. Until 2026-09-02 this was a bare `if not canonical_text` —
+    # only a completely empty string counted as a failure. A Cloudflare or
+    # Turnstile interstitial is not empty: it is a few hundred characters
+    # of "Just a moment…", which passed that check, got hashed, published
+    # itself as a real change, and had its entries re-extracted from the
+    # challenge page. On a PUBLIC directory carrying vendor names, silently.
+    #
+    # This is the third caller of content_health.py, and the one that had
+    # been missed — which is exactly why the check lives in a shared module
+    # instead of inside whichever pipeline noticed the problem first.
+    issue = content_health_issue(raw_html, canonical_text)
+    if issue is not None:
+        logger.warning(
+            "Unhealthy content (%s) for vendor %s — treating as a fetch failure",
+            issue,
+            vendor.slug,
+        )
         vendor.next_check_at = utc_now() + _RETRY_AFTER
         await session.commit()
         return
