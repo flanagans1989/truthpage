@@ -21,6 +21,12 @@ async def record_lead(
     await session.commit()
 
 
+def sample_tenant() -> SimpleNamespace:
+    """The fictional tenant behind the sample ZIP — pairs with
+    sample_change_event() below, same never-real-data reasoning."""
+    return SimpleNamespace(name="Example SaaS Inc.", slug="example-saas")
+
+
 def sample_change_event() -> SimpleNamespace:
     """A fictional change, shaped exactly like a real ChangeEvent, for the
     downloadable sample ZIP. Never real tenant data: a made-up company's

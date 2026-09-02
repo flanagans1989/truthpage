@@ -19,7 +19,7 @@ from app.core.templating import templates as _templates
 from app.core.urlguard import validate_url
 from app.db.session import get_db_session
 from app.services.evidence import evidence_zip
-from app.services.leads import record_lead, sample_change_event
+from app.services.leads import record_lead, sample_change_event, sample_tenant
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ async def sample_evidence_pack(
 
     await record_lead(email=email, source="sample_evidence_pack", context=None, session=db)
 
-    zip_bytes = evidence_zip(sample_change_event(), "https://usetrustpages.com")
+    zip_bytes = evidence_zip(sample_change_event(), "https://usetrustpages.com", sample_tenant())
     return Response(
         content=zip_bytes,
         media_type="application/zip",

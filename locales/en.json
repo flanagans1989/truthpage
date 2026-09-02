@@ -113,7 +113,7 @@
   "compare.pick_label": "Pick this instead if:",
   "compare.ours_title": "Where TrustPages sits",
   "compare.ours_line": "{free} free, or {paid}. One job, done with an audit in mind.",
-  "compare.sample_zip_line": "See the actual file before you sign up — SHA-256 anchor, raw HTML, unified diff and a signed manifest, built from an example change.",
+  "compare.sample_zip_line": "See the actual file before you sign up — SHA-256 anchor, raw HTML, unified diff and a manifest.txt with SHA-256 digests of every file, built from an example change.",
   "compare.gaps_title": "What we don't have",
   "compare.gaps_note": "If one of these is a requirement, one of the categories above is a better buy than we are.",
   "vendors.meta_title": "Sub-processor lists for {count} vendors, monitored daily | TrustPages",

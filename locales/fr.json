@@ -118,7 +118,7 @@
   "compare.pick_label": "Préférez-les si :",
   "compare.ours_title": "Où se place TrustPages",
   "compare.ours_line": "{free} gratuitement, ou {paid}. Une seule mission, menée en pensant à l'audit.",
-  "compare.sample_zip_line": "Voyez le fichier réel avant de vous inscrire — ancre SHA-256, HTML brut, diff unifié et manifeste signé, construits à partir d'un exemple de changement.",
+  "compare.sample_zip_line": "Voyez le fichier réel avant de vous inscrire — ancre SHA-256, HTML brut, diff unifié et un manifest.txt avec les empreintes SHA-256 de chaque fichier, construits à partir d'un exemple de changement.",
   "compare.gaps_title": "Ce que nous n'avons pas",
   "compare.gaps_note": "Si l'un de ces points est une exigence, l'une des catégories ci-dessus est un meilleur achat que nous.",
 
