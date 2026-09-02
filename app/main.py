@@ -23,6 +23,7 @@ from app.routers import (
     subprocessors,
     tools,
     vendors,
+    verify,
     webhooks,
 )
 from app.scheduler.jobs import run_sweep_cycle
@@ -126,6 +127,7 @@ app.include_router(public.router)
 app.include_router(vendors.router)
 app.include_router(admin.router)
 app.include_router(tools.router)
+app.include_router(verify.router)
 
 
 @app.get("/healthz")

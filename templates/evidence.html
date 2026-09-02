@@ -124,6 +124,71 @@
             </dl>
         </div>
 
+        <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+            <div class="flex items-center gap-2 mb-4">
+                <h2 class="text-base font-semibold text-slate-900">Independent timestamp (RFC 3161)</h2>
+                {% if event.timestamp_status == 'timestamped' %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-xs font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Timestamped
+                </span>
+                {% elif event.timestamp_status in ('pending', 'retrying') %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-600 px-2 py-0.5 text-xs font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Pending
+                </span>
+                {% elif event.timestamp_status == 'failed' %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 text-xs font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Could not get an independent timestamp
+                </span>
+                {% endif %}
+            </div>
+            {% if event.timestamp_status == 'timestamped' %}
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Timestamp authority</dt>
+                    <dd class="text-slate-900 font-medium break-all">{{ event.tsa_authority_url }}</dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Time asserted by the authority</dt>
+                    <dd class="text-slate-900 font-medium">
+                        {{ event.tsa_time_utc.strftime('%Y-%m-%d %H:%M UTC') if event.tsa_time_utc else 'not recorded' }}
+                    </dd>
+                </div>
+            </dl>
+            <p class="text-slate-500 text-xs mt-4">
+                A third party that does not work for TrustPages has attested to this content hash existing at this
+                time — independent of TrustPages' own records. Included in the audit ZIP; verify offline with
+                <code class="bg-slate-100 px-1 rounded">./verify.sh</code>, no internet connection required.
+            </p>
+            {% elif event.timestamp_status in ('pending', 'retrying') %}
+            <p class="text-slate-500 text-sm">
+                Not yet timestamped — this happens automatically on the next monitoring cycle
+                {% if event.tsa_attempt_count %}(attempt {{ event.tsa_attempt_count }}){% endif %}.
+                No action needed.
+            </p>
+            {% elif event.timestamp_status == 'failed' %}
+            <p class="text-slate-600 text-sm mb-3">
+                TrustPages could not obtain an independent RFC 3161 timestamp for this change after
+                {{ event.tsa_attempt_count }} attempts.
+                {% if event.tsa_last_error %}<span class="text-slate-400">({{ event.tsa_last_error }})</span>{% endif %}
+                The content hash above is unaffected — this only means no third party has attested to its capture
+                time yet.
+            </p>
+            <form hx-post="/dashboard/events/{{ event.id }}/retry-timestamp" hx-swap="none"
+                  onsubmit="setTimeout(() => location.reload(), 300)">
+                <button type="submit"
+                        class="text-xs px-3 py-1.5 rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition">
+                    Retry now
+                </button>
+            </form>
+            {% else %}
+            <p class="text-slate-400 text-sm">
+                Not available — this change was recorded before independent timestamping existed. This is
+                permanent: TrustPages never attaches a timestamp to a capture after the fact, since that would
+                claim the document existed at a time it did not.
+            </p>
+            {% endif %}
+        </div>
+
         <h2 class="text-base font-semibold text-slate-900 mb-4">Captured page text</h2>
         {% if event.old_content_text or event.new_content_text %}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">

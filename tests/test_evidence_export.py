@@ -273,19 +273,21 @@ class TestPackContents:
 
     def test_every_pack_file_has_a_schema_counterpart(self):
         # No file may sit in the ZIP unexplained — an auditor's "what is
-        # this file" question must have an answer in manifest.txt. The
-        # EVIDENCE section's *_file fields name the evidentiary documents;
-        # manifest.sha256 and README.txt are the two documented utility
-        # files (see docs/manifest_v2.md), not evidence, so they're the
-        # only files allowed to lack an EVIDENCE *_file counterpart.
+        # this file" question must have an answer in manifest.txt. Any
+        # field whose name ends in "_file" and whose value isn't
+        # not_available names an evidentiary document (this generalizes
+        # automatically as PR 3/PR 4 add tsa_token_file, notice_file,
+        # delivery_log_file, etc.); manifest.sha256, README.txt and
+        # verify.sh are the three documented utility files (see
+        # docs/manifest_v2.md), not evidence, so they're the only files
+        # allowed to lack a *_file counterpart.
         files = _zip_files(evidence_zip(_event(), APP_URL, _tenant()))
         fields = parse_manifest_v2(files["manifest.txt"])
         evidence_file_values = {
-            fields["before_html_file"], fields["after_html_file"],
-            fields["before_text_file"], fields["after_text_file"],
-            fields["diff_file"],
+            value for key, value in fields.items()
+            if key.endswith("_file") and value != NOT_AVAILABLE
         }
-        known_utility_files = {"manifest.sha256", "README.txt"}
+        known_utility_files = {"manifest.sha256", "README.txt", "verify.sh"}
         for name in fields["pack_contents"]:
             assert name in evidence_file_values or name in known_utility_files, (
                 f"{name} is in the ZIP but named by no schema field"
@@ -348,6 +350,45 @@ class TestReviewActionValidator:
     def test_anything_else_raises(self, text):
         with pytest.raises(ValueError):
             validate_review_action(text)
+
+
+class TestTimestampSection:
+    """PR 3 test item 16: [TIMESTAMP] renders correctly for all real
+    timestamp_status values, and item 17 (extended): the token/chain files
+    only ever appear in the ZIP when actually timestamped."""
+
+    @pytest.mark.parametrize("status", ["pending", "retrying", "failed", "not_available_pre_tsa"])
+    def test_non_timestamped_statuses_leave_the_other_four_fields_not_available(self, status):
+        event = _event(timestamp_status=status, tsa_authority_url=None, tsa_time_utc=None)
+        files = _zip_files(evidence_zip(event, APP_URL, _tenant()))
+        fields = parse_manifest_v2(files["manifest.txt"])
+        assert fields["timestamp_status"] == status
+        assert fields["tsa_token_file"] == NOT_AVAILABLE
+        assert fields["tsa_authority_url"] == NOT_AVAILABLE
+        assert fields["tsa_time_utc"] == NOT_AVAILABLE
+        assert fields["tsa_chain_file"] == NOT_AVAILABLE
+        # No token/chain file physically added when there's nothing to add.
+        assert "after.html.sha256.tsr" not in files
+        assert "tsa-chain.pem" not in files
+
+    def test_timestamped_status_fills_all_four_fields_and_files(self):
+        event = _event(
+            timestamp_status="timestamped",
+            tsa_authority_url="https://freetsa.org/tsr",
+            tsa_time_utc=datetime(2026, 9, 2, 14, 22, 32, tzinfo=timezone.utc),
+            tsa_token=b"fake-token-bytes-for-this-test",
+        )
+        files = _zip_files(evidence_zip(event, APP_URL, _tenant()))
+        # tsa_token is real bytes, not text — re-fetch as bytes for this one.
+        zf_bytes = zipfile.ZipFile(BytesIO(evidence_zip(event, APP_URL, _tenant())))
+        fields = parse_manifest_v2(files["manifest.txt"])
+        assert fields["timestamp_status"] == "timestamped"
+        assert fields["tsa_token_file"] == "after.html.sha256.tsr"
+        assert fields["tsa_authority_url"] == "https://freetsa.org/tsr"
+        assert fields["tsa_time_utc"] == "2026-09-02T14:22:32Z"
+        assert fields["tsa_chain_file"] == "tsa-chain.pem"
+        assert zf_bytes.read("after.html.sha256.tsr") == b"fake-token-bytes-for-this-test"
+        assert len(zf_bytes.read("tsa-chain.pem")) > 0
 
 
 class TestManifestVersionDetection:

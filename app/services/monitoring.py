@@ -13,7 +13,7 @@ from app.core.scraper.detector import ChangeDetector
 from app.core.scraper.fetcher import fetch_raw_html, mark_subprocessor_requires_browser
 from app.core.scraper.hasher import ContentHasher
 from app.core.scraper.normalizer import HTMLNormalizer
-from app.db.models.change_event import ChangeEvent, ChangeStatus
+from app.db.models.change_event import ChangeEvent, ChangeStatus, TimestampStatus
 from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.services.mailer import mailer
@@ -166,6 +166,12 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         llm_classification=analysis.classification,
         llm_confidence=analysis.confidence,
         status=status,
+        # Explicit, not relied on as the column default: this is a real
+        # snapshot just stored, eligible for an RFC 3161 timestamp on the
+        # next sweep tick. The column's own default is the terminal
+        # not_available_pre_tsa — deliberately the safe state a forgetful
+        # caller would fall into, never this one.
+        timestamp_status=TimestampStatus.pending.value,
     )
     session.add(change_event)
 

@@ -18,6 +18,40 @@ ever disagree, this document is the spec and the code has a bug.
 > (see the changelog at the bottom); that window is now closed once this
 > reaches production.
 
+## KURAL 0 — no backdated timestamping, ever, under any condition
+
+No existing snapshot may EVER, under any circumstance, receive a
+timestamp generated after the fact. A token obtained today attached to
+HTML captured three months ago would be a document asserting an event
+happened at a time it did not — the single failure mode that would
+invalidate every legal claim this whole feature makes, for every pack,
+retroactively.
+
+Concretely:
+
+- Every `change_event` row that existed before RFC 3161 support shipped is
+  migrated to `timestamp_status = 'not_available_pre_tsa'` — a status the
+  system may only ever assign at migration time or when there is
+  genuinely no digest to stamp (see `app/services/tsa_retry.py`'s
+  `new_raw_html_hash is None` branch), never chosen to "fix" a stuck
+  record.
+- `not_available_pre_tsa` is TERMINAL. No code path — not a retry pass,
+  not a manual action, not a future migration — may ever move a row out
+  of it. `stamp_change_event()` raises `BackdatedTimestampError` the
+  instant it's called on one; this is enforced in code, not left as a
+  status a caller could accidentally overwrite.
+- New rows are set to `pending` explicitly at insert time (in
+  `app/services/monitoring.py`, the moment a real change is detected and
+  stored) — never relied on as a default. The column's own
+  `server_default`/ORM default is deliberately `not_available_pre_tsa`,
+  the safe, inert state: code that forgets to set it explicitly fails
+  toward "no timestamp attempted" rather than toward a false claim.
+- Verified by a trip-wire test
+  (`tests/test_tsa_retry.py::TestKural0TripWire`), not just documented:
+  calling the stamping function on a `not_available_pre_tsa` record must
+  raise, and the retry pass's query must never select one in the first
+  place.
+
 ## Rules
 
 - **Always English.** `manifest.txt` is generated in English regardless of
@@ -113,8 +147,8 @@ after_text_sha256:
 diff_file:
 diff_sha256:
 
-[TIMESTAMP]                      # PR 3 fills this in
-timestamp_status:                # timestamped | pending | failed | not_available (pre-TSA)
+[TIMESTAMP]                      # filled by PR 3
+timestamp_status:                # pending | retrying | timestamped | failed | not_available_pre_tsa
 tsa_token_file:
 tsa_authority_url:
 tsa_time_utc:
@@ -149,13 +183,12 @@ objection_status:                # one of the four permitted forms — see Rules
                                   # excluded (see below)
 ```
 
-## Field notes (what this PR — PR 2 — actually fills in)
+## Field notes
 
-Everything in `[SUBJECT]`, `[DETECTION]`, `[EVIDENCE]`, and
-`[PACK CONTENTS]` is populated from data that already exists today.
-`[TIMESTAMP]`, `[REVIEW]`, `[NOTIFICATION]`, and `[OBJECTION WINDOW]` are
-`not_available` in every field until PR 3 / PR 4 land — see the table in
-that PR's description for exactly which PR fills which field.
+`[SUBJECT]`, `[DETECTION]`, `[EVIDENCE]`, `[PACK CONTENTS]` (PR 2) and now
+`[TIMESTAMP]` (PR 3) are populated from real data. `[REVIEW]`,
+`[NOTIFICATION]`, and `[OBJECTION WINDOW]` stay `not_available` in every
+field until PR 4 — see that PR's description for which field it fills.
 
 A few fields worth calling out:
 
@@ -196,6 +229,94 @@ A few fields worth calling out:
   it per-event is a data-collection change outside this PR's scope, noted
   here rather than silently done.
 
+## RFC 3161 timestamping
+
+### What gets sent to the TSA
+
+Only the SHA-256 digest of `after.html` (`ChangeEvent.new_raw_html_hash`)
+— never the page content. RFC 3161 is designed exactly for this: the
+timestamp authority attests "this digest existed at this time" without
+ever seeing what it's a digest of. The TSA never learns which vendor page
+a tenant monitors, what it says, or that TrustPages exists as their
+customer. This is worth saying in the sales copy, not just here — see
+`README.txt`'s wording in every pack.
+
+### When a timestamp is requested
+
+Only when a real change is detected and a new `change_event` row is
+stored — never on a daily scan that finds nothing different. A "no
+change" tick costs zero TSA calls; the retry pass only ever looks at rows
+that already exist with `pending`/`retrying` status
+(`app/services/tsa_retry.py::run_timestamp_retry_pass`).
+
+### State machine
+
+```
+        (change_event created, new_raw_html_hash present)
+                          │
+                          ▼
+                      pending ──────────────┐
+                          │                 │
+                (attempt, TSA fails)   (attempt, TSA succeeds)
+                          │                 │
+                          ▼                 ▼
+                      retrying ──────► timestamped
+                          │
+             (attempt N == TSA_MAX_ATTEMPTS)
+                          │
+                          ▼
+                       failed ──(manual retry)──► retrying
+```
+
+`not_available_pre_tsa` is not on this diagram — it is reachable only from
+outside it (migration backfill, or a `new_raw_html_hash is None` event),
+and nothing on this diagram ever points to it. `failed` is not terminal:
+a person can manually retry from the dashboard, which resets the attempt
+counter and returns the row to `retrying` for the next sweep tick.
+
+The retry pass runs asynchronously at the very start of every existing
+sweep cycle (`app/scheduler/jobs.py::run_sweep_cycle`) — not a new
+worker/queue/broker. A TSA outage can never block, slow down, or fail the
+scraping pass that runs after it in the same cycle; the two are
+independent steps in the same tick.
+
+### Configuration
+
+```
+TSA_PRIMARY_URL=https://freetsa.org/tsr   # default
+TSA_FALLBACK_URL=                          # blank = no fallback attempted
+TSA_TIMEOUT_SECONDS=20
+TSA_MAX_ATTEMPTS=5
+```
+
+Only FreeTSA is configured today. `TSA_FALLBACK_URL` exists in the code
+and is tried automatically whenever it's set (primary first, then
+fallback), but shipping a second provider means also bundling its CA
+chain (see below) — setting the URL without the chain would make a
+fallback-issued token unverifiable by both `verify.sh` and `/verify`. Do
+not set it without adding that file.
+
+### Where the bundled CA chain comes from
+
+`app/static_data/tsa/freetsa-chain.pem` — FreeTSA's root CA certificate
+concatenated with their TSA signing certificate, fetched directly from
+`https://freetsa.org/files/cacert.pem` and `https://freetsa.org/files/tsa.crt`
+(FreeTSA's own published files, not a third-party mirror). Checked into
+the repo rather than fetched at request time, so:
+
+- a ZIP is buildable and `/verify` is checkable even if freetsa.org is
+  down;
+- the exact bytes trusted by `verify.sh` (shipped in every pack) and by
+  the server-side `/verify` endpoint are identical and reviewable in this
+  repo, not fetched live from a URL that could change.
+
+**This is the only CA chain `/verify` and every `verify.sh` will ever
+trust.** A pack's own `tsa-chain.pem` — inside an uploaded ZIP, or one an
+attacker crafts to sit next to a forged token — is never read for trust
+purposes. If it were, anyone could bundle a self-signed throwaway CA next
+to a self-signed "token" and have their own upload "verify" against
+itself; the whole feature would prove nothing.
+
 ## manifest.sha256 and README.txt
 
 `[PACK CONTENTS]` makes the pack self-describing — an auditor with only
@@ -207,11 +328,57 @@ so:
 - A separate file, **`manifest.sha256`**, is added to the ZIP containing
   just the hex SHA-256 digest of `manifest.txt`'s bytes (plus a trailing
   newline).
-- **`README.txt`** (≤20 lines, plain English) orients an auditor who opens
-  the ZIP without any TrustPages context: what each file is, how to check
-  a hash, and — already, ahead of PR 3 shipping — that packs generated
-  before RFC 3161 timestamping have no independent proof of *when* the
-  capture happened (`[TIMESTAMP]` reads `not_available`).
+- **`README.txt`** (≤25 lines, plain English) orients an auditor who opens
+  the ZIP without any TrustPages context: what each file is, how to run
+  `verify.sh`, and — for a pack with no independent timestamp — that this
+  isn't a failure, just something the pack predates or couldn't obtain
+  (`[TIMESTAMP]`'s `timestamp_status` says which).
+- **`verify.sh`** (POSIX sh, `openssl` only, no network access) ships in
+  every pack — timestamped or not. It re-hashes `after.html` and compares
+  against `manifest.txt`, then (only if `timestamp_status: timestamped`)
+  checks the `.tsr` token against the bundled `tsa-chain.pem` sitting next
+  to it. Output is exactly one line:
+  - `PASS - content hash matches and timestamp verified (<UTC>)` (exit 0)
+  - `FAIL - <reason>` (exit 1)
+  - `NO TIMESTAMP - pack predates independent timestamping; content hash
+    matches` (exit 0 — **this is not a failure**, just the honest state of
+    a pack that has no independent timestamp)
+- **`after.html.sha256.tsr`** and **`tsa-chain.pem`** are added to the ZIP
+  ONLY when `timestamp_status: timestamped` — there is nothing to include
+  otherwise, and `[TIMESTAMP]`'s other four fields read `not_available`
+  precisely because these files don't exist for this pack.
+
+## /verify
+
+A public, unauthenticated page (`app/routers/verify.py`,
+`app/services/verify.py`) that runs the same check `verify.sh` does,
+server-side, for someone who'd rather not run a shell script. Two input
+modes: upload the whole `.zip`, or a captured file plus its `.tsr` token.
+
+Hard constraints, enforced structurally, not just by convention:
+
+- **Never touches the database.** No import of `AsyncSession`,
+  `get_db_session`, or any `select(...)` anywhere in
+  `app/services/verify.py` — checked by a static test
+  (`tests/test_verify.py::TestNeverTouchesTheDatabaseOrDisk`) as well as by
+  the route functions simply declaring no database dependency at all. A
+  hash → tenant/vendor lookup here would let anyone probe "does company X
+  monitor vendor Y", which is a data leak this page must be structurally
+  incapable of.
+- **Never trusts an uploaded CA chain** — same rule as `verify.sh` above,
+  for the same reason: only `app/static_data/tsa/*.pem` is ever consulted
+  for verification, regardless of what a `.zip` or a paired upload
+  contains.
+- **Nothing uploaded is written to permanent disk or logged.** A token
+  that must reach `openssl` on the filesystem goes into a
+  `tempfile.TemporaryDirectory()`, deleted before the response is sent.
+- **Size- and zip-bomb-limited**: 5 MB per upload, and — before any entry
+  is decompressed — a cap on total entry count and on both total and
+  per-entry uncompressed size.
+- **Reads both v1 and v2 packs** via the same `detect_manifest_version`
+  used everywhere else. A v1 pack (no independent timestamp ever existed
+  for it) is reported the same honest way `verify.sh` reports a pre-TSA
+  v2 pack — not an error.
 
 ## Signing
 
@@ -252,6 +419,11 @@ Their verifiability must never break:
 
 ## Changelog (pre-deploy only — see the frozen-schema note at the top)
 
+- **v2 draft 3 (PR 3):** `[TIMESTAMP]` filled in — `timestamp_status`,
+  `tsa_token_file`, `tsa_authority_url`, `tsa_time_utc`, `tsa_chain_file`.
+  No field names/order changed from draft 2 — only what was previously an
+  all-`not_available` section now carries real values when
+  `timestamp_status: timestamped`.
 - **v2 draft 2:** `review_action`'s permitted values changed from
   `approved_for_notification` / `auto_published_cosmetic` to
   `notice_released_by_reviewer` / `auto_published_cosmetic` (the old value
