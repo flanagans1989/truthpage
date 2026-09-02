@@ -35,6 +35,29 @@ _SUBSCRIPTION_STATUS_MAP = {
 _ENDS_THE_SUBSCRIPTION = frozenset({"free"})
 
 
+def _plan_from_items(items: list[dict] | None) -> str | None:
+    """Which tier a transaction/subscription's line items paid for, by
+    matching the actual Paddle price id — never trust plan off custom_data,
+    which is client-supplied and unverified. None means "couldn't tell";
+    the caller keeps whatever plan the tenant already had rather than
+    guessing, since downgrading a paying customer by mistake is worse than
+    leaving a stale value for one webhook cycle."""
+    price_ids = {
+        (item.get("price") or {}).get("id")
+        for item in (items or [])
+        if isinstance(item, dict)
+    }
+    if settings.PADDLE_PRICE_ID_STARTER and settings.PADDLE_PRICE_ID_STARTER in price_ids:
+        return "starter"
+    if settings.PADDLE_PRICE_ID_STARTER_YEARLY and settings.PADDLE_PRICE_ID_STARTER_YEARLY in price_ids:
+        return "starter"
+    if settings.PADDLE_PRICE_ID_GROWTH and settings.PADDLE_PRICE_ID_GROWTH in price_ids:
+        return "growth"
+    if settings.PADDLE_PRICE_ID_GROWTH_YEARLY and settings.PADDLE_PRICE_ID_GROWTH_YEARLY in price_ids:
+        return "growth"
+    return None
+
+
 # Reject webhooks whose signature timestamp is too old — otherwise a captured
 # payload (e.g. an old transaction.completed) could be replayed to re-activate
 # a canceled subscription. Paddle recommends a 5-second window; we allow more
@@ -93,11 +116,14 @@ async def _handle_transaction_completed(data: dict, db: AsyncSession) -> None:
         tenant.paddle_customer_id = paddle_customer_id
     if paddle_subscription_id:
         tenant.paddle_subscription_id = paddle_subscription_id
+    plan = _plan_from_items(data.get("items"))
+    if plan is not None:
+        tenant.plan = plan
     tenant.subscription_status = "active"
     await db.commit()
     logger.info(
-        "webhook transaction.completed: tenant %s activated (customer=%s)",
-        tenant.id, paddle_customer_id,
+        "webhook transaction.completed: tenant %s activated (customer=%s, plan=%s)",
+        tenant.id, paddle_customer_id, tenant.plan,
     )
 
 
@@ -116,6 +142,10 @@ async def _handle_subscription_updated(data: dict, db: AsyncSession) -> None:
 
     if paddle_subscription_id:
         tenant.paddle_subscription_id = paddle_subscription_id
+
+    plan = _plan_from_items(data.get("items"))
+    if plan is not None:
+        tenant.plan = plan
 
     if mapped_status in _ENDS_THE_SUBSCRIPTION:
         switched_off = await move_tenant_to_free(tenant, db)

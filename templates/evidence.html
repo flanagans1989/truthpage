@@ -24,10 +24,18 @@
                class="inline-block text-sm font-semibold px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
                 {% if event.notice_body %}Open customer notice{% else %}Draft customer notice{% endif %}
             </a>
+            {% if tenant.may_export_evidence %}
             <a href="/dashboard/events/{{ event.id }}/evidence.zip"
                class="inline-block text-sm font-semibold px-4 py-2 rounded-lg text-slate-700 border border-slate-300 hover:border-slate-400 transition">
                 Download audit evidence (.zip)
             </a>
+            {% else %}
+            <a href="/pricing"
+               class="inline-block text-sm font-semibold px-4 py-2 rounded-lg text-slate-400 border border-slate-200 transition"
+               title="Downloadable audit evidence is part of the Growth plan">
+                Download audit evidence (.zip) <span class="text-xs">— Growth plan</span>
+            </a>
+            {% endif %}
         </div>
         <p class="text-xs text-slate-400 -mt-4 mb-6">Before/after HTML, the diff and the decision trail in one file — for an auditor or an enterprise customer's security review.</p>
 

@@ -75,3 +75,75 @@ class TestTenantLimit:
 
         assert "free" in SUBSCRIPTION_STATUSES
         assert "free" in MONITORED_STATUSES
+
+    def test_starter_plan_gets_the_starter_cap(self):
+        from app.core.config import settings
+        from app.db.models.tenant import Tenant
+
+        starter = Tenant(name="s", slug="s", subscription_status="active", plan="starter")
+        assert starter.subprocessor_limit == settings.STARTER_MAX_SUBPROCESSORS
+
+    def test_growth_plan_gets_the_growth_cap(self):
+        from app.core.config import settings
+        from app.db.models.tenant import Tenant
+
+        growth = Tenant(name="g", slug="g", subscription_status="active", plan="growth")
+        assert growth.subprocessor_limit == settings.MAX_SUBPROCESSORS_PER_TENANT
+
+    def test_trialing_gets_the_growth_cap_regardless_of_plan(self):
+        from app.core.config import settings
+        from app.db.models.tenant import Tenant
+
+        trial = Tenant(name="t", slug="t", subscription_status="trialing", plan="starter")
+        assert trial.subprocessor_limit == settings.MAX_SUBPROCESSORS_PER_TENANT
+
+
+class TestGrowthOnlyFeatures:
+    def test_starter_may_not_hide_badge_or_export_evidence(self):
+        from app.db.models.tenant import Tenant
+
+        starter = Tenant(name="s", slug="s", subscription_status="active", plan="starter")
+        assert starter.may_hide_badge is False
+        assert starter.may_export_evidence is False
+
+    def test_growth_may_hide_badge_and_export_evidence(self):
+        from app.db.models.tenant import Tenant
+
+        growth = Tenant(name="g", slug="g", subscription_status="active", plan="growth")
+        assert growth.may_hide_badge is True
+        assert growth.may_export_evidence is True
+
+    def test_past_due_starter_still_reads_as_starter_not_growth(self):
+        # A payment problem doesn't retract or grant a feature — the tier is
+        # whatever it was, just also behind on payment.
+        from app.db.models.tenant import Tenant
+
+        starter = Tenant(name="s", slug="s", subscription_status="past_due", plan="starter")
+        assert starter.may_export_evidence is False
+
+    def test_trial_previews_the_full_growth_feature_set(self):
+        from app.db.models.tenant import Tenant
+
+        trial = Tenant(name="t", slug="t", subscription_status="trialing", plan="starter")
+        assert trial.may_hide_badge is True
+        assert trial.may_export_evidence is True
+
+    def test_free_never_gets_growth_features(self):
+        from app.db.models.tenant import Tenant
+
+        free = Tenant(name="f", slug="f", subscription_status="free", plan="growth")
+        assert free.may_hide_badge is False
+        assert free.may_export_evidence is False
+
+    def test_unset_plan_on_an_unflushed_instance_reads_as_growth(self):
+        # mapped_column(default=...) only applies at flush time (same quirk
+        # documented on hide_powered_by in test_badge.py) — a Tenant() built
+        # without an explicit plan must still behave like the paid tier
+        # every pre-Starter tenant actually has, not silently downgrade.
+        from app.db.models.tenant import Tenant
+
+        paid = Tenant(name="y", slug="y", subscription_status="active")
+        assert paid.plan is None
+        assert paid.has_growth_features is True
+        assert paid.may_hide_badge is True
+        assert paid.may_export_evidence is True

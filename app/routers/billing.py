@@ -18,10 +18,29 @@ _PADDLE_API_BASE = (
     else "https://sandbox-api.paddle.com"
 )
 
+# plan/interval → price id. A blank id means "not configured yet in Paddle"
+# rather than a code change waiting to happen — the pricing page can
+# describe a tier before anyone can actually buy it (see Starter).
+_PRICE_IDS = {
+    ("starter", "monthly"): settings.PADDLE_PRICE_ID_STARTER,
+    ("starter", "yearly"): settings.PADDLE_PRICE_ID_STARTER_YEARLY,
+    ("growth", "monthly"): settings.PADDLE_PRICE_ID_GROWTH,
+    ("growth", "yearly"): settings.PADDLE_PRICE_ID_GROWTH_YEARLY,
+}
+
 
 @router.get("/checkout")
-async def checkout(request: Request, tenant: CurrentTenant):
-    if not settings.PADDLE_PRICE_ID_GROWTH or not settings.PADDLE_CLIENT_TOKEN:
+async def checkout(
+    request: Request,
+    tenant: CurrentTenant,
+    plan: str = "growth",
+    interval: str = "monthly",
+):
+    if plan not in ("starter", "growth") or interval not in ("monthly", "yearly"):
+        raise HTTPException(status_code=404)
+
+    price_id = _PRICE_IDS[(plan, interval)]
+    if not price_id or not settings.PADDLE_CLIENT_TOKEN:
         raise HTTPException(status_code=503, detail="Billing not configured")
 
     return _templates.TemplateResponse(
@@ -30,7 +49,8 @@ async def checkout(request: Request, tenant: CurrentTenant):
         {
             "paddle_client_token": settings.PADDLE_CLIENT_TOKEN,
             "paddle_environment": settings.PADDLE_ENVIRONMENT,
-            "price_id": settings.PADDLE_PRICE_ID_GROWTH,
+            "price_id": price_id,
+            "plan": plan,
             "tenant_id": str(tenant.id),
             "customer_email": tenant.email,
             "success_url": f"{settings.APP_URL}/dashboard?checkout=success",

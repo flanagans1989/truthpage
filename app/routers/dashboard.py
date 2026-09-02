@@ -155,7 +155,15 @@ async def evidence_bundle(
     tenant hands to their own auditor or an enterprise customer's security
     review, rather than a screenshot that only proves what the page said
     the week someone thought to capture it.
+
+    Growth-tier only — Free and Starter still see the same record on the
+    dashboard page itself, just not the exportable file.
     """
+    if not tenant.may_export_evidence:
+        raise HTTPException(
+            status_code=402,
+            detail="Downloadable audit evidence is part of the Growth plan.",
+        )
     event = await _event_for_tenant(event_id, tenant, db)
     zip_bytes = evidence_zip(event, settings.APP_URL)
 
@@ -179,7 +187,14 @@ async def evidence_export(
     characters and would make the file unreadable in a spreadsheet. The row
     carries both hashes and the record URL, which is what a reviewer follows
     to see the documents themselves.
+
+    Growth-tier only, same reasoning as the ZIP endpoint above.
     """
+    if not tenant.may_export_evidence:
+        raise HTTPException(
+            status_code=402,
+            detail="CSV export is part of the Growth plan.",
+        )
     result = await db.execute(
         select(ChangeEvent)
         .join(ChangeEvent.subprocessor)

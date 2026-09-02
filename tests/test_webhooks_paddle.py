@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import time
 
-from app.routers.webhooks import _SUBSCRIPTION_STATUS_MAP, _verify_signature
+from app.routers.webhooks import _SUBSCRIPTION_STATUS_MAP, _plan_from_items, _verify_signature
 
 _SECRET = "test-webhook-secret"
 
@@ -79,3 +79,53 @@ def test_ending_statuses_are_the_ones_that_need_the_free_limit_applied():
 
 def test_subscription_status_map_unknown_falls_back_to_past_due():
     assert _SUBSCRIPTION_STATUS_MAP.get("some_future_status", "past_due") == "past_due"
+
+
+class TestPlanFromItems:
+    def test_matches_growth_price_id(self, monkeypatch):
+        from app.core.config import settings
+
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_GROWTH", "pri_growth")
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_STARTER", "pri_starter")
+        assert _plan_from_items([{"price": {"id": "pri_growth"}}]) == "growth"
+
+    def test_matches_starter_price_id(self, monkeypatch):
+        from app.core.config import settings
+
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_GROWTH", "pri_growth")
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_STARTER", "pri_starter")
+        assert _plan_from_items([{"price": {"id": "pri_starter"}}]) == "starter"
+
+    def test_matches_yearly_price_ids_too(self, monkeypatch):
+        from app.core.config import settings
+
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_GROWTH_YEARLY", "pri_growth_y")
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_STARTER_YEARLY", "pri_starter_y")
+        assert _plan_from_items([{"price": {"id": "pri_growth_y"}}]) == "growth"
+        assert _plan_from_items([{"price": {"id": "pri_starter_y"}}]) == "starter"
+
+    def test_unrecognised_price_id_returns_none_rather_than_guessing(self, monkeypatch):
+        from app.core.config import settings
+
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_GROWTH", "pri_growth")
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_STARTER", "pri_starter")
+        assert _plan_from_items([{"price": {"id": "pri_something_else"}}]) is None
+
+    def test_empty_or_missing_items_returns_none(self, monkeypatch):
+        from app.core.config import settings
+
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_GROWTH", "pri_growth")
+        assert _plan_from_items([]) is None
+        assert _plan_from_items(None) is None
+
+    def test_blank_configured_price_id_never_matches_a_blank_item(self, monkeypatch):
+        """A tenant on a price Paddle hasn't set an id for (both blank) must
+        never be misread as a match — that would silently plan="growth" for
+        garbage input."""
+        from app.core.config import settings
+
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_STARTER", "")
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_STARTER_YEARLY", "")
+        monkeypatch.setattr(settings, "PADDLE_PRICE_ID_GROWTH", "pri_growth")
+        assert _plan_from_items([{"price": {"id": ""}}]) is None
+        assert _plan_from_items([{"price": {"id": None}}]) is None

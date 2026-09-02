@@ -14,6 +14,14 @@ SUBSCRIPTION_STATUSES = ("trialing", "active", "past_due", "canceled", "unpaid",
 # Statuses whose pages the sweeper still checks.
 MONITORED_STATUSES = ("active", "trialing", "free")
 
+# Which paid tier, independent of whether billing is currently in good
+# standing — a tenant that goes past_due keeps being "starter" or "growth"
+# for feature purposes, it just also gets a payment problem. Meaningless
+# while subscription_status is "free"; irrelevant during "trialing", which
+# always previews the full Growth feature set regardless of which tier the
+# tenant will eventually choose.
+PLAN_TIERS = ("starter", "growth")
+
 
 class Tenant(TimestampMixin, Base):
     __tablename__ = "tenants"
@@ -21,6 +29,10 @@ class Tenant(TimestampMixin, Base):
         CheckConstraint(
             f"subscription_status IN {SUBSCRIPTION_STATUSES}",
             name="ck_tenants_subscription_status",
+        ),
+        CheckConstraint(
+            f"plan IN {PLAN_TIERS}",
+            name="ck_tenants_plan",
         ),
     )
 
@@ -41,6 +53,14 @@ class Tenant(TimestampMixin, Base):
     # End of the free trial. Only meaningful while status == "trialing";
     # a paid subscription (status == "active") ignores it.
     trial_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Which paid tier — see PLAN_TIERS above. Set by the checkout the tenant
+    # started (custom_data carries it) and confirmed by the webhook against
+    # the actual Paddle price id on the transaction/subscription, never
+    # trusted from the client alone.
+    plan: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="growth", server_default="growth"
+    )
 
     @property
     def trial_expired(self) -> bool:
@@ -72,9 +92,41 @@ class Tenant(TimestampMixin, Base):
         return self.subscription_status == "free"
 
     @property
+    def is_starter_plan(self) -> bool:
+        """Paying, but on the middle tier — not free, not trialing (a trial
+        previews the full Growth feature set), and `plan` says Starter."""
+        return not self.is_free_plan and self.subscription_status != "trialing" and self.plan == "starter"
+
+    @property
+    def has_growth_features(self) -> bool:
+        """Growth-tier features: white-label badge, exportable audit evidence.
+        True on Growth (even past_due — a payment problem doesn't retract a
+        feature mid-cycle) and during any trial, which previews the full
+        Growth experience regardless of which tier the tenant will pick
+        afterwards. False for Starter and for the free plan.
+
+        Checks "!= starter" rather than "== growth" so an in-memory Tenant
+        with no `plan` set yet (the ORM default only applies at flush, same
+        as hide_powered_by above) reads as Growth rather than as neither
+        tier — the same fallback subprocessor_limit already relies on.
+        """
+        if self.is_free_plan:
+            return False
+        if self.subscription_status == "trialing":
+            return True
+        return self.plan != "starter"
+
+    @property
     def may_hide_badge(self) -> bool:
-        """Removing the badge is a paid feature. A trial is the paid plan."""
-        return not self.is_free_plan
+        """Removing the badge is a Growth-tier feature."""
+        return self.has_growth_features
+
+    @property
+    def may_export_evidence(self) -> bool:
+        """The downloadable CSV/ZIP audit pack is a Growth-tier feature.
+        Free and Starter still get the per-change evidence record on the
+        dashboard — just not the exportable file."""
+        return self.has_growth_features
 
     @property
     def shows_powered_by(self) -> bool:
@@ -84,11 +136,11 @@ class Tenant(TimestampMixin, Base):
     def subprocessor_limit(self) -> int:
         from app.core.config import settings
 
-        return (
-            settings.FREE_TIER_MAX_SUBPROCESSORS
-            if self.is_free_plan
-            else settings.MAX_SUBPROCESSORS_PER_TENANT
-        )
+        if self.is_free_plan:
+            return settings.FREE_TIER_MAX_SUBPROCESSORS
+        if self.is_starter_plan:
+            return settings.STARTER_MAX_SUBPROCESSORS
+        return settings.MAX_SUBPROCESSORS_PER_TENANT
 
     subprocessors: Mapped[list["Subprocessor"]] = relationship(  # noqa: F821
         "Subprocessor",

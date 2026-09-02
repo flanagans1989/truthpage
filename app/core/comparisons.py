@@ -20,7 +20,7 @@ VERIFIED_ON = "1 September 2026"
 
 OURS = {
     "free": "3 vendor pages, permanently",
-    "paid": "$99/month for 25 pages",
+    "paid": "$29/month for 10 pages, $89/month for 30 with the audit evidence pack",
 }
 
 # The old per-competitor URLs, kept as redirect targets so links and any
