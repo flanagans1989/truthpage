@@ -1,0 +1,58 @@
+<div id="recipient-{{ recipient.id }}" class="flex items-center justify-between gap-3 py-2 border-b border-slate-100 last:border-b-0">
+    <div class="min-w-0">
+        <p class="text-sm text-slate-900 truncate">{{ recipient.recipient_email }}</p>
+        {% if recipient.manually_resolved_at %}
+        <p class="text-xs text-slate-400 mt-0.5">
+            Marked resolved by {{ recipient.manually_resolved_by }} on {{ recipient.manually_resolved_at.strftime('%d %b %Y') }}
+            {% if recipient.manually_resolved_note %}&middot; {{ recipient.manually_resolved_note }}{% endif %}
+        </p>
+        {% endif %}
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+        {% if status in ('bounced', 'failed', 'send_failed') %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> {{ status.replace('_', ' ') }}
+        </span>
+        <form hx-post="/dashboard/events/{{ event.id }}/recipients/{{ recipient.id }}/resend"
+              hx-target="#recipient-{{ recipient.id }}" hx-swap="outerHTML">
+            <button type="submit" class="text-xs px-2 py-1 rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition">Resend</button>
+        </form>
+        <button type="button" onclick="document.getElementById('resolve-form-{{ recipient.id }}').classList.toggle('hidden')"
+                class="text-xs px-2 py-1 rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition">
+            Mark resolved
+        </button>
+        {% elif status == 'resolved' %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> resolved
+        </span>
+        <form hx-post="/dashboard/events/{{ event.id }}/recipients/{{ recipient.id }}/resend"
+              hx-target="#recipient-{{ recipient.id }}" hx-swap="outerHTML">
+            <button type="submit" class="text-xs px-2 py-1 rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition">Resend</button>
+        </form>
+        {% elif status == 'delivered' %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> delivered
+        </span>
+        {% elif status == 'deferred' %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> deferred
+        </span>
+        {% else %}
+        <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-600 px-2 py-0.5 text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> queued
+        </span>
+        {% endif %}
+    </div>
+</div>
+{% if status in ('bounced', 'failed', 'send_failed') %}
+<form id="resolve-form-{{ recipient.id }}" hidden
+      hx-post="/dashboard/events/{{ event.id }}/recipients/{{ recipient.id }}/resolve"
+      hx-target="#recipient-{{ recipient.id }}" hx-swap="outerHTML"
+      class="flex items-center gap-2 pb-2 -mt-1">
+    <input type="text" name="note" placeholder="How was this resolved? (optional)"
+           class="flex-1 text-xs px-2 py-1.5 rounded-lg border border-slate-300">
+    <button type="submit" class="text-xs px-2 py-1.5 rounded border border-slate-300 text-slate-700 hover:bg-slate-50 transition">
+        Confirm
+    </button>
+</form>
+{% endif %}

@@ -1,15 +1,21 @@
+import base64
+import binascii
 import hashlib
 import hmac
 import json
 import logging
 import time
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.db.models.mixins import utc_now
+from app.db.models.notification import DeliveryEventType, NotificationDeliveryEvent, NotificationRecipient
 from app.db.models.tenant import Tenant
 from app.db.session import get_db_session
 from app.services.plans import move_tenant_to_free
@@ -213,4 +219,123 @@ async def paddle_webhook(
     else:
         logger.debug("webhook: unhandled event type %s — ignoring", event_type)
 
+    return {"received": True}
+
+
+# Resend signs webhooks the same way Svix does (svix-id/svix-timestamp/
+# svix-signature) — see docs/manifest_v2.md's Notification section. This is
+# a from-scratch implementation of that standard scheme rather than a new
+# dependency, since it's three lines of HMAC once the secret is decoded.
+_RESEND_EVENT_TYPE_MAP = {
+    "email.delivered": DeliveryEventType.delivered.value,
+    "email.bounced": DeliveryEventType.bounced.value,
+    "email.delivery_delayed": DeliveryEventType.deferred.value,
+    "email.failed": DeliveryEventType.failed.value,
+    # email.sent is already covered by a NotificationRecipient row simply
+    # existing (see app/services/approval.py); email.complained (a spam
+    # complaint) is a different signal than this delivery log scopes to —
+    # both fall through to the "ignored, logged" branch below, deliberately.
+}
+
+
+def _verify_resend_signature(
+    payload: bytes, svix_id: str, svix_timestamp: str, svix_signature: str, secret: str
+) -> bool:
+    if not (svix_id and svix_timestamp and svix_signature):
+        return False
+    try:
+        if abs(time.time() - int(svix_timestamp)) > _SIGNATURE_MAX_AGE_SECONDS:
+            return False
+        secret_bytes = base64.b64decode(secret.removeprefix("whsec_"))
+    except (ValueError, binascii.Error):
+        return False
+
+    signed_content = f"{svix_id}.{svix_timestamp}.".encode("utf-8") + payload
+    expected = base64.b64encode(hmac.new(secret_bytes, signed_content, hashlib.sha256).digest()).decode()
+
+    # svix-signature can carry multiple space-separated "v1,<sig>" pairs
+    # (secret rotation) — any one matching is a valid signature.
+    for part in svix_signature.split(" "):
+        version, _, sig = part.partition(",")
+        if version == "v1" and sig and hmac.compare_digest(sig, expected):
+            return True
+    return False
+
+
+def _parse_resend_timestamp(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+async def _handle_resend_delivery_event(event: dict, webhook_event_id: str, db: AsyncSession) -> None:
+    event_type = _RESEND_EVENT_TYPE_MAP.get(event.get("type", ""))
+    if event_type is None:
+        logger.debug("resend webhook: ignoring unhandled type %s", event.get("type"))
+        return
+
+    data: dict = event.get("data") or {}
+    email_id = data.get("email_id")
+    if not email_id:
+        logger.warning("resend webhook: %s event with no data.email_id", event_type)
+        return
+
+    result = await db.execute(
+        select(NotificationRecipient).where(NotificationRecipient.resend_message_id == email_id)
+    )
+    recipient = result.scalar_one_or_none()
+    if recipient is None:
+        # Expected for anything sent before this PR (send_change_notification
+        # never stored a NotificationRecipient row), and harmless otherwise.
+        logger.info("resend webhook: no recipient row for email_id %s (type=%s)", email_id, event_type)
+        return
+
+    db.add(
+        NotificationDeliveryEvent(
+            recipient_id=recipient.id,
+            event_type=event_type,
+            occurred_at=_parse_resend_timestamp(event.get("created_at")) or utc_now(),
+            webhook_event_id=webhook_event_id,
+            raw_type=event.get("type"),
+        )
+    )
+    try:
+        await db.commit()
+    except IntegrityError:
+        # Same webhook delivery retried by Resend — webhook_event_id's
+        # unique index is what actually enforces this; the row is simply
+        # never inserted twice, never updated in place.
+        await db.rollback()
+        logger.info("resend webhook: duplicate delivery event %s ignored", webhook_event_id)
+
+
+@router.post("/resend")
+async def resend_webhook(
+    request: Request,
+    db: AsyncSession = Depends(get_db_session),
+):
+    payload = await request.body()
+    svix_id = request.headers.get("svix-id", "")
+    svix_timestamp = request.headers.get("svix-timestamp", "")
+    svix_signature = request.headers.get("svix-signature", "")
+
+    if not settings.RESEND_WEBHOOK_SECRET:
+        raise HTTPException(status_code=503, detail="Webhook secret not configured")
+
+    if not _verify_resend_signature(
+        payload, svix_id, svix_timestamp, svix_signature, settings.RESEND_WEBHOOK_SECRET
+    ):
+        # 401, not 400 — this is specifically an authentication failure,
+        # and nothing from an unverified request is ever written to the log.
+        raise HTTPException(status_code=401, detail="Invalid webhook signature")
+
+    try:
+        event = json.loads(payload)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid payload")
+
+    await _handle_resend_delivery_event(event, svix_id, db)
     return {"received": True}

@@ -4,6 +4,8 @@ from app.db.models.change_event import ChangeEvent, ChangeStatus, TimestampStatu
 from app.db.models.subscriber import Subscriber
 from app.db.models.vendor import Vendor, VendorChange
 from app.db.models.lead import Lead
+from app.db.models.notification import DeliveryEventType, NotificationDeliveryEvent, NotificationRecipient
+from app.db.models.objection import Objection
 
 __all__ = [
     "Tenant",
@@ -15,4 +17,8 @@ __all__ = [
     "Vendor",
     "VendorChange",
     "Lead",
+    "DeliveryEventType",
+    "NotificationRecipient",
+    "NotificationDeliveryEvent",
+    "Objection",
 ]

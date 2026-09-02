@@ -83,6 +83,24 @@ class Tenant(TimestampMixin, Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # How many days the tenant's own DPA promises its customers to object to
+    # a sub-processor change before it takes effect — configurable, never
+    # hardcoded, because the product cannot know a tenant's contract terms.
+    # 30 is only a starting default (see settings.DEFAULT_OBJECTION_WINDOW_DAYS).
+    objection_window_days: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=30, server_default="30"
+    )
+
+    # Where the [OBJECTION WINDOW] notice's [CONTACT] placeholder points —
+    # nullable so an existing tenant's behavior doesn't change until they
+    # explicitly set one; objection_contact_email (below) falls back to
+    # the account email in the meantime.
+    privacy_contact_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+
+    @property
+    def objection_contact_email(self) -> str:
+        return self.privacy_contact_email or self.email or ""
+
     @property
     def needs_onboarding(self) -> bool:
         return self.onboarded_at is None

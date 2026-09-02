@@ -18,6 +18,7 @@ from app.core.config import settings
 from app.core.tsa import TSAError, request_timestamp
 from app.db.models.change_event import ChangeEvent, TimestampStatus
 from app.db.models.mixins import utc_now
+from app.db.models.subprocessor import Subprocessor
 
 logger = logging.getLogger(__name__)
 
@@ -87,22 +88,88 @@ async def stamp_change_event(event: ChangeEvent, session: AsyncSession) -> None:
     await session.commit()
 
 
+async def stamp_subprocessor_baseline(subprocessor: Subprocessor, session: AsyncSession) -> None:
+    """Same contract as stamp_change_event, for a source's first-ever
+    captured snapshot (see monitoring.py's "First check" branch and
+    baseline_raw_html_hash's docstring on the model) — a parallel state
+    machine over baseline_* columns rather than a shared helper, so a bug
+    in one can never silently also affect the other."""
+    if subprocessor.baseline_timestamp_status == TimestampStatus.not_available_pre_tsa.value:
+        raise BackdatedTimestampError(
+            f"refusing to timestamp subprocessor {subprocessor.id}'s baseline: its status is "
+            "not_available_pre_tsa (captured before independent timestamping existed) — "
+            "backdated timestamping is never allowed"
+        )
+
+    if subprocessor.baseline_raw_html_hash is None:
+        subprocessor.baseline_timestamp_status = TimestampStatus.not_available_pre_tsa.value
+        await session.commit()
+        return
+
+    attempt = subprocessor.baseline_tsa_attempt_count + 1
+    urls = [settings.TSA_PRIMARY_URL]
+    if settings.TSA_FALLBACK_URL:
+        urls.append(settings.TSA_FALLBACK_URL)
+
+    last_error: str | None = None
+    for url in urls:
+        try:
+            tsr_bytes, tsa_time = await request_timestamp(
+                subprocessor.baseline_raw_html_hash, url, settings.TSA_TIMEOUT_SECONDS
+            )
+        except TSAError as exc:
+            last_error = str(exc)
+            logger.warning("TSA request to %s failed for subprocessor %s baseline: %s", url, subprocessor.id, exc)
+            continue
+
+        subprocessor.baseline_timestamp_status = TimestampStatus.timestamped.value
+        subprocessor.baseline_tsa_token = tsr_bytes
+        subprocessor.baseline_tsa_authority_url = url
+        subprocessor.baseline_tsa_time_utc = tsa_time
+        subprocessor.baseline_tsa_attempt_count = attempt
+        subprocessor.baseline_tsa_last_error = None
+        await session.commit()
+        logger.info("Timestamped subprocessor %s baseline via %s (attempt %d)", subprocessor.id, url, attempt)
+        return
+
+    subprocessor.baseline_tsa_attempt_count = attempt
+    subprocessor.baseline_tsa_last_error = last_error
+    if attempt >= settings.TSA_MAX_ATTEMPTS:
+        subprocessor.baseline_timestamp_status = TimestampStatus.failed.value
+        logger.warning(
+            "Baseline timestamping failed permanently for subprocessor %s after %d attempts: %s",
+            subprocessor.id, attempt, last_error,
+        )
+    else:
+        subprocessor.baseline_timestamp_status = TimestampStatus.retrying.value
+    await session.commit()
+
+
 async def run_timestamp_retry_pass(session_factory: async_sessionmaker[AsyncSession]) -> None:
-    """Finds every change_event due for a timestamp attempt (`pending` or
-    `retrying`) and gives each exactly one attempt this tick. One event's
-    failure never aborts the pass for the rest."""
+    """Finds every change_event AND subprocessor-baseline due for a
+    timestamp attempt (`pending` or `retrying`) and gives each exactly one
+    attempt this tick. One record's failure never aborts the pass for the
+    rest, and the two kinds are entirely independent of each other."""
     async with session_factory() as session:
         result = await session.execute(
             select(ChangeEvent).where(ChangeEvent.timestamp_status.in_(_DUE_STATUSES))
         )
-        due_ids = [row.id for row in result.scalars().all()]
+        due_event_ids = [row.id for row in result.scalars().all()]
 
-    if not due_ids:
+        result = await session.execute(
+            select(Subprocessor).where(Subprocessor.baseline_timestamp_status.in_(_DUE_STATUSES))
+        )
+        due_subprocessor_ids = [row.id for row in result.scalars().all()]
+
+    if not due_event_ids and not due_subprocessor_ids:
         logger.debug("TSA retry pass: nothing due at %s", utc_now().isoformat())
         return
 
-    logger.info("TSA retry pass: %d change event(s) due", len(due_ids))
-    for event_id in due_ids:
+    logger.info(
+        "TSA retry pass: %d change event(s), %d subprocessor baseline(s) due",
+        len(due_event_ids), len(due_subprocessor_ids),
+    )
+    for event_id in due_event_ids:
         async with session_factory() as session:
             event = await session.get(ChangeEvent, event_id)
             if event is None:
@@ -111,3 +178,13 @@ async def run_timestamp_retry_pass(session_factory: async_sessionmaker[AsyncSess
                 await stamp_change_event(event, session)
             except Exception:
                 logger.exception("TSA retry pass: unhandled error for change_event %s", event_id)
+
+    for subprocessor_id in due_subprocessor_ids:
+        async with session_factory() as session:
+            subprocessor = await session.get(Subprocessor, subprocessor_id)
+            if subprocessor is None:
+                continue
+            try:
+                await stamp_subprocessor_baseline(subprocessor, session)
+            except Exception:
+                logger.exception("TSA retry pass: unhandled error for subprocessor %s baseline", subprocessor_id)

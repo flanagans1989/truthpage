@@ -1,0 +1,51 @@
+<div id="objection-window">
+    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm mb-4">
+        <div>
+            <dt class="text-slate-400 text-xs mb-0.5">Window</dt>
+            <dd class="text-slate-900 font-medium">
+                {% if event.window_days %}
+                {{ event.window_days }} days &middot; opened {{ event.notified_at.strftime('%d %b %Y') }},
+                closes {{ event.window_closes_at.strftime('%d %b %Y') }}
+                {% else %}
+                <span class="text-slate-400 font-normal">not applicable — no subscribers were notified</span>
+                {% endif %}
+            </dd>
+        </div>
+        <div>
+            <dt class="text-slate-400 text-xs mb-0.5">Status</dt>
+            <dd class="text-slate-900 font-medium">{{ objection_status }}</dd>
+        </div>
+    </dl>
+
+    {% if event.objections %}
+    <div class="mb-4 space-y-2">
+        {% for objection in event.objections %}
+        <div class="text-sm bg-slate-50 rounded-lg px-4 py-3">
+            <p class="font-medium text-slate-900">{{ objection.objector_name }} &middot; {{ objection.objected_at.strftime('%d %b %Y') }}</p>
+            {% if objection.note %}<p class="text-slate-600 mt-1">{{ objection.note }}</p>{% endif %}
+            <p class="text-xs text-slate-400 mt-1">Recorded by {{ objection.recorded_by_email }} on {{ objection.created_at.strftime('%d %b %Y') }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if event.window_days %}
+    <details class="text-sm">
+        <summary class="cursor-pointer text-slate-600 hover:text-slate-900">Record an objection received outside TrustPages</summary>
+        <form hx-post="/dashboard/events/{{ event.id }}/objections"
+              hx-target="#objection-window" hx-swap="outerHTML"
+              class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input type="text" name="objector_name" placeholder="Who objected" required
+                   class="text-sm px-3 py-2 rounded-lg border border-slate-300">
+            <input type="date" name="objected_at" required
+                   class="text-sm px-3 py-2 rounded-lg border border-slate-300">
+            <textarea name="note" placeholder="Note (optional)" rows="2"
+                      class="sm:col-span-2 text-sm px-3 py-2 rounded-lg border border-slate-300"></textarea>
+            <button type="submit"
+                    class="sm:col-span-2 justify-self-start text-xs font-semibold px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white transition">
+                Record objection
+            </button>
+        </form>
+    </details>
+    {% endif %}
+</div>

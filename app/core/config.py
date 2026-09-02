@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     PADDLE_API_KEY: str = ""
     PADDLE_CLIENT_TOKEN: str = ""
     PADDLE_WEBHOOK_SECRET: str = ""
+    # Resend's per-endpoint signing secret ("whsec_...") for /webhooks/resend
+    # — see app/routers/webhooks.py. Same purpose as PADDLE_WEBHOOK_SECRET
+    # above: without it, anyone could POST a fabricated "delivered" event.
+    RESEND_WEBHOOK_SECRET: str = ""
     PADDLE_PRICE_ID_GROWTH: str = ""
     PADDLE_PRICE_ID_GROWTH_YEARLY: str = ""
     # Starter is the middle tier. Blank until a real Paddle price exists for
@@ -87,6 +91,13 @@ class Settings(BaseSettings):
     # script-only render) rather than as real content — never stored as a
     # snapshot, never diffed. See app/core/scraper/content_health.py.
     CONTENT_HEALTH_MIN_TEXT_LENGTH: int = 500
+
+    # Fallback used only where Tenant.objection_window_days hasn't been
+    # explicitly set otherwise (i.e. new tenants, via the column's own
+    # server_default) — see docs/manifest_v2.md's [OBJECTION WINDOW]
+    # section. Never read directly to decide an actual window; that always
+    # comes from the tenant's own row.
+    DEFAULT_OBJECTION_WINDOW_DAYS: int = 30
 
     @property
     def admin_email_set(self) -> frozenset[str]:

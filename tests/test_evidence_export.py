@@ -369,7 +369,7 @@ class TestTimestampSection:
         assert fields["tsa_chain_file"] == NOT_AVAILABLE
         # No token/chain file physically added when there's nothing to add.
         assert "after.html.sha256.tsr" not in files
-        assert "tsa-chain.pem" not in files
+        assert "freetsa.org.pem" not in files
 
     def test_timestamped_status_fills_all_four_fields_and_files(self):
         event = _event(
@@ -386,9 +386,9 @@ class TestTimestampSection:
         assert fields["tsa_token_file"] == "after.html.sha256.tsr"
         assert fields["tsa_authority_url"] == "https://freetsa.org/tsr"
         assert fields["tsa_time_utc"] == "2026-09-02T14:22:32Z"
-        assert fields["tsa_chain_file"] == "tsa-chain.pem"
+        assert fields["tsa_chain_file"] == "freetsa.org.pem"
         assert zf_bytes.read("after.html.sha256.tsr") == b"fake-token-bytes-for-this-test"
-        assert len(zf_bytes.read("tsa-chain.pem")) > 0
+        assert len(zf_bytes.read("freetsa.org.pem")) > 0
 
 
 class TestManifestVersionDetection:

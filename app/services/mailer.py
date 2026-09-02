@@ -25,6 +25,49 @@ class MailerService:
         except Exception:
             logger.exception("mailer: failed to send '%s' to %s", subject, to)
 
+    async def _send_tracked(
+        self,
+        *,
+        to: str,
+        subject: str,
+        html: str,
+        reply_to: str | None = None,
+        from_display: str | None = None,
+    ) -> tuple[str | None, str | None]:
+        """Like _send, but for a caller that needs to record the outcome
+        per recipient rather than just log it — returns
+        (resend_message_id, error). Never raises.
+
+        Open/click tracking has no per-request field in Resend's send API —
+        it is a domain-level setting (off by default, and never turned on
+        for our domain; see docs/manifest_v2.md's Notification section).
+        This payload is correspondingly deliberately minimal: no `tags`,
+        no tracking-related key of any kind, ever — enforced by
+        tests/test_mailer.py's static check on this exact dict.
+        """
+        payload: dict = {
+            "from": from_display or settings.RESEND_FROM_EMAIL,
+            "to": [to],
+            "subject": subject,
+            "html": html,
+        }
+        if reply_to:
+            payload["reply_to"] = reply_to
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.post(
+                    _RESEND_API_URL,
+                    headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}"},
+                    json=payload,
+                )
+                resp.raise_for_status()
+                message_id = resp.json().get("id")
+                logger.info("mailer: sent '%s' to %s (id=%s)", subject, to, message_id)
+                return message_id, None
+        except Exception as exc:
+            logger.exception("mailer: failed to send '%s' to %s", subject, to)
+            return None, str(exc)
+
     async def send_magic_link(self, email: str, link: str) -> None:
         subject = "Your TrustPages sign-in link"
         body = f"""<!DOCTYPE html>
@@ -228,6 +271,80 @@ class MailerService:
 </body>
 </html>"""
         await self._send(email, subject, body)
+
+    async def send_notice(
+        self,
+        recipients: list[tuple[str, str]],  # (email, unsubscribe_url)
+        tenant_name: str,
+        reply_to: str,
+        subject: str,
+        body: str,
+    ) -> list[dict]:
+        """Sends the frozen Article 28(2) notice (already placeholder-
+        resolved — see app/core/llm/notice.py) to each recipient. Unlike
+        send_change_notification, the From name names the tenant
+        explicitly and Reply-To goes back to the tenant, not TrustPages —
+        a recipient should never mistake this for marketing mail from a
+        vendor they don't recognize. Returns one result per recipient:
+        {"email", "resend_message_id", "error"} — the caller persists
+        these as NotificationRecipient rows; nothing here touches a
+        database.
+        """
+        # RESEND_FROM_EMAIL is "Display Name <address>" — keep our verified
+        # address (only that address is deliverable; Resend rejects sending
+        # "as" an address on a domain we haven't verified) but swap in a
+        # display name that says whose notice this actually is.
+        from_address = settings.RESEND_FROM_EMAIL.split("<")[-1].rstrip(">")
+        from_display = f"{tenant_name} via TrustPages <{from_address}>"
+        safe_tenant = html.escape(tenant_name)
+        # The notice is plain text by the drafting prompt's own rules (see
+        # app/core/llm/notice.py) — escaped and newline-wrapped into a
+        # minimal HTML shell rather than re-rendered as rich content, since
+        # nothing in it should be interpreted as markup.
+        safe_body = html.escape(body).replace("\n", "<br>")
+
+        def _build_html(unsubscribe_url: str) -> str:
+            return f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:48px 0;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:48px 40px;">
+        <tr><td>
+          <p style="margin:0 0 4px;font-size:12px;color:#94a3b8;font-weight:500;text-transform:uppercase;letter-spacing:.05em;">
+            Notice from {safe_tenant}
+          </p>
+          <p style="margin:0 0 24px;font-size:14px;color:#334155;line-height:1.7;">{safe_body}</p>
+          <p style="margin:0 0 16px;font-size:12px;color:#94a3b8;line-height:1.5;">
+            You're receiving this because you subscribed to updates from {safe_tenant}. Replies
+            reach {safe_tenant} directly, not TrustPages.
+          </p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">
+            <a href="{unsubscribe_url}" style="color:#94a3b8;">Unsubscribe</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+        async def _one(email: str, unsubscribe_url: str) -> dict:
+            message_id, error = await self._send_tracked(
+                to=email,
+                subject=subject,
+                html=_build_html(unsubscribe_url),
+                reply_to=reply_to,
+                from_display=from_display,
+            )
+            return {"email": email, "resend_message_id": message_id, "error": error}
+
+        results = await asyncio.gather(*[_one(email, url) for email, url in recipients])
+        sent = sum(1 for r in results if r["error"] is None)
+        logger.info("mailer: notice sent %d/%d for tenant '%s'", sent, len(recipients), tenant_name)
+        return list(results)
 
     async def send_change_notification(
         self,

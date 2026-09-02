@@ -60,17 +60,18 @@ class TestVerifyPackHappyPath:
         assert "verification failed" in result.message
 
     def test_a_pack_with_its_own_fake_ca_chain_is_still_verified_against_our_bundled_chain(self):
-        # The critical security property: an uploaded tsa-chain.pem is
-        # never trusted, even if the zip supplies one. Overwrite it with
-        # garbage and confirm the real, bundled-chain-based verification
-        # still passes (i.e. the garbage was never consulted).
+        # The critical security property: an uploaded chain file (whatever
+        # tsa_chain_file names — freetsa.org.pem today) is never trusted,
+        # even if the zip supplies one. Overwrite it with garbage and
+        # confirm the real, bundled-chain-based verification still passes
+        # (i.e. the garbage was never consulted).
         zip_bytes = _real_sample_zip_bytes()
         zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as out:
             for name in zf.namelist():
                 content = zf.read(name)
-                if name == "tsa-chain.pem":
+                if name == "freetsa.org.pem":
                     content = b"-----BEGIN CERTIFICATE-----\nnot a real cert\n-----END CERTIFICATE-----\n"
                 out.writestr(name, content)
         result = verify_pack(buf.getvalue())

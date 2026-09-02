@@ -1,7 +1,9 @@
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,12 +13,21 @@ from app.core.config import settings
 from app.core.templating import templates as _templates
 from app.db.models.change_event import ChangeEvent, ChangeStatus, TimestampStatus
 from app.db.models.mixins import utc_now
+from app.db.models.notification import NotificationRecipient
+from app.db.models.objection import Objection
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
-from app.core.llm.notice import ArticleNoticeDrafter
-from app.services.approval import approve_change_event, reject_change_event
+from app.core.llm.notice import ArticleNoticeDrafter, notice_preview_token
+from app.services.approval import (
+    approve_change_event,
+    confirmed_recipients,
+    reject_change_event,
+    release_notice,
+)
 from app.services.evidence import evidence_csv, evidence_zip
+from app.services.mailer import mailer
+from app.services.notifications import compute_objection_status, derive_recipient_status
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +98,12 @@ async def approve_event(
     tenant: CurrentTenant,
     db: AsyncSession = Depends(get_db_session),
 ):
+    """Records the decision only. Releasing the customer notice — reading
+    its final text and the recipient count, then explicitly sending it —
+    happens separately on the notice page (see notice_draft/send_notice_route
+    below); attaching a reviewer's name to text they have not yet seen
+    would make that attribution meaningless.
+    """
     ownership = await db.execute(
         select(ChangeEvent)
         .join(ChangeEvent.subprocessor)
@@ -139,8 +156,16 @@ async def evidence_record(
     decision trail.
     """
     event = await _event_for_tenant(event_id, tenant, db)
+    recipient_statuses = [(r, derive_recipient_status(r)) for r in event.notification_recipients]
     return _templates.TemplateResponse(
-        request, "evidence.html", {"tenant": tenant, "event": event}
+        request,
+        "evidence.html",
+        {
+            "tenant": tenant,
+            "event": event,
+            "recipient_statuses": recipient_statuses,
+            "objection_status": compute_objection_status(event),
+        },
     )
 
 
@@ -169,10 +194,139 @@ async def retry_timestamp(
     )
 
 
+@router.post("/dashboard/events/{event_id}/recipients/{recipient_id}/resend", response_class=HTMLResponse)
+async def resend_notification(
+    request: Request,
+    event_id: UUID,
+    recipient_id: UUID,
+    tenant: CurrentTenant,
+    db: AsyncSession = Depends(get_db_session),
+):
+    """A bounce is a real compliance gap (see docs/manifest_v2.md) — this is
+    the tenant's fix-it action, a fresh send attempt to one recipient using
+    the exact frozen notice text that already went to everyone else (never
+    re-drafted). last_manual_resend_at marks where the new attempt starts,
+    so derive_recipient_status stops reading the old bounce as current.
+    """
+    event = await _event_for_tenant(event_id, tenant, db)
+    recipient = next((r for r in event.notification_recipients if r.id == recipient_id), None)
+    if recipient is None:
+        raise HTTPException(status_code=404)
+    if not event.notice_frozen_body:
+        raise HTTPException(status_code=409, detail="No frozen notice exists for this change yet.")
+
+    sub_result = await db.execute(
+        select(Subscriber.unsubscribe_token).where(
+            Subscriber.tenant_id == tenant.id,
+            Subscriber.email == recipient.recipient_email,
+        )
+    )
+    token = sub_result.scalar_one_or_none()
+    unsubscribe_url = f"{settings.APP_URL}/trust/unsubscribe?token={token}" if token else settings.APP_URL
+
+    results = await mailer.send_notice(
+        recipients=[(recipient.recipient_email, unsubscribe_url)],
+        tenant_name=tenant.name,
+        reply_to=tenant.email or "",
+        subject=event.notice_frozen_subject or "",
+        body=event.notice_frozen_body,
+    )
+    result = results[0]
+    now = utc_now()
+    recipient.resend_message_id = result["resend_message_id"]
+    recipient.send_error = result["error"]
+    recipient.last_manual_resend_at = now
+    recipient.last_manual_resend_by = tenant.email or ""
+    recipient.manually_resolved_at = None
+    recipient.manually_resolved_by = None
+    recipient.manually_resolved_note = None
+    await db.commit()
+    logger.info(
+        "Notification resend: recipient %s (event %s) by tenant %s, error=%s",
+        recipient_id, event_id, tenant.slug, result["error"],
+    )
+    return _templates.TemplateResponse(
+        request, "partials/delivery_recipient_row.html",
+        {"event": event, "recipient": recipient, "status": derive_recipient_status(recipient)},
+    )
+
+
+@router.post("/dashboard/events/{event_id}/recipients/{recipient_id}/resolve", response_class=HTMLResponse)
+async def resolve_notification(
+    request: Request,
+    event_id: UUID,
+    recipient_id: UUID,
+    tenant: CurrentTenant,
+    note: str = Form(""),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Marks a bounce/failure as handled outside TrustPages (a phone call,
+    a corrected address used elsewhere) — an annotation, not a correction
+    of the record: bounced_count in the manifest still counts it, because
+    the notice genuinely never arrived through this channel."""
+    event = await _event_for_tenant(event_id, tenant, db)
+    recipient = next((r for r in event.notification_recipients if r.id == recipient_id), None)
+    if recipient is None:
+        raise HTTPException(status_code=404)
+
+    recipient.manually_resolved_at = utc_now()
+    recipient.manually_resolved_by = tenant.email or ""
+    recipient.manually_resolved_note = note.strip() or None
+    await db.commit()
+    logger.info("Notification bounce marked resolved: recipient %s (event %s) by tenant %s", recipient_id, event_id, tenant.slug)
+    return _templates.TemplateResponse(
+        request, "partials/delivery_recipient_row.html",
+        {"event": event, "recipient": recipient, "status": derive_recipient_status(recipient)},
+    )
+
+
+@router.post("/dashboard/events/{event_id}/objections", response_class=HTMLResponse)
+async def record_objection(
+    request: Request,
+    event_id: UUID,
+    tenant: CurrentTenant,
+    objector_name: str = Form(...),
+    objected_at: str = Form(...),
+    note: str = Form(""),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Objections arrive by email or phone in real life, never through this
+    product — this is where a tenant records one after the fact. Nothing
+    here is auto-generated: a human always names who objected, when, and
+    (via the authenticated session) who entered the record.
+    """
+    event = await _event_for_tenant(event_id, tenant, db)
+    objector_name = objector_name.strip()
+    if not objector_name:
+        raise HTTPException(status_code=422, detail="Objector name is required.")
+    try:
+        parsed_date = datetime.strptime(objected_at, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=422, detail="objected_at must be a YYYY-MM-DD date.")
+
+    objection = Objection(
+        change_event_id=event.id,
+        objector_name=objector_name,
+        objected_at=parsed_date.replace(tzinfo=UTC),
+        note=note.strip() or None,
+        recorded_by_email=tenant.email or "",
+    )
+    db.add(objection)
+    await db.commit()
+    logger.info("Objection recorded for event %s by tenant %s", event_id, tenant.slug)
+
+    event = await _event_for_tenant(event_id, tenant, db)
+    return _templates.TemplateResponse(
+        request, "partials/objection_window.html",
+        {"event": event, "objection_status": compute_objection_status(event)},
+    )
+
+
 @router.get("/dashboard/events/{event_id}/evidence.zip")
 async def evidence_bundle(
     event_id: UUID,
     tenant: CurrentTenant,
+    delivery_variant: str = "redacted",
     db: AsyncSession = Depends(get_db_session),
 ):
     """One change, as a downloadable audit pack: before/after HTML and text,
@@ -180,6 +334,13 @@ async def evidence_bundle(
     tenant hands to their own auditor or an enterprise customer's security
     review, rather than a screenshot that only proves what the page said
     the week someone thought to capture it.
+
+    delivery_variant='full' includes real subscriber email addresses in
+    the delivery log instead of redacted ones — the tenant's own UI gates
+    this behind an explicit checkbox and warning (see evidence.html); the
+    query param alone is not itself the confirmation, but this route has
+    no session state to hold one in, so the link the checked box produces
+    is what carries the choice.
 
     Growth-tier only — Free and Starter still see the same record on the
     dashboard page itself, just not the exportable file.
@@ -189,11 +350,16 @@ async def evidence_bundle(
             status_code=402,
             detail="Downloadable audit evidence is part of the Growth plan.",
         )
+    if delivery_variant not in ("redacted", "full"):
+        raise HTTPException(status_code=422, detail="delivery_variant must be 'redacted' or 'full'")
     event = await _event_for_tenant(event_id, tenant, db)
-    zip_bytes = evidence_zip(event, settings.APP_URL, tenant)
+    zip_bytes = evidence_zip(event, settings.APP_URL, tenant, delivery_variant=delivery_variant)
 
     filename = f"trustpages-audit-{event.subprocessor.name.lower().replace(' ', '-')}-{str(event.id)[:8]}.zip"
-    logger.info("Evidence ZIP downloaded: event %s, tenant %s", event_id, tenant.slug)
+    logger.info(
+        "Evidence ZIP downloaded: event %s, tenant %s, delivery_variant=%s",
+        event_id, tenant.slug, delivery_variant,
+    )
     return Response(
         content=zip_bytes,
         media_type="application/zip",
@@ -245,7 +411,13 @@ async def _event_for_tenant(event_id: UUID, tenant, db: AsyncSession) -> ChangeE
         select(ChangeEvent)
         .join(ChangeEvent.subprocessor)
         .where(ChangeEvent.id == event_id, Subprocessor.tenant_id == tenant.id)
-        .options(selectinload(ChangeEvent.subprocessor))
+        .options(
+            selectinload(ChangeEvent.subprocessor),
+            selectinload(ChangeEvent.notification_recipients).selectinload(
+                NotificationRecipient.delivery_events
+            ),
+            selectinload(ChangeEvent.objections),
+        )
     )
     event = result.scalar_one_or_none()
     if event is None:
@@ -303,10 +475,75 @@ async def notice_draft(
             # send it. An empty page with an error is the honest outcome.
             error = "The draft could not be generated. Try again in a moment."
 
+    preview_recipients: list | None = None
+    preview_token: str | None = None
+    if event.notice_body is not None:
+        preview_recipients = await confirmed_recipients(event.subprocessor.tenant_id, db)
+        preview_token = notice_preview_token(event.notice_body)
+
     return _templates.TemplateResponse(
         request,
         "notice.html",
-        {"tenant": tenant, "event": event, "error": error, "upgrade_required": False},
+        {
+            "tenant": tenant,
+            "event": event,
+            "error": error,
+            "upgrade_required": False,
+            "preview_recipient_count": len(preview_recipients) if preview_recipients is not None else None,
+            "preview_token": preview_token,
+            # A notice can be released only for an approved event that
+            # hasn't already had its notice sent — see release_notice's
+            # own guards, which this mirrors so the button is never shown
+            # for a request the backend would refuse anyway.
+            "can_release": event.status == "approved" and event.review_action is None,
+        },
+    )
+
+
+@router.post("/dashboard/events/{event_id}/notice/send", response_class=HTMLResponse)
+async def send_notice_route(
+    request: Request,
+    event_id: UUID,
+    tenant: CurrentTenant,
+    reviewer_name: str = Form(...),
+    notice_body_token: str = Form(...),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """The explicit "send" action — only reachable after loading the
+    notice page, which is where notice_body_token (a hash of the exact
+    text currently drafted) comes from. See release_notice's docstring
+    for why this, not the button existing, is what actually enforces
+    "seen the final text before sending".
+    """
+    event = await _event_for_tenant(event_id, tenant, db)
+
+    reviewer_name = reviewer_name.strip()
+    if not reviewer_name:
+        raise HTTPException(status_code=422, detail="Your name is required to release the notice.")
+
+    error = await release_notice(
+        event_id,
+        reviewer_name=reviewer_name,
+        reviewer_email=tenant.email or "",
+        notice_body_preview_token=notice_body_token,
+        session=db,
+    )
+    logger.info("Notice release requested for event %s by tenant %s: error=%s", event_id, tenant.slug, error)
+
+    event = await _event_for_tenant(event_id, tenant, db)
+    preview_recipients = await confirmed_recipients(event.subprocessor.tenant_id, db)
+    return _templates.TemplateResponse(
+        request,
+        "notice.html",
+        {
+            "tenant": tenant,
+            "event": event,
+            "error": error,
+            "upgrade_required": False,
+            "preview_recipient_count": len(preview_recipients),
+            "preview_token": notice_preview_token(event.notice_body) if event.notice_body else None,
+            "can_release": event.status == "approved" and event.review_action is None,
+        },
     )
 
 
@@ -334,4 +571,48 @@ async def toggle_badge(
     )
     return _templates.TemplateResponse(
         request, "partials/badge_setting.html", {"tenant": tenant}
+    )
+
+
+@router.post("/dashboard/settings/objection-window", response_class=HTMLResponse)
+async def set_objection_window(
+    request: Request,
+    tenant: CurrentTenant,
+    objection_window_days: int = Form(...),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """The DPA promises this window's length — the product cannot invent
+    one, so this just stores whatever the tenant's own contract says. Only
+    affects windows opened AFTER this change; an already-open window keeps
+    the value it was opened with (see ChangeEvent.window_days)."""
+    if not 1 <= objection_window_days <= 365:
+        raise HTTPException(status_code=422, detail="Must be between 1 and 365 days.")
+
+    tenant.objection_window_days = objection_window_days
+    await db.commit()
+    logger.info("Objection window setting: tenant %s -> %d days", tenant.slug, objection_window_days)
+    return _templates.TemplateResponse(
+        request, "partials/objection_window_setting.html", {"tenant": tenant}
+    )
+
+
+@router.post("/dashboard/settings/privacy-contact-email", response_class=HTMLResponse)
+async def set_privacy_contact_email(
+    request: Request,
+    tenant: CurrentTenant,
+    privacy_contact_email: str = Form(""),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Where [CONTACT] in a released notice points. Blank clears the
+    override (falls back to the account email again — Tenant.
+    objection_contact_email handles that, nothing to backfill here)."""
+    value = privacy_contact_email.strip()
+    if value and "@" not in value:
+        raise HTTPException(status_code=422, detail="That doesn't look like an email address.")
+
+    tenant.privacy_contact_email = value or None
+    await db.commit()
+    logger.info("Privacy contact email setting: tenant %s -> %s", tenant.slug, value or "(cleared)")
+    return _templates.TemplateResponse(
+        request, "partials/privacy_contact_setting.html", {"tenant": tenant}
     )

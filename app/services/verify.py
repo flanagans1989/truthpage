@@ -6,12 +6,12 @@ Hard rules, non-negotiable:
     or a router that could reach one. This checks a file against math and
     a CA certificate, nothing else — a name/vendor/tenant lookup by hash
     would let anyone probe "does X monitor Y", which is a data leak.
-  - Never trusts a CA chain found INSIDE the upload. A zip's own
-    tsa-chain.pem (or an uploaded chain in the file+token mode) is not
-    read for trust purposes at all — verification is only ever against
-    _BUNDLED_CHAINS, checked into this repo. Otherwise anyone could bundle
-    their own throwaway CA next to a self-signed "token" and have it
-    "verify".
+  - Never trusts a CA chain found INSIDE the upload. A zip's own chain
+    file (or an uploaded chain in the file+token mode) is not read for
+    trust purposes at all — verification is only ever against a chain
+    resolved from app.core.tsa_chains, checked into this repo under
+    certs/tsa/. Otherwise anyone could bundle their own throwaway CA next
+    to a self-signed "token" and have it "verify".
   - Nothing uploaded is written to permanent disk or logged. Token bytes
     that must reach `openssl` on the filesystem go into a
     tempfile.TemporaryDirectory(), deleted before the request returns.
@@ -24,11 +24,8 @@ from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 
+from app.core.tsa_chains import all_bundled_chain_paths, chain_path_for_authority
 from app.services.evidence import detect_manifest_version, parse_manifest_v2
-
-_BUNDLED_CHAINS = [
-    Path(__file__).parent.parent / "static_data" / "tsa" / "freetsa-chain.pem",
-]
 
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
 MAX_ZIP_UNCOMPRESSED_BYTES = 50 * 1024 * 1024  # 50 MB total, across all entries
@@ -47,26 +44,52 @@ class VerifyResult:
     timestamp_status: str | None = None
     tsa_authority_url: str | None = None
     tsa_time_utc: str | None = None
+    tsa_cert_window: str | None = None
 
 
-def _run_openssl_verify(token_bytes: bytes, digest_hex: str) -> bool:
-    """True iff `token_bytes` is a valid RFC 3161 token over `digest_hex`,
-    chaining to one of _BUNDLED_CHAINS — never a chain from the upload."""
+def _cert_validity_window(chain_path: Path) -> str | None:
+    """notBefore/notAfter of the LAST certificate in `chain_path` (the
+    chain file is root CA followed by the TSA's own signing cert — see
+    certs/tsa/README.md — so the last one is the informative one)."""
+    import subprocess
+
+    text = chain_path.read_text()
+    blocks = re.findall(
+        r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", text, re.DOTALL
+    )
+    if not blocks:
+        return None
+    result = subprocess.run(
+        ["openssl", "x509", "-noout", "-dates"],
+        input=blocks[-1], capture_output=True, text=True, timeout=10,
+    )
+    if result.returncode != 0:
+        return None
+    return "; ".join(line.strip() for line in result.stdout.splitlines() if line.strip())
+
+
+def _run_openssl_verify(token_bytes: bytes, digest_hex: str, chain_paths: list[Path]) -> tuple[bool, str | None]:
+    """True + the matched chain's cert validity window iff `token_bytes` is
+    a valid RFC 3161 token over `digest_hex`, chaining to one of
+    `chain_paths` — never a chain from the upload. `-no_check_time`: a
+    token issued years ago must still verify after its signing
+    certificate's own validity window has since passed (see verify.sh's
+    identical reasoning, which this mirrors so the two never disagree)."""
     import subprocess
 
     with tempfile.TemporaryDirectory() as tmp:
         token_path = Path(tmp) / "token.tsr"
         token_path.write_bytes(token_bytes)
-        for chain_path in _BUNDLED_CHAINS:
+        for chain_path in chain_paths:
             result = subprocess.run(
                 ["openssl", "ts", "-verify", "-in", str(token_path),
-                 "-digest", digest_hex, "-CAfile", str(chain_path)],
+                 "-digest", digest_hex, "-CAfile", str(chain_path), "-no_check_time"],
                 capture_output=True,
                 timeout=15,
             )
             if result.returncode == 0:
-                return True
-    return False
+                return True, _cert_validity_window(chain_path)
+    return False, None
 
 
 def _zip_bomb_guard(zf: zipfile.ZipFile) -> str | None:
@@ -169,9 +192,19 @@ def _verify_v2(zf: zipfile.ZipFile, names: set[str], manifest_text: str) -> Veri
         )
 
     token_bytes = zf.read(token_file)
-    # Deliberately IGNORES the archive's own tsa-chain.pem — only our bundled
-    # chain is ever trusted. See module docstring.
-    verified = _run_openssl_verify(token_bytes, expected_hash)
+    # Deliberately IGNORES the archive's own chain file — only a chain
+    # resolved from the AUTHORITY NAMED IN THE MANIFEST (never the file
+    # sitting in the upload) is ever trusted. See module docstring.
+    authority_url = fields.get("tsa_authority_url")
+    chain_path = chain_path_for_authority(authority_url)
+    if chain_path is None:
+        return VerifyResult(
+            ok=False,
+            message=f"no trusted CA chain is bundled for authority {authority_url!r} — cannot verify",
+            manifest_version=2,
+            timestamp_status=status,
+        )
+    verified, cert_window = _run_openssl_verify(token_bytes, expected_hash, [chain_path])
     if not verified:
         return VerifyResult(
             ok=False,
@@ -186,8 +219,9 @@ def _verify_v2(zf: zipfile.ZipFile, names: set[str], manifest_text: str) -> Veri
         manifest_version=2,
         content_hash=expected_hash,
         timestamp_status=status,
-        tsa_authority_url=fields.get("tsa_authority_url"),
+        tsa_authority_url=authority_url,
         tsa_time_utc=fields.get("tsa_time_utc"),
+        tsa_cert_window=cert_window,
     )
 
 
@@ -199,12 +233,17 @@ def verify_content_and_token(content_bytes: bytes, token_bytes: bytes) -> Verify
         return VerifyResult(ok=False, message=f"file too large (max {MAX_UPLOAD_BYTES // (1024 * 1024)} MB)")
 
     digest = hashlib.sha256(content_bytes).hexdigest()
-    if _run_openssl_verify(token_bytes, digest):
+    # No manifest here, so no known authority to key off — this is the one
+    # mode where every bundled chain is tried (still only ever our own
+    # bundled ones, never anything from the upload).
+    verified, cert_window = _run_openssl_verify(token_bytes, digest, all_bundled_chain_paths())
+    if verified:
         return VerifyResult(
             ok=True,
             message="PASS — content hash matches and timestamp verified",
             content_hash=digest,
             timestamp_status="timestamped",
+            tsa_cert_window=cert_window,
         )
     return VerifyResult(
         ok=False,

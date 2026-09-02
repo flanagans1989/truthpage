@@ -1,0 +1,21 @@
+<div id="privacy-contact-setting" class="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-slate-100">
+    <div>
+        <p class="text-sm font-medium text-slate-900">Objection contact address</p>
+        <p class="text-xs text-slate-500 mt-0.5">
+            Where customer notices tell subscribers to send an objection. Defaults to your
+            account email ({{ tenant.email }}) until you set one here.
+        </p>
+    </div>
+    <form hx-post="/dashboard/settings/privacy-contact-email"
+          hx-target="#privacy-contact-setting"
+          hx-swap="outerHTML"
+          class="flex items-center gap-2 shrink-0">
+        <input type="email" name="privacy_contact_email" placeholder="{{ tenant.email }}"
+               value="{{ tenant.privacy_contact_email or '' }}"
+               class="text-sm px-3 py-2 rounded-lg border border-slate-300 w-56">
+        <button type="submit"
+                class="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:border-slate-400 transition">
+            Save
+        </button>
+    </form>
+</div>

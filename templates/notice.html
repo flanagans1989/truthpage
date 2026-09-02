@@ -66,6 +66,54 @@
             objections should reach, and read it against the change before sending. Redrafting
             replaces the text above, including any wording you have already sent.
         </p>
+
+        {% if event.notice_frozen_at %}
+        <div class="bg-white rounded-xl border border-emerald-200 p-6 mt-8">
+            <p class="text-sm font-semibold text-emerald-800 mb-1">Notice released</p>
+            <p class="text-xs text-slate-600">
+                Released by {{ event.reviewed_by_name }} ({{ event.reviewed_by_email }}) on
+                {{ event.reviewed_at.strftime('%d %b %Y, %H:%M') }} UTC ·
+                {{ event.recipient_count }} recipient(s) at the time.
+            </p>
+        </div>
+        {% elif can_release %}
+        <div class="bg-white rounded-xl border border-slate-200 p-6 mt-8">
+            <p class="text-sm font-semibold text-slate-900 mb-1">Release this notice</p>
+            <p class="text-xs text-slate-500 mb-4">
+                {% if preview_recipient_count %}
+                This will send the text above, as it reads right now, to
+                <strong>{{ preview_recipient_count }}</strong> active subscriber(s).
+                {% else %}
+                No active subscribers right now — releasing will record zero recipients
+                and the objection window will not open.
+                {% endif %}
+                This freezes the text and cannot be undone or resent.
+            </p>
+            <p class="text-xs text-slate-500 mb-4">
+                <strong>[CONTACT]</strong> will resolve to
+                <strong>{{ tenant.objection_contact_email }}</strong>
+                {% if not tenant.privacy_contact_email %}(your account email — set a dedicated
+                address in Settings){% endif %}, and the window length to
+                <strong>{{ tenant.objection_window_days }} days</strong>.
+            </p>
+            <form method="post" action="/dashboard/events/{{ event.id }}/notice/send"
+                  onsubmit="return confirm('Send this exact text to {{ preview_recipient_count or 0 }} subscriber(s) now? This cannot be undone.');"
+                  class="flex items-center gap-2">
+                <input type="hidden" name="notice_body_token" value="{{ preview_token }}">
+                <input type="text" name="reviewer_name" required placeholder="Your name"
+                       title="Recorded as the reviewer who released this notice — cannot be changed later."
+                       class="text-sm px-3 py-2 rounded-lg border border-slate-300 w-40">
+                <button type="submit"
+                        class="text-sm font-semibold px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition">
+                    Release &amp; send
+                </button>
+            </form>
+        </div>
+        {% elif event.status != "approved" %}
+        <div class="bg-white rounded-xl border border-slate-200 p-6 mt-8">
+            <p class="text-sm text-slate-600">Approve this change in the queue before releasing its notice.</p>
+        </div>
+        {% endif %}
         {% endif %}
     </main>
 </div>
