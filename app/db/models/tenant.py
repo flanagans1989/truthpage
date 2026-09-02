@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, String, Uuid
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -131,6 +131,35 @@ class Tenant(TimestampMixin, Base):
     @property
     def shows_powered_by(self) -> bool:
         return not (self.hide_powered_by and self.may_hide_badge)
+
+    # Tier-2 (Playwright) daily cost cap — see tier2_daily_limit / consume
+    # below. Reset lazily: whichever request first touches a stale date rolls
+    # both fields over rather than a separate midnight job.
+    tier2_daily_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    tier2_daily_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    @property
+    def tier2_daily_limit(self) -> int:
+        from app.core.config import settings
+
+        if self.is_free_plan:
+            return settings.TIER2_DAILY_LIMIT_FREE
+        if self.is_starter_plan:
+            return settings.TIER2_DAILY_LIMIT_STARTER
+        return settings.TIER2_DAILY_LIMIT_GROWTH
+
+    def consume_tier2_budget(self, today: date) -> bool:
+        """Rolls the daily counter over if `today` is a new day, then tries to
+        spend one unit of it. Returns False (budget exhausted, nothing spent)
+        without mutating state otherwise — the caller must queue the check
+        for later rather than skip it."""
+        if self.tier2_daily_date != today:
+            self.tier2_daily_date = today
+            self.tier2_daily_count = 0
+        if self.tier2_daily_count >= self.tier2_daily_limit:
+            return False
+        self.tier2_daily_count += 1
+        return True
 
     @property
     def subprocessor_limit(self) -> int:

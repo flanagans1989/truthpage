@@ -82,7 +82,7 @@
   "pricing.growth_f2": "Pack de preuves d'audit cryptographique : un ZIP téléchargeable avec ancre de vérification SHA-256, le HTML brut avant et après, le diff et votre historique de décision",
   "pricing.growth_f3": "Export CSV complet de tout l'historique — empreintes, horodatages et validations",
   "pricing.growth_f4": "Retirer le badge « Powered by TrustPages » de votre Trust Center",
-  "pricing.growth_f5": "Scraping fiable même sur des pages riches en JavaScript ou protégées contre les robots — bascule automatique vers un navigateur headless, sans configuration",
+  "pricing.growth_f5": "Budget Tier-2 (navigateur headless) quotidien plus élevé pour les pages protégées contre les robots ou riches en JavaScript — chaque forfait bénéficie de l'escalade automatique Tier-1 vers Tier-2, Growth offre simplement la plus grande marge (30 exécutions/jour contre 3 en Gratuit)",
   "pricing.growth_cta": "Essayer 14 jours",
   "pricing.growth_note": "Sans carte bancaire · Résiliable à tout moment ·",
   "pricing.growth_guarantee": "garantie satisfait ou remboursé 14 jours",

@@ -22,6 +22,12 @@ python run_sweep.py                    # manual sweep
   its 5-min scale-to-zero window whether or not work is due. 30-min ticks burn ~124 compute-hours
   a month against a 100-hour cap — that took the site down for a week (2026-08-24). It is 3h now.
   Don't shorten it without redoing the arithmetic.
+- **Tier-2 (Playwright) is plan-independent, not plan-gated.** Every tenant's bot-walled sources
+  escalate to a real headless browser, Free included — the only per-plan lever is
+  `TIER2_DAILY_LIMIT_{FREE,STARTER,GROWTH}`, a daily run cap per tenant that queues an over-budget
+  check (via `Tenant.consume_tier2_budget`) rather than skipping it. Raising those caps is a
+  compute-cost decision, same arithmetic as the sweep interval above — a source already flagged
+  `requires_browser=True` spends the budget on every single check, forever.
 - **CSS is compiled, not CDN.** Rerun the Tailwind command above after any class change, and note
   it scans `app/**/*.py` too because routers contain inline HTML.
 - **`preDeployCommand` is silently ignored on Render free.** Migrations run from the Dockerfile

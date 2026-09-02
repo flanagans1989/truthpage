@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.config import settings
 from app.core.llm.analyzer import LLMDiffAnalyzer
 from app.core.scraper.detector import ChangeDetector
 from app.core.scraper.fetcher import fetch_raw_html, mark_subprocessor_requires_browser
@@ -27,6 +28,59 @@ _llm_analyzer = LLMDiffAnalyzer()
 
 _AUTO_PUBLISH_CLASSIFICATION = "COSMETIC"
 _AUTO_PUBLISH_CONFIDENCE_THRESHOLD = 0.85
+
+# How long a Tier-2 run deferred by the daily budget waits before retrying —
+# short enough that a source queued early in the day still gets its regular
+# check_interval_minutes cadence once the next UTC day's budget opens up.
+_BUDGET_RETRY = timedelta(hours=1)
+_FETCH_FAILURE_RETRY = timedelta(minutes=30)
+
+
+async def _record_fetch_failure(subprocessor: Subprocessor, session: AsyncSession) -> None:
+    """Bumps the resource-health counter and, past the threshold, fires the
+    (dedupe-windowed) Monitoring Alert email to the tenant and to admins."""
+    subprocessor.consecutive_failure_count += 1
+    await session.commit()
+
+    if subprocessor.consecutive_failure_count < settings.MONITORING_ALERT_FAILURE_THRESHOLD:
+        return
+
+    now = utc_now()
+    if subprocessor.monitoring_alert_sent_at is not None:
+        sent_at = subprocessor.monitoring_alert_sent_at
+        if sent_at.tzinfo is None:
+            # SQLite (tests only — Postgres round-trips tz-aware values)
+            # hands back a naive datetime; we only ever write UTC into this
+            # column, so that's the correct zone to attach.
+            sent_at = sent_at.replace(tzinfo=UTC)
+        dedupe_elapsed = now - sent_at
+        if dedupe_elapsed < timedelta(days=settings.MONITORING_ALERT_DEDUPE_DAYS):
+            return
+
+    subprocessor.monitoring_alert_sent_at = now
+    await session.commit()
+
+    recipients = set(settings.admin_email_set)
+    if subprocessor.tenant.email:
+        recipients.add(subprocessor.tenant.email.lower())
+    for email in recipients:
+        await mailer.send_monitoring_alert(
+            email=email,
+            subprocessor_name=subprocessor.name,
+            monitored_url=subprocessor.monitored_url,
+            consecutive_failures=subprocessor.consecutive_failure_count,
+        )
+    logger.info(
+        "Monitoring alert sent for subprocessor %s (%d recipient(s), %d consecutive failures)",
+        subprocessor.id, len(recipients), subprocessor.consecutive_failure_count,
+    )
+
+
+def _reset_health(subprocessor: Subprocessor) -> None:
+    """A successful check clears the failure streak — and the alert dedupe
+    stamp with it, so a later, unrelated streak alerts right away."""
+    subprocessor.consecutive_failure_count = 0
+    subprocessor.monitoring_alert_sent_at = None
 
 
 async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -> None:
@@ -50,7 +104,24 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         logger.debug("Subprocessor %s monitoring disabled, skipping", subprocessor_id)
         return
 
-    # c) Fetch raw HTML — Tier-1 (httpx) or Tier-2 (Playwright) based on subprocessor state
+    # c) Tier-2 cost cap — only sources that already require the browser
+    # (i.e. run it on *every* check) draw against the tenant's daily budget.
+    # A source escalating for the first time this run still gets that one
+    # attempt; it starts drawing on the budget from the next check onward.
+    # Going over the budget queues the check (never a silent skip, never a
+    # counted failure — this isn't the source's fault).
+    if subprocessor.requires_browser:
+        if not subprocessor.tenant.consume_tier2_budget(utc_now().date()):
+            logger.info(
+                "Tier-2 daily budget exhausted for tenant %s — queuing subprocessor %s",
+                subprocessor.tenant_id, subprocessor.id,
+            )
+            subprocessor.next_check_at = utc_now() + _BUDGET_RETRY
+            await session.commit()
+            return
+        await session.commit()
+
+    # d) Fetch raw HTML — Tier-1 (httpx) or Tier-2 (Playwright) based on subprocessor state
     # 90s hard ceiling: 30s page.goto + buffer for browser launch/teardown.
     # Prevents a hung Playwright process from freezing the entire sweep job.
     try:
@@ -66,16 +137,16 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         )
     except asyncio.TimeoutError:
         logger.warning("Fetch timed out after 90 s for %s — retrying in 30 min", subprocessor.monitored_url)
-        subprocessor.next_check_at = utc_now() + timedelta(minutes=30)
-        await session.commit()
+        subprocessor.next_check_at = utc_now() + _FETCH_FAILURE_RETRY
+        await _record_fetch_failure(subprocessor, session)
         return
     except Exception:
         logger.exception("Failed to fetch %s — retrying in 30 min", subprocessor.monitored_url)
-        subprocessor.next_check_at = utc_now() + timedelta(minutes=30)
-        await session.commit()
+        subprocessor.next_check_at = utc_now() + _FETCH_FAILURE_RETRY
+        await _record_fetch_failure(subprocessor, session)
         return
 
-    # d) Normalize and hash
+    # e) Normalize and hash
     canonical_text = _normalizer.normalize(raw_html)
     if not canonical_text:
         # Empty body usually means an error page or a broken render, not a
@@ -84,8 +155,8 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
             "Empty normalized content for %s — treating as fetch failure, retrying in 30 min",
             subprocessor.monitored_url,
         )
-        subprocessor.next_check_at = utc_now() + timedelta(minutes=30)
-        await session.commit()
+        subprocessor.next_check_at = utc_now() + _FETCH_FAILURE_RETRY
+        await _record_fetch_failure(subprocessor, session)
         return
     new_hash = _hasher.hash(canonical_text)
     # Digest of the document itself, for the evidence bundle — distinct from
@@ -107,6 +178,7 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         subprocessor.last_raw_html_hash = new_raw_html_hash
         subprocessor.last_checked_at = now
         subprocessor.next_check_at = next_check
+        _reset_health(subprocessor)
         await session.commit()
         return
 
@@ -115,6 +187,7 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         logger.debug("No change detected for subprocessor %s", subprocessor_id)
         subprocessor.last_checked_at = now
         subprocessor.next_check_at = next_check
+        _reset_health(subprocessor)
         await session.commit()
         return
 
@@ -176,6 +249,7 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
     subprocessor.last_raw_html_hash = new_raw_html_hash
     subprocessor.last_checked_at = now
     subprocessor.next_check_at = next_check
+    _reset_health(subprocessor)
 
     await session.commit()
 

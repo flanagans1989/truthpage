@@ -36,6 +36,12 @@
                     <span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span> Paused
                 </span>
                 {% endif %}
+                {% if sp.has_monitoring_alert %}
+                <span title="Failed {{ sp.consecutive_failure_count }} checks in a row — this page may have moved, gone down, or started blocking automated requests."
+                      class="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full ml-1">
+                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span> Monitoring Alert
+                </span>
+                {% endif %}
             </td>
             <td class="py-3 text-right">
                 <div class="flex items-center justify-end gap-2">

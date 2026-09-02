@@ -293,5 +293,57 @@ class MailerService:
             sent, len(recipients), subprocessor_name,
         )
 
+    async def send_monitoring_alert(
+        self,
+        email: str,
+        subprocessor_name: str,
+        monitored_url: str,
+        consecutive_failures: int,
+    ) -> None:
+        """A source has failed to check enough times in a row that it's more
+        likely broken/blocked than transient. Sent once per failure streak
+        (see MONITORING_ALERT_DEDUPE_DAYS) to the tenant and to admins."""
+        subject = f"Monitoring Alert: {subprocessor_name} could not be checked"
+        dashboard_url = f"{settings.APP_URL}/dashboard"
+
+        safe_name = html.escape(subprocessor_name)
+        safe_url = html.escape(monitored_url)
+
+        body = f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:48px 0;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:48px 40px;">
+        <tr><td>
+          <p style="margin:0 0 4px;font-size:12px;color:#b45309;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">
+            Monitoring Alert
+          </p>
+          <p style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0f172a;">
+            {safe_name} has failed {consecutive_failures} checks in a row
+          </p>
+          <p style="margin:0 0 24px;font-size:14px;color:#64748b;line-height:1.6;">
+            TrustPages could not read
+            <a href="{safe_url}" style="color:#2563eb;">{safe_url}</a>
+            on its last {consecutive_failures} attempts — this page may have moved,
+            gone down, or started blocking automated requests harder than a
+            headless browser retry can clear. Change detection is paused for
+            this source until a check succeeds again.
+          </p>
+          <a href="{dashboard_url}"
+             style="display:inline-block;background:#2563eb;color:#ffffff;font-size:14px;
+                    font-weight:600;padding:14px 28px;border-radius:8px;text-decoration:none;">
+            Review in dashboard
+          </a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+        await self._send(email, subject, body)
+
 
 mailer = MailerService()

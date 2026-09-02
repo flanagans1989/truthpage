@@ -42,6 +42,22 @@ class Settings(BaseSettings):
     # Comma-separated emails allowed to open /admin (matched against tenant.email)
     ADMIN_EMAILS: str = ""
 
+    # A source is flagged with a persistent "Monitoring Alert" once its
+    # consecutive failed checks (4xx/5xx, timeout, empty content) reach this.
+    MONITORING_ALERT_FAILURE_THRESHOLD: int = 3
+    # Once the alert email fires for a source, don't fire it again for this
+    # many days even if it keeps failing — a page that's been down a week
+    # doesn't need a fresh email every single day.
+    MONITORING_ALERT_DEDUPE_DAYS: int = 7
+
+    # Tier-2 (Playwright) runs are the expensive path — a real browser launch,
+    # not an httpx GET. These are per-tenant, per-UTC-day ceilings on how many
+    # Tier-2 runs a tenant's already-bot-walled sources may consume; going over
+    # queues the check for the next day rather than skipping it silently.
+    TIER2_DAILY_LIMIT_FREE: int = 3
+    TIER2_DAILY_LIMIT_STARTER: int = 10
+    TIER2_DAILY_LIMIT_GROWTH: int = 30
+
     @property
     def admin_email_set(self) -> frozenset[str]:
         return frozenset(e.strip().lower() for e in self.ADMIN_EMAILS.split(",") if e.strip())

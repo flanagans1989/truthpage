@@ -82,7 +82,7 @@
   "pricing.growth_f2": "Paquete de pruebas de auditoría criptográfico: un ZIP descargable con ancla de verificación SHA-256, el HTML original antes y después, el diff y tu historial de decisiones",
   "pricing.growth_f3": "Exportación CSV completa de todo tu historial de cambios — hashes, marcas de tiempo y quién aprobó qué",
   "pricing.growth_f4": "Elimina el distintivo «Powered by TrustPages» de tu Trust Center",
-  "pricing.growth_f5": "Rastreo fiable incluso en páginas con mucho JavaScript o protegidas contra bots — cambio automático a navegador headless, sin configuración",
+  "pricing.growth_f5": "Mayor presupuesto diario de Tier-2 (navegador headless) para páginas de proveedores protegidas contra bots o con mucho JavaScript — todos los planes reciben la escalada automática de Tier-1 a Tier-2, Growth solo tiene más margen (30 ejecuciones/día frente a 3 en el plan Gratis)",
   "pricing.growth_cta": "Probar 14 días",
   "pricing.growth_note": "Sin tarjeta de crédito · Cancela cuando quieras ·",
   "pricing.growth_guarantee": "garantía de devolución de 14 días",
