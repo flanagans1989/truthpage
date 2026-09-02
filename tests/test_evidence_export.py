@@ -1,10 +1,11 @@
 import csv
+import zipfile
 from datetime import datetime, timezone
-from io import StringIO
+from io import BytesIO, StringIO
 from types import SimpleNamespace
 from uuid import UUID
 
-from app.services.evidence import COLUMNS, evidence_csv, iso_utc
+from app.services.evidence import COLUMNS, evidence_csv, evidence_zip, iso_utc
 
 APP_URL = "https://usetrustpages.com/"
 
@@ -26,6 +27,13 @@ def _event(**overrides):
         notified_at=datetime(2026, 9, 1, 9, 0, 30, tzinfo=timezone.utc),
         old_hash="a" * 64,
         new_hash="b" * 64,
+        raw_diff="--- before\n+++ after\n-Old line\n+New line",
+        old_content_text="Old page text.",
+        new_content_text="New page text.",
+        old_raw_html="<html>old</html>",
+        new_raw_html="<html>new</html>",
+        notice_subject=None,
+        notice_body=None,
     )
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
@@ -96,3 +104,52 @@ class TestEvidenceCsv:
     def test_every_event_produces_exactly_one_row(self):
         rows = _rows(evidence_csv([_event(), _event(), _event()], APP_URL))
         assert len(rows) == 4
+
+
+def _zip_files(zip_bytes: bytes) -> dict[str, str]:
+    with zipfile.ZipFile(BytesIO(zip_bytes)) as zf:
+        return {name: zf.read(name).decode("utf-8") for name in zf.namelist()}
+
+
+class TestEvidenceZip:
+    def test_bundle_contains_before_after_and_diff(self):
+        files = _zip_files(evidence_zip(_event(), APP_URL))
+        assert files["before.html"] == "<html>old</html>"
+        assert files["after.html"] == "<html>new</html>"
+        assert files["before.txt"] == "Old page text."
+        assert files["after.txt"] == "New page text."
+        assert "New line" in files["diff.txt"]
+
+    def test_manifest_carries_the_audit_fields(self):
+        manifest = _zip_files(evidence_zip(_event(), APP_URL))["manifest.txt"]
+        assert "Cloudflare" in manifest
+        assert "a" * 64 in manifest and "b" * 64 in manifest
+        assert "MATERIAL" in manifest
+        assert "trustpages" in manifest
+        assert "11111111-2222-3333-4444-555555555555" in manifest
+
+    def test_missing_raw_html_is_a_note_not_a_missing_file(self):
+        event = _event(old_raw_html=None, new_raw_html=None)
+        files = _zip_files(evidence_zip(event, APP_URL))
+        assert "Not captured" in files["before.html"]
+        assert "Not captured" in files["after.html"]
+
+    def test_undrafted_notice_says_so_in_the_manifest(self):
+        manifest = _zip_files(evidence_zip(_event(), APP_URL))["manifest.txt"]
+        assert "No notice has been drafted" in manifest
+
+    def test_drafted_notice_is_included_in_the_manifest(self):
+        event = _event(notice_subject="Update to our sub-processor list", notice_body="We are adding Cloudflare.")
+        manifest = _zip_files(evidence_zip(event, APP_URL))["manifest.txt"]
+        assert "Update to our sub-processor list" in manifest
+        assert "We are adding Cloudflare." in manifest
+
+    def test_no_decision_yet_reads_as_not_decided(self):
+        event = _event(status="pending_review", approved_at=None, approved_by=None)
+        manifest = _zip_files(evidence_zip(event, APP_URL))["manifest.txt"]
+        assert "not yet decided" in manifest
+
+    def test_auto_published_with_no_decision_is_not_reported_as_undecided(self):
+        event = _event(status="auto_published", approved_at=None, approved_by=None)
+        manifest = _zip_files(evidence_zip(event, APP_URL))["manifest.txt"]
+        assert "auto-published" in manifest

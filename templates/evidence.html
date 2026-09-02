@@ -19,10 +19,17 @@
                class="text-blue-600 hover:underline break-all">{{ event.subprocessor.monitored_url }}</a>
         </p>
 
-        <a href="/dashboard/events/{{ event.id }}/notice"
-           class="inline-block mb-6 text-sm font-semibold px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
-            {% if event.notice_body %}Open customer notice{% else %}Draft customer notice{% endif %}
-        </a>
+        <div class="flex flex-wrap gap-3 mb-6">
+            <a href="/dashboard/events/{{ event.id }}/notice"
+               class="inline-block text-sm font-semibold px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition">
+                {% if event.notice_body %}Open customer notice{% else %}Draft customer notice{% endif %}
+            </a>
+            <a href="/dashboard/events/{{ event.id }}/evidence.zip"
+               class="inline-block text-sm font-semibold px-4 py-2 rounded-lg text-slate-700 border border-slate-300 hover:border-slate-400 transition">
+                Download audit evidence (.zip)
+            </a>
+        </div>
+        <p class="text-xs text-slate-400 -mt-4 mb-6">Before/after HTML, the diff and the decision trail in one file — for an auditor or an enterprise customer's security review.</p>
 
         <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">

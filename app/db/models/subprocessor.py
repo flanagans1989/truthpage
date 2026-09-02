@@ -23,6 +23,10 @@ class Subprocessor(TimestampMixin, Base):
     monitoring_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
     last_content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     last_content_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Raw HTML of the last successful fetch, carried forward so the next
+    # change event has a "before" document to store — not just its
+    # normalized text. Same nullability story as last_content_text.
+    last_raw_html: Mapped[str | None] = mapped_column(Text, nullable=True)
     requires_browser: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     check_interval_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=1440, server_default="1440")
     next_check_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -16,7 +16,7 @@ from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
 from app.core.llm.notice import ArticleNoticeDrafter
 from app.services.approval import approve_change_event, reject_change_event
-from app.services.evidence import evidence_csv
+from app.services.evidence import evidence_csv, evidence_zip
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +141,30 @@ async def evidence_record(
     event = await _event_for_tenant(event_id, tenant, db)
     return _templates.TemplateResponse(
         request, "evidence.html", {"tenant": tenant, "event": event}
+    )
+
+
+@router.get("/dashboard/events/{event_id}/evidence.zip")
+async def evidence_bundle(
+    event_id: UUID,
+    tenant: CurrentTenant,
+    db: AsyncSession = Depends(get_db_session),
+):
+    """One change, as a downloadable audit pack: before/after HTML and text,
+    the diff, and the decision/notice trail in a manifest — the file a
+    tenant hands to their own auditor or an enterprise customer's security
+    review, rather than a screenshot that only proves what the page said
+    the week someone thought to capture it.
+    """
+    event = await _event_for_tenant(event_id, tenant, db)
+    zip_bytes = evidence_zip(event, settings.APP_URL)
+
+    filename = f"trustpages-audit-{event.subprocessor.name.lower().replace(' ', '-')}-{str(event.id)[:8]}.zip"
+    logger.info("Evidence ZIP downloaded: event %s, tenant %s", event_id, tenant.slug)
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

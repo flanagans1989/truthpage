@@ -98,6 +98,7 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         logger.info("Baseline captured for subprocessor %s", subprocessor_id)
         subprocessor.last_content_hash = new_hash
         subprocessor.last_content_text = canonical_text
+        subprocessor.last_raw_html = raw_html
         subprocessor.last_checked_at = now
         subprocessor.next_check_at = next_check
         await session.commit()
@@ -151,6 +152,8 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         raw_diff=raw_diff,
         old_content_text=subprocessor.last_content_text,
         new_content_text=canonical_text,
+        old_raw_html=subprocessor.last_raw_html,
+        new_raw_html=raw_html,
         llm_summary=analysis.summary,
         llm_classification=analysis.classification,
         llm_confidence=analysis.confidence,
@@ -161,6 +164,7 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
     # h) Update subprocessor state
     subprocessor.last_content_hash = new_hash
     subprocessor.last_content_text = canonical_text
+    subprocessor.last_raw_html = raw_html
     subprocessor.last_checked_at = now
     subprocessor.next_check_at = next_check
 

@@ -43,6 +43,12 @@ class ChangeEvent(TimestampMixin, Base):
     # not the delta. Nullable because events written before 0006 have neither.
     old_content_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     new_content_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Raw HTML either side of the change, for the downloadable evidence
+    # bundle. Deliberately not shown on the dashboard page itself — the
+    # normalized text above is what a human reads, this is what an auditor
+    # asks for. Nullable: events recorded before 0012 have neither.
+    old_raw_html: Mapped[str | None] = mapped_column(Text, nullable=True)
+    new_raw_html: Mapped[str | None] = mapped_column(Text, nullable=True)
     llm_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     llm_classification: Mapped[str | None] = mapped_column(String(100), nullable=True)
     llm_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
