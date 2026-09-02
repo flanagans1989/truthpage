@@ -165,7 +165,7 @@ async def evidence_bundle(
             detail="Downloadable audit evidence is part of the Growth plan.",
         )
     event = await _event_for_tenant(event_id, tenant, db)
-    zip_bytes = evidence_zip(event, settings.APP_URL)
+    zip_bytes = evidence_zip(event, settings.APP_URL, tenant)
 
     filename = f"trustpages-audit-{event.subprocessor.name.lower().replace(' ', '-')}-{str(event.id)[:8]}.zip"
     logger.info("Evidence ZIP downloaded: event %s, tenant %s", event_id, tenant.slug)
