@@ -41,7 +41,14 @@ def _openssl_time(dt: datetime) -> str:
 @pytest.fixture
 def expired_tsa_chain_and_token(tmp_path: Path) -> tuple[Path, Path]:
     """Returns (chain_path, token_path) for a real RFC 3161 token whose
-    signing certificate's notAfter is one hour before "now"."""
+    signing certificate's notAfter is one hour before "now".
+
+    Uses `openssl ca` with -startdate/-enddate rather than `x509 -req`'s
+    -not_before/-not_after (only supported by newer OpenSSL point
+    releases) — the `ca` subcommand's start/end-date override has been
+    portable since long before OpenSSL 3.0, which is what actually matters
+    for this to run the same way in CI as it does locally.
+    """
     root_key = tmp_path / "root.key"
     root_pem = tmp_path / "root.pem"
     tsa_key = tmp_path / "tsa.key"
@@ -71,17 +78,44 @@ def expired_tsa_chain_and_token(tmp_path: Path) -> tuple[Path, Path]:
 
     tsa_ext.write_text("basicConstraints=critical,CA:FALSE\nextendedKeyUsage=critical,timeStamping\n")
 
+    # Minimal CA database `openssl ca` requires to exist, even though this
+    # test never reads it back.
+    (tmp_path / "index.txt").write_text("")
+    (tmp_path / "newcerts").mkdir()
+    ca_serial = tmp_path / "ca_serial"
+    ca_serial.write_text("1000\n")
+    ca_cnf = tmp_path / "ca.cnf"
+    ca_cnf.write_text(f"""[ ca ]
+default_ca = CA_default
+
+[ CA_default ]
+dir = {tmp_path.as_posix()}
+database = {(tmp_path / "index.txt").as_posix()}
+new_certs_dir = {(tmp_path / "newcerts").as_posix()}
+certificate = {root_pem.as_posix()}
+private_key = {root_key.as_posix()}
+serial = {ca_serial.as_posix()}
+default_md = sha256
+policy = policy_any
+email_in_dn = no
+copy_extensions = none
+unique_subject = no
+
+[ policy_any ]
+commonName = supplied
+""")
+
     now = datetime.now(UTC)
     not_before = _openssl_time(now - timedelta(days=2))
     not_after = _openssl_time(now - timedelta(hours=1))  # expired one hour ago
 
     result = _run(
-        ["openssl", "x509", "-req", "-in", str(tsa_csr), "-CA", str(root_pem), "-CAkey", str(root_key),
-         "-CAcreateserial", "-not_before", not_before, "-not_after", not_after,
-         "-extfile", str(tsa_ext), "-out", str(tsa_pem), "-sha256"],
+        ["openssl", "ca", "-config", str(ca_cnf), "-batch", "-notext",
+         "-startdate", not_before, "-enddate", not_after,
+         "-extfile", str(tsa_ext), "-in", str(tsa_csr), "-out", str(tsa_pem)],
         env=env,
     )
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == 0, result.stdout + result.stderr
 
     # Sanity-check the fixture itself really is expired as of "now".
     dates = _run(["openssl", "x509", "-in", str(tsa_pem), "-noout", "-dates"], env=env)
