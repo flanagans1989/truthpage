@@ -168,7 +168,7 @@ sent_at:
 recipient_count:
 delivered_count:
 bounced_count:
-delivery_log_file:               # delivery_log.csv (redacted) or delivery_log_full.csv
+delivery_log_file:               # delivery_log_redacted.csv or delivery_log_full.csv
 
 [OBJECTION WINDOW]
 window_days:
@@ -250,6 +250,21 @@ change" tick costs zero TSA calls; the retry pass only ever looks at rows
 that already exist with `pending`/`retrying` status
 (`app/services/tsa_retry.py::run_timestamp_retry_pass`).
 
+**Plus, once per source, its very first captured snapshot** (the
+baseline — see `monitoring.py`'s "First check" branch): that capture
+never becomes a `change_event` (there is nothing yet to diff it against),
+so without this it would never be timestamp-eligible at all — and it
+becomes the source's first real `change_event`'s `before.html` later,
+which would otherwise stay permanently unstamped even though it's a
+perfectly current capture. Mirrors the same state machine over
+`Subprocessor.baseline_*` columns (`stamp_subprocessor_baseline`), same
+KURAL 0: every subprocessor row that predates this defaults to
+`baseline_timestamp_status = not_available_pre_tsa` via migration
+server_default, and a new baseline is explicitly set to `pending` at
+capture time. Not currently surfaced in the manifest schema (this fixes a
+data-completeness gap, not a new field) — see
+`tests/test_tsa_retry_baseline.py`.
+
 ### State machine
 
 ```
@@ -299,8 +314,10 @@ not set it without adding that file.
 
 ### Where the bundled CA chain comes from
 
-`app/static_data/tsa/freetsa-chain.pem` — FreeTSA's root CA certificate
-concatenated with their TSA signing certificate, fetched directly from
+`certs/tsa/<hostname>.pem` — one file per authority, named after its
+hostname (`app/core/tsa_chains.py` resolves an authority URL to its file).
+`certs/tsa/freetsa.org.pem` is FreeTSA's root CA certificate concatenated
+with their TSA signing certificate, fetched directly from
 `https://freetsa.org/files/cacert.pem` and `https://freetsa.org/files/tsa.crt`
 (FreeTSA's own published files, not a third-party mirror). Checked into
 the repo rather than fetched at request time, so:
@@ -311,12 +328,21 @@ the repo rather than fetched at request time, so:
   the server-side `/verify` endpoint are identical and reviewable in this
   repo, not fetched live from a URL that could change.
 
-**This is the only CA chain `/verify` and every `verify.sh` will ever
-trust.** A pack's own `tsa-chain.pem` — inside an uploaded ZIP, or one an
-attacker crafts to sit next to a forged token — is never read for trust
-purposes. If it were, anyone could bundle a self-signed throwaway CA next
-to a self-signed "token" and have their own upload "verify" against
-itself; the whole feature would prove nothing.
+Files in `certs/tsa/` are **never deleted**, even if an authority is later
+retired from `TSA_PRIMARY_URL`/`TSA_FALLBACK_URL` (see that directory's
+README): a token it already issued must still verify against the chain
+that was valid when it was issued.
+
+**This is the only source of CA chains `/verify` and every `verify.sh`
+will ever trust.** A pack's own chain file — inside an uploaded ZIP, or
+one an attacker crafts to sit next to a forged token — is never read for
+trust purposes. If it were, anyone could bundle a self-signed throwaway CA
+next to a self-signed "token" and have their own upload "verify" against
+itself; the whole feature would prove nothing. `/verify` selects the
+chain by the manifest's own `tsa_authority_url` field (never by trying
+just any bundled chain against a v2 pack); the file+token pair mode (no
+manifest, so no known authority) is the one exception, trying every
+bundled chain — still only ever our own, never one from the upload.
 
 ## Delivery record and objection window (PR 4)
 
@@ -335,25 +361,47 @@ of these fields with a different value (`tests/test_frozen_notification_fields.p
 The append-only delivery-event log (`notification_delivery_events`) is the
 same idea applied to a whole table: rows are inserted, never updated.
 
-### Reviewer identity ([REVIEW])
+### Reviewer identity ([REVIEW]) — approve and release are two separate acts
 
-`reviewed_by_name`/`reviewed_by_email` are copied at the moment a human
-approves a material change and releases its notice — never a live join to
-the tenant's account, since a later rename or email change on that account
+Approving a change (`app/services/approval.py::approve_change_event`)
+records only that the change is real and should be published — status
+goes to `approved`, nothing about `[REVIEW]`/`[NOTIFICATION]`/`[OBJECTION
+WINDOW]` is touched. Releasing its notice
+(`release_notice`, driven by `POST /dashboard/events/{id}/notice/send`) is
+a separate, later, explicit action: it drafts the notice if one doesn't
+already exist, requires the reviewer's name (typed at that moment — email
+is always the authenticated session identity, never client-supplied),
+freezes a placeholder-resolved copy of the text (`[OBJECTION WINDOW]` →
+the tenant's actual window length, `[CONTACT]` →
+`Tenant.objection_contact_email` — `privacy_contact_email` if the tenant
+set one, else the account email; the only two placeholders the drafting
+prompt permits), and sends it to every confirmed, active subscriber.
+
+**A notice can never be released without the caller having first loaded
+the exact current draft.** The notice page embeds
+`notice_preview_token(event.notice_body)` (a SHA-256 of the draft as
+rendered) in a hidden field; `release_notice` refuses — with no field
+touched, nothing sent — unless the submitted token still matches the
+current draft's. This is what makes "the reviewer saw the final text and
+recipient count before sending" a server-enforced guarantee rather than a
+UI convention: a stale page, a race with a concurrent redraft, or a
+hand-crafted request that never loaded the page at all are all refused
+the same way. `release_notice` also refuses if the event isn't
+`approved`, or if it was already released once (`review_action` already
+set) — a notice is sent exactly once, never resent through this path (see
+the dashboard's per-recipient "Resend" action for a genuine retry to one
+address after a bounce, which reuses the already-frozen text rather than
+re-releasing).
+
+If drafting fails, nothing about the approval is affected (it already
+happened, separately) — the tenant retries release from the notice page.
+
+`reviewed_by_name`/`reviewed_by_email` are copied at release, never a
+live join to the tenant's account, since a later rename or email change
 must not rewrite what already happened. A cosmetic change auto-published
-by the classifier has no reviewer: `reviewed_by_name`/`_email`/`_at` stay
-`not_available` and `review_action` reads `auto_published_cosmetic` —
-never a placeholder name like `"system"`.
-
-Approving a material change (`app/services/approval.py::approve_change_event`)
-drafts the Article 28(2) notice if one doesn't already exist, freezes a
-placeholder-resolved copy of it (`[OBJECTION WINDOW]` → the tenant's actual
-window length, `[CONTACT]` → the tenant's own email — the only two
-placeholders the drafting prompt permits), and sends it to every
-confirmed, active subscriber in one action. If drafting fails, the
-approval itself still records (a tenant should not be stuck over a model
-outage) but nothing is released or sent — `review_action` stays
-`not_available` and the tenant can retry from the notice page.
+by the classifier has no reviewer at all: `reviewed_by_name`/`_email`/
+`_at` stay `not_available` and `review_action` reads
+`auto_published_cosmetic` — never a placeholder name like `"system"`.
 
 ### Delivery log ([NOTIFICATION])
 
@@ -384,8 +432,8 @@ never adding a tracking-related key to the send payload, checked by
 external check: that tracking is not enabled in the Resend dashboard's
 Configuration tab for our sending domain.
 
-**Redacted vs. full delivery log**: `delivery_log.csv` (default; email
-local-parts masked, e.g. `j***@acme.com`) or `delivery_log_full.csv` (real
+**Redacted vs. full delivery log**: `delivery_log_redacted.csv` (default;
+email local-parts masked, e.g. `j***@acme.com`) or `delivery_log_full.csv` (real
 addresses, gated behind an explicit checkbox and confirmation in the
 dashboard) — the variant is encoded in the filename `delivery_log_file`
 already names, not a new schema field, since a tenant's own customers'
@@ -416,6 +464,22 @@ objection overrides the "window open"/"no objection" wording regardless
 of whether the window has actually closed yet — it is the single most
 important fact this section can report.
 
+`[CONTACT]` resolves to `Tenant.privacy_contact_email` if the tenant has
+set one (Settings → "Objection contact address"), else falls back to the
+account email — `Tenant.objection_contact_email` is the one place this
+fallback is decided, so notice drafting/release/preview never each
+implement it slightly differently.
+
+### Pending-queue notification
+
+Unrelated to the above, but easy to lose track of when the old generic
+"a sub-processor changed" subscriber email went away: `mailer.
+send_review_needed`, called from `monitoring.py` whenever a change lands
+in `pending_review` (not for an auto-published cosmetic one), is a
+separate, pre-existing mechanism that tells the TENANT they have
+something to review — it was never touched by this PR and still fires on
+every pending change (`tests/test_monitoring_queue_notification.py`).
+
 ## manifest.sha256 and README.txt
 
 `[PACK CONTENTS]` makes the pack self-describing — an auditor with only
@@ -427,7 +491,9 @@ so:
 - A separate file, **`manifest.sha256`**, is added to the ZIP containing
   just the hex SHA-256 digest of `manifest.txt`'s bytes (plus a trailing
   newline).
-- **`README.txt`** (≤25 lines, plain English) orients an auditor who opens
+- **`README.txt`** (short, plain English — grows a little as PR 4 adds
+  optional files, but stays a pointer to the manifest, never a second
+  copy of it) orients an auditor who opens
   the ZIP without any TrustPages context: what each file is, how to run
   `verify.sh`, and — for a pack with no independent timestamp — that this
   isn't a failure, just something the pack predates or couldn't obtain
@@ -435,17 +501,29 @@ so:
 - **`verify.sh`** (POSIX sh, `openssl` only, no network access) ships in
   every pack — timestamped or not. It re-hashes `after.html` and compares
   against `manifest.txt`, then (only if `timestamp_status: timestamped`)
-  checks the `.tsr` token against the bundled `tsa-chain.pem` sitting next
-  to it. Output is exactly one line:
-  - `PASS - content hash matches and timestamp verified (<UTC>)` (exit 0)
+  checks the `.tsr` token against the chain file named in
+  `tsa_chain_file`, sitting next to it, passing `-no_check_time` —
+  a token issued years ago must still verify after its signing
+  certificate's own validity window has since passed; without this flag
+  every pack in this product would eventually stop verifying as its TSA's
+  certificate ages past its `notAfter` date. Output is exactly one line:
+  - `PASS - content hash matches and timestamp verified (<UTC>); TSA cert
+    notBefore=<date>; notAfter=<date>` (exit 0)
   - `FAIL - <reason>` (exit 1)
   - `NO TIMESTAMP - pack predates independent timestamping; content hash
     matches` (exit 0 — **this is not a failure**, just the honest state of
     a pack that has no independent timestamp)
-- **`after.html.sha256.tsr`** and **`tsa-chain.pem`** are added to the ZIP
-  ONLY when `timestamp_status: timestamped` — there is nothing to include
-  otherwise, and `[TIMESTAMP]`'s other four fields read `not_available`
-  precisely because these files don't exist for this pack.
+
+  Proven with a genuinely expired throwaway certificate, not just
+  asserted: `tests/test_verify_sh_expired_cert.py` issues a real RFC 3161
+  token whose signing cert's `notAfter` is one hour before the test runs,
+  confirms `openssl ts -verify` alone reports it expired, and confirms
+  `verify.sh` (and `/verify`) still report PASS.
+- **`after.html.sha256.tsr`** and the chain file named in `tsa_chain_file`
+  are added to the ZIP ONLY when `timestamp_status: timestamped` — there
+  is nothing to include otherwise, and `[TIMESTAMP]`'s other four fields
+  read `not_available` precisely because these files don't exist for this
+  pack.
 
 ## /verify
 
@@ -465,9 +543,9 @@ Hard constraints, enforced structurally, not just by convention:
   monitor vendor Y", which is a data leak this page must be structurally
   incapable of.
 - **Never trusts an uploaded CA chain** — same rule as `verify.sh` above,
-  for the same reason: only `app/static_data/tsa/*.pem` is ever consulted
-  for verification, regardless of what a `.zip` or a paired upload
-  contains.
+  for the same reason: only a chain resolved from `certs/tsa/` (via
+  `app/core/tsa_chains.py`) is ever consulted for verification, regardless
+  of what a `.zip` or a paired upload contains.
 - **Nothing uploaded is written to permanent disk or logged.** A token
   that must reach `openssl` on the filesystem goes into a
   `tempfile.TemporaryDirectory()`, deleted before the response is sent.
@@ -521,7 +599,16 @@ Their verifiability must never break:
 - **v2 draft 4 (PR 4):** `[REVIEW]`, `[NOTIFICATION]`, `[OBJECTION WINDOW]`
   filled in — no field names/order changed from draft 3. Every field this
   schema names is now real data or `not_available`; none is left waiting
-  on a future PR.
+  on a future PR. Review fixes on this same draft, still no field
+  names/order changed: approve and release-notice split into two
+  separate actions (see "Reviewer identity" above); `delivery_log_file`'s
+  redacted variant renamed `delivery_log_redacted.csv` (was
+  `delivery_log.csv`); `tsa_chain_file`'s value is now authority-keyed
+  (`freetsa.org.pem`, was the fixed literal `tsa-chain.pem`) and
+  `verify.sh`/`/verify` pass `-no_check_time`; `[CONTACT]` now resolves to
+  `Tenant.objection_contact_email` (`privacy_contact_email`, new,
+  falling back to the account email) rather than the account email
+  directly.
 - **v2 draft 3 (PR 3):** `[TIMESTAMP]` filled in — `timestamp_status`,
   `tsa_token_file`, `tsa_authority_url`, `tsa_time_utc`, `tsa_chain_file`.
   No field names/order changed from draft 2 — only what was previously an

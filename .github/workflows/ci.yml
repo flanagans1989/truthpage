@@ -15,5 +15,19 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: uv sync --dev
+      - name: Check for a single alembic head
+        # A migration branch point (two files claiming a different
+        # revision off the same down_revision, or a renumbering that
+        # collides with an existing one) breaks `alembic upgrade head`
+        # silently until someone actually runs it against a real
+        # database — this catches it in CI instead. See the fix in
+        # PR flanagans1989/truthpage#9 for the exact failure mode.
+        run: |
+          heads=$(uv run alembic heads | wc -l)
+          if [ "$heads" -ne 1 ]; then
+            echo "::error::alembic has $heads heads, expected exactly 1 — run 'uv run alembic heads' locally"
+            uv run alembic heads
+            exit 1
+          fi
       - name: Run tests
         run: uv run pytest -q

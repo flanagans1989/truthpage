@@ -1,15 +1,22 @@
 import uuid
 from datetime import date, datetime, timedelta
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, Uuid
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.db.models.change_event import _TIMESTAMP_STATUS_VALUES
 from app.db.models.mixins import TimestampMixin
 
 
 class Subprocessor(TimestampMixin, Base):
     __tablename__ = "subprocessors"
+    __table_args__ = (
+        CheckConstraint(
+            f"baseline_timestamp_status IN {_TIMESTAMP_STATUS_VALUES}",
+            name="ck_subprocessors_baseline_timestamp_status",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[uuid.UUID] = mapped_column(
@@ -67,6 +74,27 @@ class Subprocessor(TimestampMixin, Base):
     # failure streak, a long budget deferral, a dead worker, anything) — the
     # only question it asks is "was this source actually looked at recently".
     staleness_alert_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # RFC 3161 timestamping for this source's very FIRST captured snapshot
+    # — the one taken on first check, before there is anything to diff
+    # against (see monitoring.py's "First check" branch), so it never
+    # becomes a change_event and would otherwise never be timestamp-
+    # eligible at all. Mirrors ChangeEvent's TSA columns exactly, same
+    # KURAL 0: every EXISTING row defaults to the terminal
+    # not_available_pre_tsa (server_default) — a baseline captured before
+    # this feature shipped is never backdated. baseline_raw_html_hash is a
+    # frozen copy of the hash actually offered for stamping —
+    # last_raw_html_hash above keeps moving with every later check, so the
+    # baseline's own digest has to be pinned separately.
+    baseline_raw_html_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    baseline_timestamp_status: Mapped[str] = mapped_column(
+        String(30), nullable=False, default="not_available_pre_tsa", server_default="not_available_pre_tsa"
+    )
+    baseline_tsa_token: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    baseline_tsa_authority_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    baseline_tsa_time_utc: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    baseline_tsa_attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    baseline_tsa_last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     tenant: Mapped["Tenant"] = relationship(  # noqa: F821
         "Tenant",

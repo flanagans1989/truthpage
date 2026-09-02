@@ -18,8 +18,13 @@ from app.db.models.objection import Objection
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
-from app.core.llm.notice import ArticleNoticeDrafter
-from app.services.approval import approve_change_event, reject_change_event
+from app.core.llm.notice import ArticleNoticeDrafter, notice_preview_token
+from app.services.approval import (
+    approve_change_event,
+    confirmed_recipients,
+    reject_change_event,
+    release_notice,
+)
 from app.services.evidence import evidence_csv, evidence_zip
 from app.services.mailer import mailer
 from app.services.notifications import compute_objection_status, derive_recipient_status
@@ -91,9 +96,14 @@ async def approve_event(
     request: Request,
     event_id: UUID,
     tenant: CurrentTenant,
-    reviewer_name: str = Form(...),
     db: AsyncSession = Depends(get_db_session),
 ):
+    """Records the decision only. Releasing the customer notice — reading
+    its final text and the recipient count, then explicitly sending it —
+    happens separately on the notice page (see notice_draft/send_notice_route
+    below); attaching a reviewer's name to text they have not yet seen
+    would make that attribution meaningless.
+    """
     ownership = await db.execute(
         select(ChangeEvent)
         .join(ChangeEvent.subprocessor)
@@ -102,23 +112,10 @@ async def approve_event(
     if ownership.scalar_one_or_none() is None:
         raise HTTPException(status_code=404)
 
-    reviewer_name = reviewer_name.strip()
-    if not reviewer_name:
-        raise HTTPException(status_code=422, detail="Your name is required to approve and release a notice.")
-
-    # reviewer_email always comes from the authenticated session, never
-    # from client input — a name can be typed by anyone at the keyboard,
-    # but the identity behind it is whoever is actually signed in.
-    error = await approve_change_event(
-        event_id,
-        approved_by_user=tenant.slug,
-        reviewer_name=reviewer_name,
-        reviewer_email=tenant.email or "",
-        session=db,
-    )
-    logger.info("Queue: event %s approved by tenant %s (reviewer=%s)", event_id, tenant.slug, reviewer_name)
+    await approve_change_event(event_id, approved_by_user=tenant.slug, session=db)
+    logger.info("Queue: event %s approved by tenant %s", event_id, tenant.slug)
     return _templates.TemplateResponse(
-        request, "partials/change_event_done.html", {"action": "approved", "error": error}
+        request, "partials/change_event_done.html", {"action": "approved"}
     )
 
 
@@ -478,10 +475,75 @@ async def notice_draft(
             # send it. An empty page with an error is the honest outcome.
             error = "The draft could not be generated. Try again in a moment."
 
+    preview_recipients: list | None = None
+    preview_token: str | None = None
+    if event.notice_body is not None:
+        preview_recipients = await confirmed_recipients(event.subprocessor.tenant_id, db)
+        preview_token = notice_preview_token(event.notice_body)
+
     return _templates.TemplateResponse(
         request,
         "notice.html",
-        {"tenant": tenant, "event": event, "error": error, "upgrade_required": False},
+        {
+            "tenant": tenant,
+            "event": event,
+            "error": error,
+            "upgrade_required": False,
+            "preview_recipient_count": len(preview_recipients) if preview_recipients is not None else None,
+            "preview_token": preview_token,
+            # A notice can be released only for an approved event that
+            # hasn't already had its notice sent — see release_notice's
+            # own guards, which this mirrors so the button is never shown
+            # for a request the backend would refuse anyway.
+            "can_release": event.status == "approved" and event.review_action is None,
+        },
+    )
+
+
+@router.post("/dashboard/events/{event_id}/notice/send", response_class=HTMLResponse)
+async def send_notice_route(
+    request: Request,
+    event_id: UUID,
+    tenant: CurrentTenant,
+    reviewer_name: str = Form(...),
+    notice_body_token: str = Form(...),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """The explicit "send" action — only reachable after loading the
+    notice page, which is where notice_body_token (a hash of the exact
+    text currently drafted) comes from. See release_notice's docstring
+    for why this, not the button existing, is what actually enforces
+    "seen the final text before sending".
+    """
+    event = await _event_for_tenant(event_id, tenant, db)
+
+    reviewer_name = reviewer_name.strip()
+    if not reviewer_name:
+        raise HTTPException(status_code=422, detail="Your name is required to release the notice.")
+
+    error = await release_notice(
+        event_id,
+        reviewer_name=reviewer_name,
+        reviewer_email=tenant.email or "",
+        notice_body_preview_token=notice_body_token,
+        session=db,
+    )
+    logger.info("Notice release requested for event %s by tenant %s: error=%s", event_id, tenant.slug, error)
+
+    event = await _event_for_tenant(event_id, tenant, db)
+    preview_recipients = await confirmed_recipients(event.subprocessor.tenant_id, db)
+    return _templates.TemplateResponse(
+        request,
+        "notice.html",
+        {
+            "tenant": tenant,
+            "event": event,
+            "error": error,
+            "upgrade_required": False,
+            "preview_recipient_count": len(preview_recipients),
+            "preview_token": notice_preview_token(event.notice_body) if event.notice_body else None,
+            "can_release": event.status == "approved" and event.review_action is None,
+        },
     )
 
 
@@ -531,4 +593,26 @@ async def set_objection_window(
     logger.info("Objection window setting: tenant %s -> %d days", tenant.slug, objection_window_days)
     return _templates.TemplateResponse(
         request, "partials/objection_window_setting.html", {"tenant": tenant}
+    )
+
+
+@router.post("/dashboard/settings/privacy-contact-email", response_class=HTMLResponse)
+async def set_privacy_contact_email(
+    request: Request,
+    tenant: CurrentTenant,
+    privacy_contact_email: str = Form(""),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Where [CONTACT] in a released notice points. Blank clears the
+    override (falls back to the account email again — Tenant.
+    objection_contact_email handles that, nothing to backfill here)."""
+    value = privacy_contact_email.strip()
+    if value and "@" not in value:
+        raise HTTPException(status_code=422, detail="That doesn't look like an email address.")
+
+    tenant.privacy_contact_email = value or None
+    await db.commit()
+    logger.info("Privacy contact email setting: tenant %s -> %s", tenant.slug, value or "(cleared)")
+    return _templates.TemplateResponse(
+        request, "partials/privacy_contact_setting.html", {"tenant": tenant}
     )

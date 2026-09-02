@@ -86,6 +86,13 @@
                     <dd class="text-slate-900 font-medium">{{ result.tsa_time_utc }}</dd>
                 </div>
                 {% endif %}
+                {% if result.tsa_cert_window %}
+                <div class="sm:col-span-2">
+                    <dt class="text-slate-400 text-xs mb-0.5">TSA certificate validity window</dt>
+                    <dd class="text-slate-900 font-medium">{{ result.tsa_cert_window }}</dd>
+                    <dd class="text-slate-400 text-xs mt-0.5">The token is still valid even after this window closes — see /verify's notes.</dd>
+                </div>
+                {% endif %}
             </dl>
         </div>
         {% endif %}

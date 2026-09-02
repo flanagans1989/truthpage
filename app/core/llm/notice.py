@@ -7,6 +7,7 @@ must fail loudly rather than return filler. The tenant is about to send this
 text to their customers.
 """
 import asyncio
+import hashlib
 import json
 import logging
 
@@ -75,6 +76,17 @@ def build_prompt(
             "```",
         ]
     )
+
+
+def notice_preview_token(body: str) -> str:
+    """A stand-in for "the reviewer actually saw this exact text" — the
+    notice-release page embeds this in a hidden field, and release_notice
+    refuses to send unless the submitted token still matches
+    notice_preview_token(current notice_body). A stale page (or a request
+    that skipped loading the page at all) fails this check instead of
+    silently sending whatever text happens to be in the database now.
+    """
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()
 
 
 def resolve_notice_placeholders(

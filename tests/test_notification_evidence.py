@@ -1,5 +1,5 @@
 """app/services/evidence.py's [REVIEW]/[NOTIFICATION]/[OBJECTION WINDOW]
-sections, notice.txt/delivery_log.csv in the ZIP, and the redacted/full
+sections, notice.txt/delivery_log_redacted.csv in the ZIP, and the redacted/full
 delivery-log variant — the PR 4 half of the manifest schema frozen in
 docs/manifest_v2.md. Uses the same SimpleNamespace fixture style as
 test_evidence_export.py (which this file complements, not replaces).
@@ -141,7 +141,7 @@ class TestNotificationSection:
         assert fields["delivered_count"] == "1"
         assert fields["bounced_count"] == "1"
         assert fields["notice_file"] == "notice.txt"
-        assert fields["delivery_log_file"] == "delivery_log.csv"
+        assert fields["delivery_log_file"] == "delivery_log_redacted.csv"
         assert fields["sent_at"] != NOT_AVAILABLE
 
     def test_no_recipients_is_not_available(self):
@@ -155,7 +155,7 @@ class TestNotificationSection:
         assert fields["recipient_count"] == NOT_AVAILABLE
         assert fields["delivered_count"] == NOT_AVAILABLE
         assert fields["delivery_log_file"] == NOT_AVAILABLE
-        assert "delivery_log.csv" not in _zip_files(evidence_zip(event, APP_URL, _tenant()))
+        assert "delivery_log_redacted.csv" not in _zip_files(evidence_zip(event, APP_URL, _tenant()))
         assert "notice.txt" not in _zip_files(evidence_zip(event, APP_URL, _tenant()))
 
     def test_notice_txt_contains_the_frozen_text_not_the_editable_draft(self):
@@ -168,9 +168,9 @@ class TestNotificationSection:
 class TestDeliveryLogVariant:
     def test_redacted_is_the_default_and_masks_addresses(self):
         files = _zip_files(evidence_zip(_base_event(), APP_URL, _tenant()))
-        assert "delivery_log.csv" in files
+        assert "delivery_log_redacted.csv" in files
         assert "delivery_log_full.csv" not in files
-        rows = list(csv_module.reader(StringIO(files["delivery_log.csv"])))
+        rows = list(csv_module.reader(StringIO(files["delivery_log_redacted.csv"])))
         emails = [row[0] for row in rows[1:]]
         assert all("@" in e and not e.startswith("sub1") for e in emails)
         assert any(e.startswith("s***@") for e in emails)
@@ -178,7 +178,7 @@ class TestDeliveryLogVariant:
     def test_full_variant_uses_a_different_filename_and_real_addresses(self):
         files = _zip_files(evidence_zip(_base_event(), APP_URL, _tenant(), delivery_variant="full"))
         assert "delivery_log_full.csv" in files
-        assert "delivery_log.csv" not in files
+        assert "delivery_log_redacted.csv" not in files
         rows = list(csv_module.reader(StringIO(files["delivery_log_full.csv"])))
         emails = {row[0] for row in rows[1:]}
         assert emails == {"sub1@example.com", "sub2@example.com"}

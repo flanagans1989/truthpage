@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
-from app.core.llm.notice import ArticleNoticeDrafter, resolve_notice_placeholders
+from app.core.llm.notice import ArticleNoticeDrafter, notice_preview_token, resolve_notice_placeholders
 from app.db.models.change_event import (
     REVIEW_ACTION_NOTICE_RELEASED,
     ChangeEvent,
@@ -29,17 +29,78 @@ _notice_drafter = ArticleNoticeDrafter()
 async def approve_change_event(
     change_event_id: UUID,
     approved_by_user: str,
+    session: AsyncSession,
+) -> None:
+    """Records the decision that this change is real and should be
+    published — nothing more. Releasing and sending its customer notice is
+    a separate, later, explicit act (see release_notice below): approving
+    a change is not the same claim as "a human read the final notice text
+    and the recipient count, and chose to send it".
+    """
+    result = await session.execute(
+        select(ChangeEvent)
+        .where(ChangeEvent.id == change_event_id)
+    )
+    event: ChangeEvent | None = result.scalar_one_or_none()
+
+    if event is None:
+        logger.warning("approve_change_event: ChangeEvent %s not found", change_event_id)
+        return
+
+    if event.status in _TERMINAL_STATUSES:
+        logger.info(
+            "approve_change_event: ChangeEvent %s already in terminal status '%s', skipping",
+            change_event_id,
+            event.status,
+        )
+        return
+
+    now = utc_now()
+    event.status = ChangeStatus.approved.value
+    event.approved_by = approved_by_user
+    event.approved_at = now
+
+    await session.commit()
+    logger.info("approve_change_event: ChangeEvent %s approved by '%s'", change_event_id, approved_by_user)
+
+
+async def confirmed_recipients(tenant_id, session: AsyncSession) -> list[tuple[str, str]]:
+    """(email, unsubscribe_url) for every confirmed, active subscriber of
+    a tenant — the same query release_notice actually sends to, so a
+    preview showing "this will reach N people" is never a different query
+    than the one that fires."""
+    sub_result = await session.execute(
+        select(Subscriber.email, Subscriber.unsubscribe_token).where(
+            Subscriber.tenant_id == tenant_id,
+            Subscriber.confirmed == True,  # noqa: E712
+            Subscriber.is_active == True,  # noqa: E712
+        )
+    )
+    return [
+        (row[0], f"{settings.APP_URL}/trust/unsubscribe?token={row[1]}")
+        for row in sub_result.all()
+    ]
+
+
+async def release_notice(
+    change_event_id: UUID,
     reviewer_name: str,
     reviewer_email: str,
+    notice_body_preview_token: str,
     session: AsyncSession,
 ) -> str | None:
-    """Approves a material change and, in the same action, releases and
-    sends its Article 28(2) notice — see docs/manifest_v2.md's [REVIEW]/
-    [NOTIFICATION]/[OBJECTION WINDOW] sections for what this freezes and
-    why. Returns an error string if the notice couldn't be drafted (the
-    approval itself still goes through — a tenant should not be stuck
-    unable to record a decision because a model call failed; they can
-    retry from /dashboard/events/{id}/notice, which the queue links to).
+    """The explicit, separate "send" action — freezes the notice, records
+    who released it, and sends it to every confirmed active subscriber.
+    Returns an error string (not raised) if it couldn't proceed; None on
+    success.
+
+    `notice_body_preview_token` must equal notice_preview_token(event.
+    notice_body) at the moment this is called — the hash of the EXACT
+    text the reviewer's page rendered. This is what makes "you cannot send
+    without having seen the final text" a real, server-enforced guarantee
+    rather than a UI convention: a stale page (or a hand-crafted request
+    that never loaded the current draft) is refused, not silently sent
+    against whatever text happens to be in the database right now.
     """
     result = await session.execute(
         select(ChangeEvent)
@@ -51,74 +112,34 @@ async def approve_change_event(
     event: ChangeEvent | None = result.scalar_one_or_none()
 
     if event is None:
-        logger.warning("approve_change_event: ChangeEvent %s not found", change_event_id)
-        return None
-
-    if event.status in _TERMINAL_STATUSES:
-        logger.info(
-            "approve_change_event: ChangeEvent %s already in terminal status '%s', skipping",
-            change_event_id,
-            event.status,
+        return "This change no longer exists."
+    if event.status != ChangeStatus.approved.value:
+        return "Approve this change before releasing its notice."
+    if event.review_action is not None:
+        return "This notice has already been released — it cannot be sent again."
+    if event.notice_body is None:
+        return "Draft the notice before releasing it."
+    if notice_preview_token(event.notice_body) != notice_body_preview_token:
+        return (
+            "The notice text has changed since you loaded this page — "
+            "reload it and try again."
         )
-        return None
 
     now = utc_now()
-    event.status = ChangeStatus.approved.value
-    event.approved_by = approved_by_user
-    event.approved_at = now
-    event.reviewed_by_name = reviewer_name
-    event.reviewed_by_email = reviewer_email
-    event.reviewed_at = now
-
-    # NOTE: subprocessor.last_content_hash is already advanced by the
-    # monitoring cycle at detection time. Re-writing it here from an older
-    # event would roll the baseline backwards and re-trigger the same diff.
     subprocessor = event.subprocessor
     tenant = subprocessor.tenant
 
-    if event.notice_body is None:
-        try:
-            draft = await _notice_drafter.draft(
-                company=tenant.name,
-                vendor=subprocessor.name,
-                vendor_url=subprocessor.monitored_url,
-                detected_on=event.created_at.strftime("%d %B %Y"),
-                summary=event.llm_summary or "A change was detected on the vendor's page.",
-                raw_diff=event.raw_diff[:12_000],
-            )
-            event.notice_subject = draft.subject
-            event.notice_body = draft.body
-        except Exception:
-            logger.exception(
-                "approve_change_event: notice draft failed for %s — approval recorded, "
-                "no notice released",
-                change_event_id,
-            )
-            await session.commit()
-            return (
-                "Approved, but the customer notice could not be drafted — no notice was "
-                "sent. Draft and release it from the notice page."
-            )
+    recipients = await confirmed_recipients(subprocessor.tenant_id, session)
 
-    # Collect active confirmed subscribers before committing (session still open)
-    sub_result = await session.execute(
-        select(Subscriber.email, Subscriber.unsubscribe_token).where(
-            Subscriber.tenant_id == subprocessor.tenant_id,
-            Subscriber.confirmed == True,  # noqa: E712
-            Subscriber.is_active == True,  # noqa: E712
-        )
-    )
-    recipients: list[tuple[str, str]] = [
-        (row[0], f"{settings.APP_URL}/trust/unsubscribe?token={row[1]}")
-        for row in sub_result.all()
-    ]
-
+    event.reviewed_by_name = reviewer_name
+    event.reviewed_by_email = reviewer_email
+    event.reviewed_at = now
     event.review_action = REVIEW_ACTION_NOTICE_RELEASED
     resolved_subject, resolved_body = resolve_notice_placeholders(
         subject=event.notice_subject,
         body=event.notice_body,
         window_days=tenant.objection_window_days,
-        contact_email=tenant.email or "",
+        contact_email=tenant.objection_contact_email,
     )
     event.notice_frozen_subject = resolved_subject
     event.notice_frozen_body = resolved_body
@@ -135,17 +156,15 @@ async def approve_change_event(
 
     await session.commit()
     logger.info(
-        "approve_change_event: ChangeEvent %s approved by '%s', reviewed by %s",
-        change_event_id,
-        approved_by_user,
-        reviewer_email,
+        "release_notice: ChangeEvent %s released by %s (%d recipient(s))",
+        change_event_id, reviewer_email, len(recipients),
     )
 
     if recipients:
         send_results = await mailer.send_notice(
             recipients=recipients,
             tenant_name=tenant.name,
-            reply_to=tenant.email or "",
+            reply_to=tenant.objection_contact_email,
             subject=resolved_subject,
             body=resolved_body,
         )
@@ -161,10 +180,7 @@ async def approve_change_event(
         await session.commit()
         sent = sum(1 for r in send_results if r["error"] is None)
         logger.info(
-            "approve_change_event: notice sent %d/%d for ChangeEvent %s",
-            sent,
-            len(send_results),
-            change_event_id,
+            "release_notice: notice sent %d/%d for ChangeEvent %s", sent, len(send_results), change_event_id,
         )
 
     return None

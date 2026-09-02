@@ -274,6 +274,14 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         subprocessor.last_raw_html_hash = new_raw_html_hash
         subprocessor.last_checked_at = now
         subprocessor.next_check_at = next_check
+        # This baseline is the only capture of this source that will NEVER
+        # become a change_event (nothing existed yet to diff it against) —
+        # without this, it would never be timestamp-eligible at all, and
+        # it becomes this source's first real change_event's before.html
+        # later. Frozen separately from last_raw_html_hash, which keeps
+        # moving with every later check.
+        subprocessor.baseline_raw_html_hash = new_raw_html_hash
+        subprocessor.baseline_timestamp_status = TimestampStatus.pending.value
         _reset_health(subprocessor)
         await session.commit()
         return

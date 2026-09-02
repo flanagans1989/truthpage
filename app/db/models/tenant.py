@@ -91,6 +91,16 @@ class Tenant(TimestampMixin, Base):
         Integer, nullable=False, default=30, server_default="30"
     )
 
+    # Where the [OBJECTION WINDOW] notice's [CONTACT] placeholder points —
+    # nullable so an existing tenant's behavior doesn't change until they
+    # explicitly set one; objection_contact_email (below) falls back to
+    # the account email in the meantime.
+    privacy_contact_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+
+    @property
+    def objection_contact_email(self) -> str:
+        return self.privacy_contact_email or self.email or ""
+
     @property
     def needs_onboarding(self) -> bool:
         return self.onboarded_at is None
