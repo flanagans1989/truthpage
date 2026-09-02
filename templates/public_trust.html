@@ -52,9 +52,17 @@
                             <span class="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full font-medium">
                                 <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Active
                             </span>
-                            <p class="text-xs text-slate-400 mt-1">
+                            {% set age_days = (utc_now() - sp.last_checked_at).days if sp.last_checked_at else None %}
+                            <p class="text-xs mt-1
+                                {%- if age_days is none %} text-slate-400
+                                {%- elif age_days > 14 %} text-red-600 font-medium
+                                {%- elif age_days > 7 %} text-amber-600
+                                {%- else %} text-slate-400
+                                {%- endif %}">
                                 {% if sp.last_checked_at %}
                                     Checked {{ sp.last_checked_at.strftime('%d %b %Y') }}
+                                    {%- if age_days > 14 %} — verification overdue
+                                    {%- endif %}
                                 {% else %}
                                     Pending first check
                                 {% endif %}

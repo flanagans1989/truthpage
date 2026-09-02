@@ -72,9 +72,9 @@ wait to be asked if the thread is slow):
   keeps a dated document per change rather than just the current state, and
   the Growth plan adds a downloadable, hash-verified evidence pack — the
   file an auditor actually asks for, not a screenshot.
-- *"Can it read pages that need JavaScript to render?"* — Yes, Growth plan
-  escalates to a real headless browser automatically when a page is behind
-  bot protection or client-rendered; no configuration needed.
+- *"Can it read pages that need JavaScript to render?"* — Yes, every plan
+  (Free included) escalates to a real headless browser automatically when a
+  page is behind bot protection or client-rendered; no configuration needed.
 - *"Is my data monitored, or am I setting this up to protect myself?"* —
   Both directions: you add the vendors you use (nobody publishes on your
   behalf), and separately there's a public directory of already-verified

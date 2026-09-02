@@ -36,6 +36,25 @@
                     <span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span> Paused
                 </span>
                 {% endif %}
+                {% if sp.tier2_deferred %}
+                <span title="Daily automated-browser budget used up — next attempt around {{ sp.next_check_at.strftime('%H:%M UTC') if sp.next_check_at }}."
+                      class="inline-flex items-center gap-1 text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full ml-1">
+                    <span class="w-1.5 h-1.5 bg-slate-400 rounded-full"></span> Deferred
+                </span>
+                {% endif %}
+                {% if sp.has_monitoring_alert %}
+                {% set _reason_text = {
+                    'http_error': 'an HTTP error response',
+                    'timeout': 'the request timing out',
+                    'bot_wall': 'a bot-protection challenge page',
+                    'empty_content': 'an empty or near-empty page',
+                    'browser_error': 'the headless-browser fetch failing',
+                }.get(sp.last_failure_reason) %}
+                <span title="{% if _reason_text %}Last failure: {{ _reason_text }}. {% endif %}Failed {{ sp.consecutive_failure_count }} check{{ 's' if sp.consecutive_failure_count != 1 }} in a row, or this source hasn't been successfully checked in a while — it may have moved, gone down, or started blocking automated requests."
+                      class="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full ml-1">
+                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span> Monitoring Alert
+                </span>
+                {% endif %}
             </td>
             <td class="py-3 text-right">
                 <div class="flex items-center justify-end gap-2">

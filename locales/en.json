@@ -78,7 +78,6 @@
   "pricing.growth_f2": "Cryptographic Audit Evidence Pack: a downloadable ZIP with a SHA-256 verification anchor, the raw HTML before and after, the diff and your decision trail",
   "pricing.growth_f3": "Full CSV export of your whole change history — hashes, timestamps and who approved what",
   "pricing.growth_f4": "Remove the \"Powered by TrustPages\" badge from your trust page",
-  "pricing.growth_f5": "Reliable scraping even on JS-heavy or bot-protected vendor pages — automatic headless-browser fallback, no setup",
   "pricing.growth_cta": "Start 14-day trial",
   "pricing.growth_note": "No credit card required · Cancel anytime ·",
   "pricing.growth_guarantee": "14-day money-back guarantee",
