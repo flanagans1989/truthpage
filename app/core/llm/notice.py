@@ -77,6 +77,25 @@ def build_prompt(
     )
 
 
+def resolve_notice_placeholders(
+    *, subject: str, body: str, window_days: int, contact_email: str
+) -> tuple[str, str]:
+    """Fills the two placeholders build_prompt()'s system rules permit — real
+    values, for the frozen copy that actually gets sent. The editable
+    notice_subject/notice_body a tenant sees on /notice keep the literal
+    brackets (that page is a draft for the tenant to send by hand, with its
+    own reminder to replace them); this only ever runs against a copy, once,
+    at the moment a notice is released — see ChangeEvent.notice_frozen_body.
+    """
+    resolved_subject = subject.replace("[OBJECTION WINDOW]", str(window_days)).replace(
+        "[CONTACT]", contact_email
+    )
+    resolved_body = body.replace("[OBJECTION WINDOW]", str(window_days)).replace(
+        "[CONTACT]", contact_email
+    )
+    return resolved_subject, resolved_body
+
+
 class ArticleNoticeDrafter:
     def __init__(self) -> None:
         # Sync client called through asyncio.to_thread, as in LLMDiffAnalyzer.

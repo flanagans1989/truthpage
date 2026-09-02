@@ -16,7 +16,12 @@ from app.core.scraper.detector import ChangeDetector
 from app.core.scraper.fetcher import fetch_raw_html, mark_subprocessor_requires_browser
 from app.core.scraper.hasher import ContentHasher
 from app.core.scraper.normalizer import HTMLNormalizer
-from app.db.models.change_event import ChangeEvent, ChangeStatus, TimestampStatus
+from app.db.models.change_event import (
+    REVIEW_ACTION_AUTO_PUBLISHED_COSMETIC,
+    ChangeEvent,
+    ChangeStatus,
+    TimestampStatus,
+)
 from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.services.mailer import mailer
@@ -336,6 +341,12 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         # not_available_pre_tsa — deliberately the safe state a forgetful
         # caller would fall into, never this one.
         timestamp_status=TimestampStatus.pending.value,
+        # No human reviewed a cosmetic auto-publish — reviewed_by_* stays
+        # NULL (never a placeholder name like "system"), and review_action
+        # records the observed action itself. A material event's
+        # review_action is set later, at actual approval time, by
+        # app/services/approval.py — never here.
+        review_action=REVIEW_ACTION_AUTO_PUBLISHED_COSMETIC if auto_publish else None,
     )
     session.add(change_event)
 

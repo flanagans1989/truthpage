@@ -83,6 +83,14 @@ class Tenant(TimestampMixin, Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # How many days the tenant's own DPA promises its customers to object to
+    # a sub-processor change before it takes effect — configurable, never
+    # hardcoded, because the product cannot know a tenant's contract terms.
+    # 30 is only a starting default (see settings.DEFAULT_OBJECTION_WINDOW_DAYS).
+    objection_window_days: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=30, server_default="30"
+    )
+
     @property
     def needs_onboarding(self) -> bool:
         return self.onboarded_at is None

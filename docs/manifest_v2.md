@@ -155,22 +155,22 @@ tsa_time_utc:
 tsa_chain_file:
 verification_instructions: See README.txt — run ./verify.sh offline.
 
-[REVIEW]                         # PR 4 fills this in
+[REVIEW]
 reviewed_by_name:
 reviewed_by_email:
 reviewed_at:
 review_action:                   # notice_released_by_reviewer | auto_published_cosmetic
 
-[NOTIFICATION]                   # PR 4 fills this in
+[NOTIFICATION]
 notice_frozen_at:
 notice_file:
 sent_at:
 recipient_count:
 delivered_count:
 bounced_count:
-delivery_log_file:
+delivery_log_file:               # delivery_log.csv (redacted) or delivery_log_full.csv
 
-[OBJECTION WINDOW]               # PR 4 fills this in
+[OBJECTION WINDOW]
 window_days:
 window_source:                   # e.g. "tenant configuration (default 30)"
 window_opened_at:
@@ -185,10 +185,11 @@ objection_status:                # one of the four permitted forms — see Rules
 
 ## Field notes
 
-`[SUBJECT]`, `[DETECTION]`, `[EVIDENCE]`, `[PACK CONTENTS]` (PR 2) and now
-`[TIMESTAMP]` (PR 3) are populated from real data. `[REVIEW]`,
-`[NOTIFICATION]`, and `[OBJECTION WINDOW]` stay `not_available` in every
-field until PR 4 — see that PR's description for which field it fills.
+`[SUBJECT]`, `[DETECTION]`, `[EVIDENCE]`, `[PACK CONTENTS]` (PR 2),
+`[TIMESTAMP]` (PR 3), and now `[REVIEW]`/`[NOTIFICATION]`/`[OBJECTION
+WINDOW]` (PR 4) are all populated from real data — every field this schema
+lists is real or `not_available`, never a placeholder waiting on a future
+PR.
 
 A few fields worth calling out:
 
@@ -317,6 +318,104 @@ purposes. If it were, anyone could bundle a self-signed throwaway CA next
 to a self-signed "token" and have their own upload "verify" against
 itself; the whole feature would prove nothing.
 
+## Delivery record and objection window (PR 4)
+
+### KURAL 0 for this PR — released evidence is immutable
+
+The moment a notice is released, these freeze and never change again:
+the sent notice text (`ChangeEvent.notice_frozen_subject`/
+`notice_frozen_body`, a separate copy from the editable `notice_subject`/
+`notice_body` a tenant can still redraft for their own reference), the
+reviewer's name/email/timestamp, the recipient-list size at send time
+(`recipient_count`), and the objection window's length and close date
+(`window_days`/`window_closes_at`). Enforced in code, not just documented:
+`app/db/models/change_event.py`'s `@validates` guard raises
+`FrozenNotificationFieldError` the instant anything tries to overwrite one
+of these fields with a different value (`tests/test_frozen_notification_fields.py`).
+The append-only delivery-event log (`notification_delivery_events`) is the
+same idea applied to a whole table: rows are inserted, never updated.
+
+### Reviewer identity ([REVIEW])
+
+`reviewed_by_name`/`reviewed_by_email` are copied at the moment a human
+approves a material change and releases its notice — never a live join to
+the tenant's account, since a later rename or email change on that account
+must not rewrite what already happened. A cosmetic change auto-published
+by the classifier has no reviewer: `reviewed_by_name`/`_email`/`_at` stay
+`not_available` and `review_action` reads `auto_published_cosmetic` —
+never a placeholder name like `"system"`.
+
+Approving a material change (`app/services/approval.py::approve_change_event`)
+drafts the Article 28(2) notice if one doesn't already exist, freezes a
+placeholder-resolved copy of it (`[OBJECTION WINDOW]` → the tenant's actual
+window length, `[CONTACT]` → the tenant's own email — the only two
+placeholders the drafting prompt permits), and sends it to every
+confirmed, active subscriber in one action. If drafting fails, the
+approval itself still records (a tenant should not be stuck over a model
+outage) but nothing is released or sent — `review_action` stays
+`not_available` and the tenant can retry from the notice page.
+
+### Delivery log ([NOTIFICATION])
+
+Every send attempt becomes a `notification_recipients` row (the frozen
+recipient-list snapshot — `recipient_count` is just its size). Resend's
+webhooks (`POST /webhooks/resend`, signed the same way Resend signs every
+webhook — `svix-id`/`svix-timestamp`/`svix-signature`, verified against
+`RESEND_WEBHOOK_SECRET` before anything is written, unverified requests
+get a 401 and touch no log) append `notification_delivery_events` rows,
+deduplicated on Resend's own delivery id so a retried webhook is never
+recorded twice.
+
+Current status per recipient is *derived* from that log
+(`app/services/notifications.py::derive_recipient_status`), never stored
+as a separately-updated column that could drift from it. Out-of-order
+events resolve by precedence, not by arrival time: a bounce/failure is
+sticky (a late-arriving "delivered" for the same attempt is noise, not a
+correction) unless a human marks it manually resolved, or a manual resend
+starts a fresh attempt whose own events take over. `delivered_count`/
+`bounced_count` are computed fresh at manifest-generation time from
+whatever the log says right now — never frozen, unlike the notice text
+above.
+
+Open/click tracking has no per-request field in Resend's send API (it is
+a domain-level dashboard setting, off by default) — this is enforced by
+never adding a tracking-related key to the send payload, checked by
+`tests/test_mailer.py`'s static assertion on that payload, and needs one
+external check: that tracking is not enabled in the Resend dashboard's
+Configuration tab for our sending domain.
+
+**Redacted vs. full delivery log**: `delivery_log.csv` (default; email
+local-parts masked, e.g. `j***@acme.com`) or `delivery_log_full.csv` (real
+addresses, gated behind an explicit checkbox and confirmation in the
+dashboard) — the variant is encoded in the filename `delivery_log_file`
+already names, not a new schema field, since a tenant's own customers'
+addresses are exactly the kind of thing a DPO would refuse to hand an
+auditor by default.
+
+**Bounces are a real compliance gap**, surfaced with a resend action and a
+"mark manually resolved" annotation (who, when, an optional note) — the
+manifest's `bounced_count` still counts a resolved bounce, since the
+notice genuinely never arrived through this channel; the annotation
+records how it was handled outside TrustPages, not that it didn't happen.
+
+### Objection window ([OBJECTION WINDOW])
+
+`window_days` comes from `Tenant.objection_window_days` (configurable,
+default 30 — never hardcoded, since the actual number is whatever the
+tenant's own DPA promises) at the moment the window opens, which is
+`sent_at` (the notice actually going out), not the moment of approval. No
+recipients means the window never opens: `objection_status` reads
+`not_available` with a reason shown in the dashboard, never a false
+"no objection recorded" for a notice that was never sent.
+
+Manually-recorded objections (`Objection` — arriving by email or phone in
+real life, never through this product) always carry who objected
+(free text) and, separately, who entered the record (`recorded_by_email`,
+the authenticated tenant identity, never client-supplied). A recorded
+objection overrides the "window open"/"no objection" wording regardless
+of whether the window has actually closed yet — it is the single most
+important fact this section can report.
+
 ## manifest.sha256 and README.txt
 
 `[PACK CONTENTS]` makes the pack self-describing — an auditor with only
@@ -419,6 +518,10 @@ Their verifiability must never break:
 
 ## Changelog (pre-deploy only — see the frozen-schema note at the top)
 
+- **v2 draft 4 (PR 4):** `[REVIEW]`, `[NOTIFICATION]`, `[OBJECTION WINDOW]`
+  filled in — no field names/order changed from draft 3. Every field this
+  schema names is now real data or `not_available`; none is left waiting
+  on a future PR.
 - **v2 draft 3 (PR 3):** `[TIMESTAMP]` filled in — `timestamp_status`,
   `tsa_token_file`, `tsa_authority_url`, `tsa_time_utc`, `tsa_chain_file`.
   No field names/order changed from draft 2 — only what was previously an

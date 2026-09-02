@@ -181,13 +181,20 @@
                                 class="text-xs font-medium px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition">
                                 Reject
                             </button>
-                            <button
+                            <form
                                 hx-post="/dashboard/queue/{{ event.id }}/approve"
                                 hx-target="#event-{{ event.id }}"
                                 hx-swap="outerHTML"
-                                class="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition">
-                                Approve
-                            </button>
+                                hx-confirm="Approve this change and release its customer notice to active subscribers now?"
+                                class="flex items-center gap-1.5">
+                                <input type="text" name="reviewer_name" required placeholder="Your name"
+                                       title="Recorded as the reviewer of record — this cannot be changed later."
+                                       class="text-xs px-2 py-1.5 rounded-lg border border-slate-300 w-28 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                <button type="submit"
+                                        class="text-xs font-medium px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition whitespace-nowrap">
+                                    Approve &amp; notify
+                                </button>
+                            </form>
                         </div>
                     </div>
 

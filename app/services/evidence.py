@@ -18,8 +18,10 @@ import hashlib
 import re
 import zipfile
 
+from app.core.config import settings
 from app.core.llm.analyzer import _MODEL as _CLASSIFIER_MODEL
 from app.db.models.mixins import utc_now
+from app.services.notifications import compute_objection_status, derive_recipient_status, summarize_recipients
 
 # FreeTSA's CA chain (root + signing cert) — checked into the repo, not
 # fetched at runtime, so a ZIP is buildable offline and this file's content
@@ -215,7 +217,81 @@ def _timestamp_section_lines(event: Any) -> list[str]:
     return lines
 
 
-def _render_manifest_v2(event: Any, app_url: str, tenant: Any, pack_files: dict[str, str]) -> str:
+def notice_filename() -> str:
+    return "notice.txt"
+
+
+def delivery_log_filename(variant: str) -> str:
+    """delivery_log.csv (redacted, the default) or delivery_log_full.csv —
+    the variant is encoded in the filename itself rather than as a new
+    manifest field, since [NOTIFICATION]'s delivery_log_file already names
+    whichever file is actually in the pack (see docs/manifest_v2.md's
+    frozen schema — this PR does not add a field to it)."""
+    return "delivery_log.csv" if variant == "redacted" else "delivery_log_full.csv"
+
+
+def _review_section_lines(event: Any) -> list[str]:
+    return [
+        f"reviewed_by_name: {_na(getattr(event, 'reviewed_by_name', None))}",
+        f"reviewed_by_email: {_na(getattr(event, 'reviewed_by_email', None))}",
+        f"reviewed_at: {iso_utc(getattr(event, 'reviewed_at', None)) or NOT_AVAILABLE}",
+        f"review_action: {validate_review_action(getattr(event, 'review_action', None) or NOT_AVAILABLE)}",
+    ]
+
+
+def _notification_section_lines(event: Any, delivery_variant: str) -> list[str]:
+    recipient_count = getattr(event, "recipient_count", None)
+    if not recipient_count:
+        return [
+            f"notice_frozen_at: {NOT_AVAILABLE}",
+            f"notice_file: {NOT_AVAILABLE}",
+            f"sent_at: {NOT_AVAILABLE}",
+            f"recipient_count: {NOT_AVAILABLE}",
+            f"delivered_count: {NOT_AVAILABLE}",
+            f"bounced_count: {NOT_AVAILABLE}",
+            f"delivery_log_file: {NOT_AVAILABLE}",
+        ]
+    recipients = getattr(event, "notification_recipients", None) or []
+    counts = summarize_recipients(recipients)
+    return [
+        f"notice_frozen_at: {iso_utc(getattr(event, 'notice_frozen_at', None)) or NOT_AVAILABLE}",
+        f"notice_file: {notice_filename()}",
+        f"sent_at: {iso_utc(getattr(event, 'notified_at', None)) or NOT_AVAILABLE}",
+        f"recipient_count: {recipient_count}",
+        f"delivered_count: {counts['delivered_count']}",
+        f"bounced_count: {counts['bounced_count']}",
+        f"delivery_log_file: {delivery_log_filename(delivery_variant)}",
+    ]
+
+
+def _objection_window_section_lines(event: Any) -> list[str]:
+    window_days = getattr(event, "window_days", None)
+    if window_days is None:
+        return [
+            f"window_days: {NOT_AVAILABLE}",
+            f"window_source: {NOT_AVAILABLE}",
+            f"window_opened_at: {NOT_AVAILABLE}",
+            f"window_closes_at: {NOT_AVAILABLE}",
+            f"objection_status: {validate_objection_status(compute_objection_status(event))}",
+        ]
+    default_days = settings.DEFAULT_OBJECTION_WINDOW_DAYS
+    source = (
+        f"tenant configuration (default {default_days})"
+        if window_days == default_days
+        else f"tenant configuration ({window_days} days, default {default_days})"
+    )
+    return [
+        f"window_days: {window_days}",
+        f"window_source: {source}",
+        f"window_opened_at: {iso_utc(getattr(event, 'notified_at', None)) or NOT_AVAILABLE}",
+        f"window_closes_at: {iso_utc(getattr(event, 'window_closes_at', None)) or NOT_AVAILABLE}",
+        f"objection_status: {validate_objection_status(compute_objection_status(event))}",
+    ]
+
+
+def _render_manifest_v2(
+    event: Any, app_url: str, tenant: Any, pack_files: dict[str, str], delivery_variant: str = "redacted"
+) -> str:
     """Builds manifest.txt per docs/manifest_v2.md. Every field the schema
     lists is always present — a value TrustPages cannot supply today is
     `not_available`, literally, never omitted and never guessed at.
@@ -288,26 +364,13 @@ def _render_manifest_v2(event: Any, app_url: str, tenant: Any, pack_files: dict[
         "verification_instructions: See README.txt — run ./verify.sh offline.",
         "",
         "[REVIEW]",
-        f"reviewed_by_name: {NOT_AVAILABLE}",
-        f"reviewed_by_email: {NOT_AVAILABLE}",
-        f"reviewed_at: {NOT_AVAILABLE}",
-        f"review_action: {validate_review_action(NOT_AVAILABLE)}",
+        *_review_section_lines(event),
         "",
         "[NOTIFICATION]",
-        f"notice_frozen_at: {NOT_AVAILABLE}",
-        f"notice_file: {NOT_AVAILABLE}",
-        f"sent_at: {NOT_AVAILABLE}",
-        f"recipient_count: {NOT_AVAILABLE}",
-        f"delivered_count: {NOT_AVAILABLE}",
-        f"bounced_count: {NOT_AVAILABLE}",
-        f"delivery_log_file: {NOT_AVAILABLE}",
+        *_notification_section_lines(event, delivery_variant),
         "",
         "[OBJECTION WINDOW]",
-        f"window_days: {NOT_AVAILABLE}",
-        f"window_source: {NOT_AVAILABLE}",
-        f"window_opened_at: {NOT_AVAILABLE}",
-        f"window_closes_at: {NOT_AVAILABLE}",
-        f"objection_status: {validate_objection_status(NOT_AVAILABLE)}",
+        *_objection_window_section_lines(event),
         "",
         "[PACK CONTENTS]",
     ]
@@ -417,7 +480,57 @@ fi
 """
 
 
-def evidence_zip(event: Any, app_url: str, tenant: Any) -> bytes:
+def _redact_email(email: str) -> str:
+    """j***@acme.com — the address's domain is kept (an auditor needs to
+    see which organizations were notified) but the local part is reduced
+    to its first character, so the redacted variant never actually
+    identifies a person by their address alone."""
+    local, _, domain = email.partition("@")
+    if not domain:
+        return "***"
+    return f"{local[:1]}***@{domain}"
+
+
+_DELIVERY_LOG_COLUMNS = (
+    "recipient",
+    "status",
+    "last_event_at_utc",
+    "resend_message_id",
+    "manually_resolved",
+    "resolution_note",
+)
+
+
+def _delivery_log_row(recipient: Any, variant: str) -> list[str]:
+    status = derive_recipient_status(recipient)
+    events = sorted(recipient.delivery_events, key=lambda e: e.occurred_at)
+    last_event_at = iso_utc(events[-1].occurred_at) if events else ""
+    email = recipient.recipient_email if variant == "full" else _redact_email(recipient.recipient_email)
+    return [
+        email,
+        status,
+        last_event_at,
+        recipient.resend_message_id or "",
+        "yes" if recipient.manually_resolved_at else "no",
+        recipient.manually_resolved_note or "",
+    ]
+
+
+def delivery_log_csv(recipients: Iterable[Any], variant: str) -> str:
+    """delivery_log.csv (variant='redacted') or delivery_log_full.csv
+    (variant='full') — see delivery_log_filename() and PR 4's section 3:
+    a tenant hands this pack to a DPO or an enterprise customer's security
+    review, and a file full of their own customers' raw email addresses is
+    a liability few would sign off on by default."""
+    buffer = StringIO()
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerow(_DELIVERY_LOG_COLUMNS)
+    for recipient in recipients:
+        writer.writerow(_delivery_log_row(recipient, variant))
+    return buffer.getvalue()
+
+
+def evidence_zip(event: Any, app_url: str, tenant: Any, delivery_variant: str = "redacted") -> bytes:
     """One detected change as a self-contained ZIP: the documents on both
     sides of it, the diff, a manifest describing all of it, and — once
     stamped — an independent RFC 3161 timestamp token. manifest.txt follows
@@ -449,9 +562,18 @@ def evidence_zip(event: Any, app_url: str, tenant: Any) -> bytes:
             pack_files[tsa_token_filename()] = tsa_token
             pack_files["tsa-chain.pem"] = _TSA_CHAIN_PATH.read_bytes()
 
+    if getattr(event, "notice_frozen_body", None):
+        pack_files[notice_filename()] = (
+            f"Subject: {event.notice_frozen_subject}\n\n{event.notice_frozen_body}\n"
+        )
+
+    if getattr(event, "recipient_count", None):
+        recipients = getattr(event, "notification_recipients", None) or []
+        pack_files[delivery_log_filename(delivery_variant)] = delivery_log_csv(recipients, delivery_variant)
+
     pack_hashes = {name: _sha256(content) for name, content in pack_files.items()}
 
-    manifest_text = _render_manifest_v2(event, app_url, tenant, pack_hashes)
+    manifest_text = _render_manifest_v2(event, app_url, tenant, pack_hashes, delivery_variant)
     manifest_sha256 = _sha256(manifest_text)
 
     buffer = BytesIO()
