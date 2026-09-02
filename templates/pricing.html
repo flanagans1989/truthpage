@@ -1,95 +1,86 @@
 {% extends "base.html" %}
-{% block title %}Pricing — TrustPages{% endblock %}
-{% block meta_description %}TrustPages pricing: a permanent free plan for 3 vendor pages, or Growth at $99/month for 25. Keep a dated, auditable record of every change your vendors make to their sub-processor lists, and publish it on a trust page your customers can subscribe to.{% endblock %}
+{% block title %}{{ t('pricing.meta_title') }}{% endblock %}
+{% block meta_description %}{{ t('pricing.meta_description') }}{% endblock %}
 {% block content %}
 <div class="min-h-screen flex flex-col">
-    <header class="border-b border-slate-200 bg-white">
-        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-            <a href="/" class="text-blue-600 font-bold text-xl">TrustPages</a>
-            <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">Sign in</a>
-        </div>
-    </header>
+    {% include "_header.html" %}
 
     <main class="flex-1 max-w-5xl mx-auto px-6 py-16 w-full">
-        <h1 class="text-3xl font-bold text-slate-900 text-center mb-3">Start free. Pay when the list gets long.</h1>
-        <p class="text-slate-600 text-center mb-12">Checking your vendors' sub-processor pages by hand is somebody's recurring afternoon. This does it every day and leaves a record you can hand to an auditor.</p>
+        <h1 class="text-3xl font-bold text-slate-900 text-center mb-3">{{ t('pricing.h1') }}</h1>
+        <p class="text-slate-600 text-center mb-12">{{ t('pricing.sub') }}</p>
 
         <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
 
             <div class="bg-white rounded-2xl border border-slate-200 p-8">
-                <h2 class="font-semibold text-slate-900 text-lg mb-1">Free</h2>
-                <p class="mb-6"><span class="text-4xl font-bold text-slate-900">$0</span><span class="text-slate-500"> / month, permanently</span></p>
+                <h2 class="font-semibold text-slate-900 text-lg mb-1">{{ t('pricing.free_name') }}</h2>
+                <p class="mb-6"><span class="text-4xl font-bold text-slate-900">$0</span><span class="text-slate-500"> {{ t('pricing.free_unit') }}</span></p>
                 <ul class="space-y-3 text-sm text-slate-600 mb-8">
-                    <li>✓ Track 3 vendor sub-processor pages</li>
-                    <li>✓ Checked daily, same monitoring as Growth</li>
-                    <li>✓ Dated evidence and CSV export</li>
-                    <li>✓ A public trust page your customers can subscribe to</li>
-                    <li class="text-slate-400">— No card, no expiry</li>
+                    <li>✓ {{ t('pricing.free_f1') }}</li>
+                    <li>✓ {{ t('pricing.free_f2') }}</li>
+                    <li>✓ {{ t('pricing.free_f3') }}</li>
+                    <li>✓ {{ t('pricing.free_f4') }}</li>
+                    <li class="text-slate-400">— {{ t('pricing.free_f5') }}</li>
                 </ul>
-                <a href="/auth/login" class="block text-center border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold py-3 rounded-lg text-sm">Start free</a>
-                <p class="text-xs text-slate-500 text-center mt-3">New accounts get 14 days of Growth first, then settle here.</p>
+                <a href="/auth/login" class="block text-center border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold py-3 rounded-lg text-sm">{{ t('pricing.free_cta') }}</a>
+                <p class="text-xs text-slate-500 text-center mt-3">{{ t('pricing.free_after') }}</p>
             </div>
 
             <div class="bg-white rounded-2xl border-2 border-blue-500 shadow-sm p-8">
-                <h2 class="font-semibold text-slate-900 text-lg mb-1">Growth</h2>
-                <p class="mb-6"><span class="text-4xl font-bold text-slate-900">$99</span><span class="text-slate-500"> / month</span></p>
+                <h2 class="font-semibold text-slate-900 text-lg mb-1">{{ t('pricing.growth_name') }}</h2>
+                <p class="mb-6"><span class="text-4xl font-bold text-slate-900">$99</span><span class="text-slate-500"> {{ t('pricing.growth_unit') }}</span></p>
                 <ul class="space-y-3 text-sm text-slate-600 mb-8">
-                    <li>✓ Track up to 25 vendor sub-processor pages</li>
-                    <li>✓ Checked daily — you hear about a change from us, not from a customer</li>
-                    <li>✓ Dated evidence for every change: what the page said before, what it says now, when it moved</li>
-                    <li>✓ AI separates material changes from cosmetic edits, so you only review what matters</li>
-                    <li>✓ Approval queue with a side-by-side diff — nothing reaches your trust page without you</li>
-                    <li>✓ Export the whole history as CSV — hashes, timestamps and who approved what</li>
-                    <li>✓ A drafted Article 28(2) notice for each change, ready to send to your customers</li>
-                    <li>✓ A public trust page your own customers can subscribe to</li>
-                    <li>✓ Email notification to your subscribers on every published change</li>
+                    <li>✓ {{ t('pricing.growth_f1') }}</li>
+                    <li>✓ {{ t('pricing.growth_f2') }}</li>
+                    <li>✓ {{ t('pricing.growth_f3') }}</li>
+                    <li>✓ {{ t('pricing.growth_f4') }}</li>
+                    <li>✓ {{ t('pricing.growth_f5') }}</li>
+                    <li>✓ {{ t('pricing.growth_f6') }}</li>
+                    <li>✓ {{ t('pricing.growth_f7') }}</li>
+                    <li>✓ {{ t('pricing.growth_f8') }}</li>
+                    <li>✓ {{ t('pricing.growth_f9') }}</li>
                 </ul>
-                <a href="/auth/login" class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg text-sm">Start 14-day trial</a>
-                <p class="text-xs text-slate-500 text-center mt-3">No credit card required · Cancel anytime · <a href="/refunds" class="text-blue-600 hover:underline">14-day money-back guarantee</a></p>
-                <p class="text-xs text-slate-400 text-center mt-4">Billing is handled securely by Paddle, our merchant of record. Prices exclude any applicable taxes, which Paddle calculates at checkout.</p>
+                <a href="/auth/login" class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg text-sm">{{ t('pricing.growth_cta') }}</a>
+                <p class="text-xs text-slate-500 text-center mt-3">
+                    {{ t('pricing.growth_note') }}
+                    <a href="/refunds" class="text-blue-600 hover:underline">{{ t('pricing.growth_guarantee') }}</a>
+                </p>
+                <p class="text-xs text-slate-400 text-center mt-4">{{ t('pricing.growth_paddle') }}</p>
             </div>
         </div>
 
         <div class="max-w-2xl mx-auto mt-16">
-            <h2 class="text-xl font-bold text-slate-900 text-center mb-8">Why teams pay for this</h2>
+            <h2 class="text-xl font-bold text-slate-900 text-center mb-8">{{ t('pricing.why_title') }}</h2>
             <div class="space-y-6">
                 <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">The objection window is short and it starts without you</h3>
-                    <p class="text-sm text-slate-600">Under GDPR Article 28(2), a processor working from a general authorisation has to tell you before it adds or replaces a sub-processor, and you get a window to object — typically 10 to 30 days in a commercial DPA. In practice that notice is a quiet update to a page on their site. If nobody is watching the page, the window closes on its own.</p>
+                    <h3 class="font-semibold text-slate-900 mb-1">{{ t('pricing.why1_t') }}</h3>
+                    <p class="text-sm text-slate-600">{{ t('pricing.why1_b') }}</p>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">"When did that change?" is a question you have to answer with a date</h3>
-                    <p class="text-sm text-slate-600">A screenshot taken the week of the audit proves nothing about what the page said three months ago. Every change here is stored with its diff and its timestamp, from the day you started monitoring.</p>
+                    <h3 class="font-semibold text-slate-900 mb-1">{{ t('pricing.why2_t') }}</h3>
+                    <p class="text-sm text-slate-600">{{ t('pricing.why2_b') }}</p>
                 </div>
                 <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">Your customers ask you the same question you ask your vendors</h3>
-                    <p class="text-sm text-slate-600">The trust page turns your answer into something you publish once instead of writing out in every security questionnaire — a public, dated history of your sub-processor changes that customers can subscribe to.</p>
+                    <h3 class="font-semibold text-slate-900 mb-1">{{ t('pricing.why3_t') }}</h3>
+                    <p class="text-sm text-slate-600">{{ t('pricing.why3_b') }}</p>
                 </div>
             </div>
         </div>
 
         <div class="max-w-2xl mx-auto mt-16">
-            <h2 class="text-xl font-bold text-slate-900 text-center mb-8">Questions</h2>
+            <h2 class="text-xl font-bold text-slate-900 text-center mb-8">{{ t('pricing.faq_title') }}</h2>
             <div class="space-y-6">
+                {% for n in [1, 2, 3, 4] %}
                 <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">Does this help with DORA?</h3>
-                    <p class="text-sm text-slate-600">Partly, and it's worth being precise about which part. DORA requires EU financial entities to keep a Register of Information covering their ICT providers <em>and those providers' subcontractors</em>, filed with the regulator each year. TrustPages keeps the subcontractor half of that current and dated. It is not a filing tool and it does not produce the register for you.</p>
+                    <h3 class="font-semibold text-slate-900 mb-1">{{ t('pricing.faq' ~ n ~ '_q') }}</h3>
+                    <p class="text-sm text-slate-600">{{ t('pricing.faq' ~ n ~ '_a') }}</p>
                 </div>
+                {% endfor %}
                 <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">How does the AI tell material changes from cosmetic ones?</h3>
-                    <p class="text-sm text-slate-600">Every detected diff is classified as material or cosmetic. Cosmetic changes — typos, reformatting, a moved heading — publish automatically. Anything that could affect your customers, such as a new sub-processor or a new processing country, goes to your approval queue first. You always have the final say before it reaches your trust page.</p>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">What happens after the 14-day trial?</h3>
-                    <p class="text-sm text-slate-600">Nothing is charged, and the account does not stop working: it settles onto the free plan, where your 3 oldest pages keep being checked daily. Anything above that is switched off rather than deleted, so upgrading later turns it back on with its history intact.</p>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">What if I need to track more than 25 vendors?</h3>
-                    <p class="text-sm text-slate-600">25 covers the vendor list of most teams at this size. If you need more, email us and we'll sort out a limit increase on the Growth plan.</p>
-                </div>
-                <div>
-                    <h3 class="font-semibold text-slate-900 mb-1">Can I cancel anytime?</h3>
-                    <p class="text-sm text-slate-600">Yes, from the billing page in your dashboard. You keep Growth until the end of the period you've already paid for, and then the account continues on the free plan rather than closing — your trust page stays online and your change history stays intact, so cancelling doesn't take down a public page your customers may have bookmarked. See our <a href="/refunds" class="text-blue-600 hover:underline">refund policy</a> for the 14-day money-back guarantee on your first paid period.</p>
+                    <h3 class="font-semibold text-slate-900 mb-1">{{ t('pricing.faq5_q') }}</h3>
+                    <p class="text-sm text-slate-600">
+                        {{ t('pricing.faq5_a') }}
+                        <a href="/refunds" class="text-blue-600 hover:underline">{{ t('pricing.faq5_link') }}</a>
+                    </p>
                 </div>
             </div>
         </div>

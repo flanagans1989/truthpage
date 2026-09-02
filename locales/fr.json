@@ -1,0 +1,253 @@
+{
+  "lang.name": "Français",
+  "nav.directory": "Annuaire",
+  "nav.compare": "Comparatif",
+  "nav.pricing": "Tarifs",
+  "nav.signin": "Se connecter",
+  "nav.language": "Langue",
+
+  "cta.start_free": "Commencer gratuitement — 3 prestataires, sans carte",
+  "cta.trial_note": "Les nouveaux comptes commencent par 14 jours de l'offre payante.",
+  "cta.pricing_link": "Tarifs",
+
+  "footer.copyright": "© 2026 Denizhan Koçakgöl · Antalya, Turquie",
+  "footer.terms": "Conditions générales",
+  "footer.privacy": "Confidentialité",
+  "footer.refunds": "Remboursement",
+  "footer.legal_note": "Les documents juridiques ne font foi qu'en anglais.",
+
+  "landing.meta_title": "Surveillance automatique des sous-traitants ultérieurs & Trust Center RGPD | TrustPages",
+  "landing.meta_description": "Surveillez automatiquement les listes de sous-traitants ultérieurs de vos prestataires, conservez une preuve datée de chaque modification et publiez un Trust Center public que vos clients peuvent suivre. Gratuit pour 3 prestataires, à vie — sans carte bancaire.",
+  "landing.hero_title": "Répondez aux audits de sécurité avant qu'on ne vous les envoie",
+  "landing.hero_body": "Vos clients grands comptes demanderont qui traite leurs données — et si vous vous en rendriez compte en cas de changement. TrustPages vous donne un Trust Center public, toujours à jour, adossé à une surveillance automatique de vos prestataires. Les audits de sécurité cessent ainsi de bloquer vos ventes.",
+  "landing.hero_note": "L'offre gratuite est permanente. Les nouveaux comptes commencent par 14 jours de l'offre payante.",
+  "landing.card1_title": "Signez plus vite",
+  "landing.card1_body": "Un seul lien à envoyer, au lieu de remplir les mêmes questions sur vos prestataires à chaque audit de sécurité. Vos acheteurs voient une présence conformité professionnelle et auditable — même avec une équipe de cinq personnes.",
+  "landing.card2_title": "Ne manquez plus un changement chez un prestataire",
+  "landing.card2_body": "Votre DPA (contrat de sous-traitance) promet à vos clients de signaler les changements de sous-traitants ultérieurs — mais vos prestataires, eux, modifient leurs listes en silence. Nous surveillons leurs pages et classons chaque modification par IA : seuls les vrais changements réclament votre attention.",
+  "landing.card3_title": "Informez vos clients automatiquement",
+  "landing.card3_body": "Les modifications validées s'affichent sur votre Trust Center et partent par e-mail à vos abonnés — votre obligation d'information, remplie sans une seule annonce manuelle.",
+  "landing.notion_title": "Pourquoi pas simplement une page Notion ?",
+  "landing.notion_body": "Une page statique ne vous dira pas que Stripe a discrètement ajouté un sous-traitant ultérieur, et elle n'écrira pas à vos clients. TrustPages, c'est la différence entre affirmer que vous suivez vos prestataires et pouvoir le prouver — avec un historique vivant que vos acheteurs peuvent auditer. Pour une fraction du prix des plateformes de conformité pour grands comptes dont vous n'avez pas encore besoin.",
+  "landing.audit_title": "Ce que vous pouvez remettre à un auditeur",
+  "landing.audit_sub": "Une capture d'écran prise la semaine de l'audit ne prouve rien sur ce que la page disait il y a trois mois.",
+  "landing.audit1_title": "Les documents, pas seulement le diff",
+  "landing.audit1_body": "Chaque modification détectée conserve la page du prestataire telle qu'elle se lisait avant et après, chacune avec une empreinte et un horodatage — plus qui l'a examinée et quand elle a été validée.",
+  "landing.audit2_title": "Un seul CSV pour tout l'historique",
+  "landing.audit2_body": "Exportez chaque modification dans un fichier unique : dates, prestataires, classifications, empreintes et décisions. Sur l'offre gratuite aussi — c'est le fichier qu'on vous demande réellement.",
+  "landing.audit3_title": "La notification client, déjà rédigée",
+  "landing.audit3_body": "Votre DPA promet à vos clients d'être prévenus au titre de l'article 28.2 du RGPD. Nous rédigeons cette notification à partir de la modification elle-même : l'étape habituellement sautée devient une relecture plutôt qu'une page blanche.",
+  "landing.demo_title": "Voir concrètement",
+  "landing.demo_sub": "Un tableau de bord pour vous, un Trust Center public pour vos clients.",
+  "landing.demo_cap1": "Votre tableau de bord : ajoutez des URL, examinez les modifications signalées, validez en un clic.",
+  "landing.demo_cap2": "Votre Trust Center public : état en direct, historique des modifications, notifications aux abonnés.",
+  "landing.demo_see_live": "Voir le nôtre en direct →",
+  "landing.demo_alt1": "Tableau de bord TrustPages affichant les URL de sous-traitants ultérieurs surveillées et leur statut",
+  "landing.demo_alt2": "Trust Center public avec les sous-traitants ultérieurs autorisés, l'historique des modifications et l'abonnement e-mail",
+  "landing.final_title": "Prêt pour les grands comptes avant l'arrivée du questionnaire",
+  "landing.final_body": "Cinq minutes de configuration — vous n'êtes alerté que lorsque quelque chose change vraiment.",
+
+  "pricing.meta_title": "Tarifs — surveiller ses sous-traitants ultérieurs dès 0 € | TrustPages",
+  "pricing.meta_description": "Tarifs TrustPages : une offre gratuite permanente pour 3 pages de prestataires, ou Growth à 99 $/mois pour 25. Conservez une trace datée et auditable de chaque modification apportée par vos prestataires à leurs listes de sous-traitants ultérieurs, et publiez-la sur un Trust Center que vos clients peuvent suivre.",
+  "pricing.h1": "Commencez gratuitement. Payez quand la liste s'allonge.",
+  "pricing.sub": "Vérifier à la main les pages de sous-traitants ultérieurs de vos prestataires, c'est un après-midi récurrent pour quelqu'un. Ceci le fait chaque jour et laisse une trace que vous pouvez remettre à un auditeur.",
+  "pricing.free_name": "Gratuit",
+  "pricing.free_unit": "/ mois, à vie",
+  "pricing.free_f1": "Suivre 3 pages de sous-traitants ultérieurs",
+  "pricing.free_f2": "Vérification quotidienne, la même surveillance que Growth",
+  "pricing.free_f3": "Preuves datées et export CSV",
+  "pricing.free_f4": "Un Trust Center public que vos clients peuvent suivre",
+  "pricing.free_f5": "Sans carte, sans expiration",
+  "pricing.free_cta": "Commencer gratuitement",
+  "pricing.free_after": "Les nouveaux comptes profitent d'abord de 14 jours de Growth, puis basculent ici.",
+  "pricing.growth_name": "Growth",
+  "pricing.growth_unit": "/ mois",
+  "pricing.growth_f1": "Suivre jusqu'à 25 pages de sous-traitants ultérieurs",
+  "pricing.growth_f2": "Vérification quotidienne — c'est nous qui vous annonçons un changement, pas votre client",
+  "pricing.growth_f3": "Preuve datée pour chaque modification : ce que disait la page, ce qu'elle dit, quand cela a bougé",
+  "pricing.growth_f4": "L'IA sépare les changements substantiels des retouches cosmétiques : vous n'examinez que l'essentiel",
+  "pricing.growth_f5": "File de validation avec comparaison côte à côte — rien n'atteint votre Trust Center sans vous",
+  "pricing.growth_f6": "Export de tout l'historique en CSV — empreintes, horodatages et validations",
+  "pricing.growth_f7": "Une notification article 28.2 rédigée pour chaque modification, prête à envoyer à vos clients",
+  "pricing.growth_f8": "Un Trust Center public que vos propres clients peuvent suivre",
+  "pricing.growth_f9": "E-mail à vos abonnés à chaque modification publiée",
+  "pricing.growth_cta": "Essayer 14 jours",
+  "pricing.growth_note": "Sans carte bancaire · Résiliable à tout moment ·",
+  "pricing.growth_guarantee": "garantie satisfait ou remboursé 14 jours",
+  "pricing.growth_paddle": "La facturation est assurée par Paddle, notre revendeur officiel (merchant of record). Les prix s'entendent hors taxes applicables, que Paddle calcule au paiement.",
+  "pricing.why_title": "Pourquoi des équipes paient pour cela",
+  "pricing.why1_t": "Le délai d'opposition est court et il court sans vous",
+  "pricing.why1_b": "Au titre de l'article 28.2 du RGPD, un sous-traitant agissant sur autorisation générale doit vous informer avant d'ajouter ou de remplacer un sous-traitant ultérieur, et vous disposez d'un délai pour vous y opposer — généralement 10 à 30 jours dans un DPA commercial. En pratique, cette information prend la forme d'une mise à jour discrète d'une page de leur site. Si personne ne regarde la page, le délai expire tout seul.",
+  "pricing.why2_t": "« Quand cela a-t-il changé ? » est une question qui exige une date",
+  "pricing.why2_b": "Une capture d'écran prise la semaine de l'audit ne prouve rien sur ce que la page disait il y a trois mois. Chaque modification est ici enregistrée avec son diff et son horodatage, depuis le jour où vous avez commencé à surveiller.",
+  "pricing.why3_t": "Vos clients vous posent la question que vous posez à vos prestataires",
+  "pricing.why3_b": "Le Trust Center transforme votre réponse en quelque chose que vous publiez une fois, au lieu de la réécrire dans chaque questionnaire de sécurité — un historique public et daté de vos changements de sous-traitants ultérieurs, que vos clients peuvent suivre.",
+  "pricing.faq_title": "Questions",
+  "pricing.faq1_q": "Est-ce utile pour DORA ?",
+  "pricing.faq1_a": "En partie, et il vaut mieux préciser laquelle. DORA impose aux entités financières de l'UE de tenir un registre d'information couvrant leurs prestataires TIC et les sous-traitants de ces prestataires, transmis chaque année au régulateur. TrustPages maintient à jour et daté le volet sous-traitants. Ce n'est pas un outil de dépôt et il ne produit pas le registre à votre place.",
+  "pricing.faq2_q": "Comment l'IA distingue-t-elle une modification substantielle d'une retouche cosmétique ?",
+  "pricing.faq2_a": "Chaque diff détecté est classé substantiel ou cosmétique. Les modifications cosmétiques — fautes de frappe, reformatage, titre déplacé — sont publiées automatiquement. Tout ce qui pourrait toucher vos clients, comme un nouveau sous-traitant ultérieur ou un nouveau pays de traitement, passe d'abord par votre file de validation. Le dernier mot vous revient toujours.",
+  "pricing.faq3_q": "Que se passe-t-il après les 14 jours d'essai ?",
+  "pricing.faq3_a": "Rien n'est débité et le compte ne s'arrête pas : il bascule sur l'offre gratuite, où vos 3 pages les plus anciennes restent vérifiées quotidiennement. Le reste est désactivé, pas supprimé — une montée en gamme ultérieure les réactive avec leur historique intact.",
+  "pricing.faq4_q": "Et s'il me faut suivre plus de 25 prestataires ?",
+  "pricing.faq4_a": "25 couvre la liste de prestataires de la plupart des équipes de cette taille. S'il vous en faut davantage, écrivez-nous : nous relèverons la limite sur l'offre Growth.",
+  "pricing.faq5_q": "Puis-je résilier à tout moment ?",
+  "pricing.faq5_a": "Oui, depuis la page de facturation de votre tableau de bord. Vous conservez Growth jusqu'à la fin de la période déjà payée, puis le compte continue sur l'offre gratuite au lieu de fermer — votre Trust Center reste en ligne et votre historique intact. Résilier ne fait donc pas disparaître une page publique que vos clients ont peut-être mise en favori.",
+  "pricing.faq5_link": "Voir notre politique de remboursement et la garantie satisfait ou remboursé de 14 jours sur votre première période payée.",
+
+  "compare.meta_title": "Comparatif des outils de surveillance des sous-traitants ultérieurs | TrustPages",
+  "compare.meta_description": "Les quatre familles d'outils qui surveillent les pages de sous-traitants ultérieurs, ce que chacune coûte et laquelle choisir — y compris quand la réponse n'est pas nous.",
+  "compare.h1": "Où se situe TrustPages",
+  "compare.intro": "Si vous cherchez de quoi surveiller les pages de sous-traitants ultérieurs de vos prestataires, vous croiserez quatre formes de produit. Leurs prix diffèrent parce qu'ils résolvent des problèmes différents — et pour certains d'entre eux, nous sommes la mauvaise réponse.",
+  "compare.figures_note": "Fourchettes de prix relevées sur les sites des éditeurs le {date}. Cette catégorie bouge ; vérifiez les tarifs actuels avant de décider.",
+  "compare.strengths_label": "Meilleurs que nous sur",
+  "compare.limits_label": "Là où ils s'arrêtent",
+  "compare.pick_label": "Préférez-les si :",
+  "compare.ours_title": "Où se place TrustPages",
+  "compare.ours_line": "{free} gratuitement, ou {paid}. Une seule mission, menée en pensant à l'audit.",
+  "compare.gaps_title": "Ce que nous n'avons pas",
+  "compare.gaps_note": "Si l'un de ces points est une exigence, l'une des catégories ci-dessus est un meilleur achat que nous.",
+
+  "compare.categories": [
+    {
+      "slug": "lightweight-registries",
+      "name": "Registres légers de sous-traitants ultérieurs",
+      "shape": "Une page hébergée listant vos sous-traitants ultérieurs, actualisée par des vérifications quotidiennes des prestataires que vous nommez. Ce qui ressemble le plus à ce que nous faisons.",
+      "price": "Gratuit pour une poignée de prestataires, environ 19-49 $/mois au-delà ou en illimité",
+      "strengths": [
+        "De loin la voie la moins chère vers un nombre illimité de prestataires",
+        "Sous-domaine personnalisé pour la page publique dès les premiers paliers payants",
+        "Des offres gratuites existent, mais elles portent en général la marque de l'éditeur sur votre page"
+      ],
+      "limits": [
+        "La trace conservée est en général l'état courant et des alertes, pas un document daté par modification",
+        "La validation avant publication est mince ou absente — les mises à jour passent le plus souvent automatiquement",
+        "La couverture se limite aux prestataires que l'outil suit déjà"
+      ],
+      "pick_them_when": "Vous avez une longue liste de prestataires, un petit budget, et personne ne vous demandera de prouver ce qu'une page disait au trimestre dernier."
+    },
+    {
+      "slug": "privacy-suites",
+      "name": "Suites de preuve pour équipes conformité",
+      "shape": "Conçues pour une fonction protection des données à plusieurs personnes : surveillance, files de validation, collecte de preuves, plus des modules registre des traitements et analyse d'impact des transferts.",
+      "price": "Environ 99 €/mois à l'entrée, 299 € pour le workflow de validation, 999 € pour les rôles et modules",
+      "strengths": [
+        "Accès par rôles pour le juridique, la conformité et les achats sur la même file",
+        "Registre des traitements et Transfer Impact Assessment à côté de la surveillance",
+        "Hébergement des données dans l'UE annoncé et DPA disponible avant l'achat"
+      ],
+      "limits": [
+        "Le workflow de validation et l'export d'audit sont deux paliers plus haut, pas dans l'offre d'entrée",
+        "La preuve est tournée vers l'intérieur, vers votre auditeur — pas de page publique pour vos clients",
+        "Les essais sont courts et il n'existe pas d'offre gratuite permanente"
+      ],
+      "pick_them_when": "Plusieurs personnes examinent les changements de prestataires, ou il vous faut registre et AIT dans le même outil. Une équipe conformité de deux personnes, nous ne savons pas la servir ; eux si."
+    },
+    {
+      "slug": "page-monitors",
+      "name": "Surveillance générique de pages web",
+      "shape": "Ce ne sont pas des produits de conformité. Ils surveillent n'importe quelle URL et vous signalent qu'elle a bougé, avec un résumé IA et un score d'importance.",
+      "price": "Gratuit pour une poignée de pages, environ 13-85 $/mois pour des centaines",
+      "strengths": [
+        "Bien moins cher par page, et des centaines de pages plutôt que des dizaines",
+        "Alertes partout — Slack, Teams, Discord, webhooks",
+        "Sélecteurs au niveau de l'élément et découverte automatique de nouvelles pages"
+      ],
+      "limits": [
+        "La sortie est une notification, pas une preuve : aucune trace de décision, aucun export d'audit",
+        "Rien à montrer à un client — pas de page publique, pas d'avis aux abonnés",
+        "Rien ne rédige la notification article 28.2 que votre DPA promet"
+      ],
+      "pick_them_when": "Vous voulez savoir quand des pages changent et vous assumerez vous-même le volet conformité, dans un tableur que vous tenez déjà."
+    },
+    {
+      "slug": "trust-platforms",
+      "name": "Plateformes Trust Center et GRC",
+      "shape": "Le haut du marché : un Trust Center complet avec automatisation des questionnaires, certifications, documents sous NDA — les sous-traitants ultérieurs n'y sont qu'une section parmi d'autres.",
+      "price": "En général des contrats annuels, à quatre ou cinq chiffres",
+      "strengths": [
+        "Répond à tout l'audit de sécurité, pas seulement au volet sous-traitants ultérieurs",
+        "Bibliothèques de documents, contrôles d'accès, intégrations avec le reste de la pile",
+        "Le nom sur la page pèse auprès d'un acheteur grand compte"
+      ],
+      "limits": [
+        "Prix et périmètre pensés pour une entreprise dotée d'une fonction conformité",
+        "La surveillance des sous-traitants ultérieurs est une fonctionnalité, pas le cœur — et souvent manuelle",
+        "Des semaines de déploiement plutôt qu'un après-midi"
+      ],
+      "pick_them_when": "Les questionnaires de sécurité sont un coût récurrent pour toute l'entreprise et vous avez le budget pour tout régler d'un coup."
+    }
+  ],
+
+  "compare.position": [
+    {
+      "title": "Les documents, pas seulement le diff",
+      "body": "Chaque modification détectée conserve la page du prestataire telle qu'elle se lisait avant et après, chacune avec une empreinte et un horodatage, plus qui l'a examinée et quand. « Que disait cette page en mars » a une réponse."
+    },
+    {
+      "title": "Rien n'est publié sans vous",
+      "body": "Les modifications sont classées substantielles ou cosmétiques, et seules les retouches cosmétiques à forte confiance se publient d'elles-mêmes. Tout le reste attend dans une file, avec la comparaison côte à côte."
+    },
+    {
+      "title": "L'export sur toutes les offres",
+      "body": "Tout l'historique sort en un seul CSV — dates, prestataires, classifications, empreintes, décisions — y compris sur l'offre gratuite. C'est le fichier qu'on vous demande réellement."
+    },
+    {
+      "title": "La notification client, déjà rédigée",
+      "body": "Votre DPA promet à vos clients d'être prévenus au titre de l'article 28.2 du RGPD. Nous la rédigeons à partir de la modification elle-même : l'étape habituellement sautée devient une relecture plutôt qu'une page blanche."
+    },
+    {
+      "title": "N'importe quelle URL, même les récalcitrantes",
+      "body": "Les pages qui ne s'affichent qu'avec JavaScript sont récupérées avec un vrai navigateur. La couverture ne s'arrête donc pas à une liste de prestataires que nous suivons déjà."
+    }
+  ],
+
+  "compare.gaps": [
+    "25 pages sur l'offre payante, là où des outils moins chers proposent l'illimité.",
+    "Le Trust Center public vit sur une adresse usetrustpages.com ; pas encore de domaine personnalisé.",
+    "Alertes par e-mail uniquement — pas de Slack, pas de webhooks, pas d'API.",
+    "Un seul identifiant par compte : pas de rôles pour une équipe conformité qui travaille ensemble.",
+    "Pas de registre des traitements, pas d'analyse d'impact des transferts, pas d'automatisation des questionnaires."
+  ],
+
+  "vendors.meta_title": "Listes de sous-traitants ultérieurs de {count} prestataires, vérifiées chaque jour | TrustPages",
+  "vendors.meta_description": "Un annuaire des listes de sous-traitants ultérieurs — qui chaque fournisseur emploie, et ce qui a changé. Chaque page est revérifiée quotidiennement à la source, chez le prestataire lui-même.",
+  "vendors.h1": "Annuaire des sous-traitants ultérieurs",
+  "vendors.intro": "À qui vos prestataires confient vos données, et quand cela a changé pour la dernière fois. Chaque page est relue chaque jour depuis la liste publiée par le prestataire — le même moteur que nos clients pointent vers leurs propres fournisseurs.",
+  "vendors.count_one": "1 sous-traitant ultérieur",
+  "vendors.count_many": "{count} sous-traitants ultérieurs",
+  "vendors.updated": "mis à jour le {date}",
+  "vendors.view": "Voir",
+  "vendors.empty": "L'annuaire se remplit — les pages apparaissent ici dès que leur première liste a été lue.",
+  "vendors.cta_title": "La même chose pour vos propres prestataires ?",
+  "vendors.cta_body": "Pointez TrustPages vers les fournisseurs que vous utilisez réellement. Nous surveillons leurs pages, vous signalons les changements substantiels, conservons des preuves datées et publions un Trust Center que vos propres clients peuvent suivre.",
+
+  "vendor.meta_title": "Sous-traitants ultérieurs de {vendor} — surveillés chaque jour | TrustPages",
+  "vendor.meta_description": "Les sous-traitants ultérieurs publiés par {vendor}, avec l'historique des modifications enregistré depuis le début de la surveillance. Vérifié chaque jour sur la page de {vendor}.",
+  "vendor.banner": "Vous utilisez {vendor} dans votre produit ? Automatisez les notifications DPA que vous devez à vos propres clients lorsque cette liste change.",
+  "vendor.banner_cta": "Ajouter {vendor} à TrustPages",
+  "vendor.breadcrumb": "Annuaire des prestataires",
+  "vendor.h1": "Sous-traitants ultérieurs de {vendor}",
+  "vendor.intro": "{vendor} publie la liste ci-dessous sur son propre site. Nous vérifions cette page chaque jour et enregistrons ce qui bouge : cette page montre donc la liste actuelle et ce qui a changé avant elle.",
+  "vendor.stat_entries": "Entrées",
+  "vendor.stat_updated": "Liste mise à jour",
+  "vendor.stat_checked": "Dernière vérification",
+  "vendor.stat_source": "Source",
+  "vendor.source_link": "la page de {vendor}",
+  "vendor.current_title": "Sous-traitants ultérieurs actuels",
+  "vendor.th_name": "Sous-traitant ultérieur",
+  "vendor.th_purpose": "Finalité",
+  "vendor.th_location": "Localisation",
+  "vendor.no_entries": "Aucune entrée n'a pu être lue sur la page lors de la dernière vérification.",
+  "vendor.history_title": "Historique des modifications",
+  "vendor.added": "Ajouté :",
+  "vendor.removed": "Retiré :",
+  "vendor.no_changes": "Aucune modification depuis le début de la surveillance.",
+  "vendor.watching_since": "Cette page est surveillée quotidiennement depuis le {date}.",
+  "vendor.why_title": "Pourquoi cela compte si vous utilisez {vendor}",
+  "vendor.why_body": "Au titre de l'article 28.2 du RGPD, vos propres clients ont généralement droit à une information avant que vous n'ajoutiez ou ne remplaciez un sous-traitant ultérieur — et les sous-traitants de {vendor} font partie de cette chaîne. Le délai prévu par un DPA courant est de 10 à 30 jours, et il court dès que le prestataire met sa page à jour, pas quand vous le remarquez.",
+  "vendor.footer_cta": "Surveiller {vendor} sur votre propre Trust Center — gratuitement",
+  "vendor.free_note": "3 prestataires gratuits, à vie. Sans carte.",
+  "vendor.classification_material": "Substantielle",
+  "vendor.classification_cosmetic": "Cosmétique"
+}

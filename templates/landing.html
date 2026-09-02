@@ -1,76 +1,60 @@
 {% extends "base.html" %}
-{% block title %}TrustPages — Answer security reviews before they're asked{% endblock %}
-{% block meta_description %}Monitor your vendors' sub-processor pages, keep dated evidence of every change, and publish a public trust page your customers can subscribe to. Free for 3 vendors, permanently — no card.{% endblock %}
+{% block title %}{{ t('landing.meta_title') }}{% endblock %}
+{% block meta_description %}{{ t('landing.meta_description') }}{% endblock %}
 {% block content %}
 <div class="min-h-screen flex flex-col">
-    <header class="border-b border-slate-200 bg-white">
-        <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-            <span class="text-blue-600 font-bold text-xl">TrustPages</span>
-            <nav class="flex items-center gap-6 text-sm">
-                <a href="/vendors" class="text-slate-600 hover:text-slate-900">Directory</a>
-                <a href="/compare" class="text-slate-600 hover:text-slate-900">Compare</a>
-                <a href="/pricing" class="text-slate-600 hover:text-slate-900">Pricing</a>
-                <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg">Sign in</a>
-            </nav>
-        </div>
-    </header>
+    {% include "_header.html" %}
 
     <main class="flex-1">
         <section class="max-w-5xl mx-auto px-6 py-20 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">Answer security reviews before they're asked</h1>
-            <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-10">
-                Enterprise buyers will ask who processes their data — and whether you'd notice if that changed.
-                TrustPages gives you a public, always-current trust page backed by automated vendor monitoring,
-                so security reviews stop stalling your deals.
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6">{{ t('landing.hero_title') }}</h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-10">{{ t('landing.hero_body') }}</p>
+            <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg">{{ t('cta.start_free') }}</a>
+            <p class="text-sm text-slate-500 mt-3">
+                {{ t('landing.hero_note') }}
+                <a href="{{ u('/pricing') }}" class="text-blue-600 hover:underline">{{ t('cta.pricing_link') }}</a>
             </p>
-            <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg">Start free — 3 vendors, no card</a>
-            <p class="text-sm text-slate-500 mt-3">Free plan is permanent. New accounts get 14 days of the paid plan first. <a href="/pricing" class="text-blue-600 hover:underline">Pricing</a></p>
         </section>
 
         <section class="max-w-5xl mx-auto px-6 pb-20 grid md:grid-cols-3 gap-8">
             <div class="bg-white rounded-2xl border border-slate-200 p-6">
                 <div class="text-2xl mb-3">🤝</div>
-                <h2 class="font-semibold text-slate-900 mb-2">Close deals faster</h2>
-                <p class="text-sm text-slate-600">Send one link instead of filling in the same vendor questions on every security review. Buyers see a professional, auditable compliance presence — even if you're a five-person team.</p>
+                <h2 class="font-semibold text-slate-900 mb-2">{{ t('landing.card1_title') }}</h2>
+                <p class="text-sm text-slate-600">{{ t('landing.card1_body') }}</p>
             </div>
             <div class="bg-white rounded-2xl border border-slate-200 p-6">
                 <div class="text-2xl mb-3">🔍</div>
-                <h2 class="font-semibold text-slate-900 mb-2">Never miss a vendor change</h2>
-                <p class="text-sm text-slate-600">Your DPA promises customers you'll flag sub-processor changes — but vendors change them silently. We check their pages for you and classify every change with AI, so only real changes need your attention.</p>
+                <h2 class="font-semibold text-slate-900 mb-2">{{ t('landing.card2_title') }}</h2>
+                <p class="text-sm text-slate-600">{{ t('landing.card2_body') }}</p>
             </div>
             <div class="bg-white rounded-2xl border border-slate-200 p-6">
                 <div class="text-2xl mb-3">📢</div>
-                <h2 class="font-semibold text-slate-900 mb-2">Keep customers informed automatically</h2>
-                <p class="text-sm text-slate-600">Approved changes publish to your trust page and notify your subscribers by email — your notification obligation, handled without a single manual announcement.</p>
+                <h2 class="font-semibold text-slate-900 mb-2">{{ t('landing.card3_title') }}</h2>
+                <p class="text-sm text-slate-600">{{ t('landing.card3_body') }}</p>
             </div>
         </section>
 
         <section class="max-w-3xl mx-auto px-6 pb-20 text-center">
-            <h2 class="text-2xl font-bold text-slate-900 mb-4">Why not just a Notion page?</h2>
-            <p class="text-slate-600">
-                A static page can't tell you when Stripe quietly adds a new sub-processor, and it can't email your
-                customers about it. TrustPages is the difference between <em>claiming</em> you track your vendors
-                and being able to <em>prove</em> it — with a live change history your buyers can audit. And it costs
-                a fraction of enterprise compliance platforms you don't need yet.
-            </p>
+            <h2 class="text-2xl font-bold text-slate-900 mb-4">{{ t('landing.notion_title') }}</h2>
+            <p class="text-slate-600">{{ t('landing.notion_body') }}</p>
         </section>
 
         <section class="bg-white border-y border-slate-200">
             <div class="max-w-4xl mx-auto px-6 py-20">
-                <h2 class="text-3xl font-bold text-slate-900 text-center mb-3">What you can hand an auditor</h2>
-                <p class="text-slate-600 text-center max-w-2xl mx-auto mb-12">A screenshot taken the week of the audit proves nothing about what the page said three months ago.</p>
+                <h2 class="text-3xl font-bold text-slate-900 text-center mb-3">{{ t('landing.audit_title') }}</h2>
+                <p class="text-slate-600 text-center max-w-2xl mx-auto mb-12">{{ t('landing.audit_sub') }}</p>
                 <div class="grid md:grid-cols-3 gap-8">
                     <div>
-                        <h3 class="font-semibold text-slate-900 mb-2">The documents, not just the diff</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">Every detected change stores the vendor's page as it read before and after, each with a content hash and a timestamp — plus who reviewed it and when they approved it.</p>
+                        <h3 class="font-semibold text-slate-900 mb-2">{{ t('landing.audit1_title') }}</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">{{ t('landing.audit1_body') }}</p>
                     </div>
                     <div>
-                        <h3 class="font-semibold text-slate-900 mb-2">One CSV for the whole history</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">Export every change as a single file: dates, vendors, classifications, hashes and decisions. On the free plan too — it is the thing you actually get asked for.</p>
+                        <h3 class="font-semibold text-slate-900 mb-2">{{ t('landing.audit2_title') }}</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">{{ t('landing.audit2_body') }}</p>
                     </div>
                     <div>
-                        <h3 class="font-semibold text-slate-900 mb-2">The customer notice, drafted</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed">Your DPA promises customers a heads-up under Article 28(2). We draft that notice from the change itself, so the part that usually gets skipped is a review rather than a blank page.</p>
+                        <h3 class="font-semibold text-slate-900 mb-2">{{ t('landing.audit3_title') }}</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed">{{ t('landing.audit3_body') }}</p>
                     </div>
                 </div>
             </div>
@@ -78,8 +62,8 @@
 
         <section class="bg-white border-y border-slate-200">
             <div class="max-w-5xl mx-auto px-6 py-20">
-                <h2 class="text-3xl font-bold text-slate-900 text-center mb-3">See it in action</h2>
-                <p class="text-slate-600 text-center max-w-2xl mx-auto mb-12">One dashboard for you, one public trust page for your customers.</p>
+                <h2 class="text-3xl font-bold text-slate-900 text-center mb-3">{{ t('landing.demo_title') }}</h2>
+                <p class="text-slate-600 text-center max-w-2xl mx-auto mb-12">{{ t('landing.demo_sub') }}</p>
 
                 <div class="grid md:grid-cols-2 gap-8 items-start">
                     <figure>
@@ -89,9 +73,9 @@
                                 <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-green-400"></span>
                             </div>
-                            <img src="/static/img/shot-dashboard.png" alt="TrustPages dashboard showing monitored sub-processor URLs and their status" class="w-full" loading="lazy">
+                            <img src="/static/img/shot-dashboard.png" alt="{{ t('landing.demo_alt1') }}" class="w-full" loading="lazy">
                         </div>
-                        <figcaption class="text-sm text-slate-500 text-center mt-3">Your dashboard: add URLs, review flagged changes, approve with one click.</figcaption>
+                        <figcaption class="text-sm text-slate-500 text-center mt-3">{{ t('landing.demo_cap1') }}</figcaption>
                     </figure>
                     <figure>
                         <div class="rounded-xl border border-slate-200 shadow-lg overflow-hidden bg-slate-100">
@@ -100,18 +84,21 @@
                                 <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                                 <span class="w-2.5 h-2.5 rounded-full bg-green-400"></span>
                             </div>
-                            <img src="/static/img/shot-trustpage.png" alt="Public trust page with authorized sub-processors, change history and email subscription" class="w-full" loading="lazy">
+                            <img src="/static/img/shot-trustpage.png" alt="{{ t('landing.demo_alt2') }}" class="w-full" loading="lazy">
                         </div>
-                        <figcaption class="text-sm text-slate-500 text-center mt-3">Your public trust page: live status, change history, subscriber notifications. <a href="/trust/trustpages" class="text-blue-600 hover:underline">See our own live →</a></figcaption>
+                        <figcaption class="text-sm text-slate-500 text-center mt-3">
+                            {{ t('landing.demo_cap2') }}
+                            <a href="/trust/trustpages" class="text-blue-600 hover:underline">{{ t('landing.demo_see_live') }}</a>
+                        </figcaption>
                     </figure>
                 </div>
             </div>
         </section>
 
         <section class="max-w-5xl mx-auto px-6 py-16 text-center">
-            <h2 class="text-2xl font-bold text-slate-900 mb-3">Be enterprise-ready before the questionnaire arrives</h2>
-            <p class="text-slate-600 mb-8">Set it up in five minutes — get notified only when something actually changes.</p>
-            <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg">Start free — 3 vendors, no card</a>
+            <h2 class="text-2xl font-bold text-slate-900 mb-3">{{ t('landing.final_title') }}</h2>
+            <p class="text-slate-600 mb-8">{{ t('landing.final_body') }}</p>
+            <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg">{{ t('cta.start_free') }}</a>
         </section>
     </main>
 

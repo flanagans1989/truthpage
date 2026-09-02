@@ -1,0 +1,253 @@
+{
+  "lang.name": "Español",
+  "nav.directory": "Directorio",
+  "nav.compare": "Comparativa",
+  "nav.pricing": "Precios",
+  "nav.signin": "Iniciar sesión",
+  "nav.language": "Idioma",
+
+  "cta.start_free": "Empezar gratis — 3 proveedores, sin tarjeta",
+  "cta.trial_note": "Las cuentas nuevas empiezan con 14 días del plan de pago.",
+  "cta.pricing_link": "Precios",
+
+  "footer.copyright": "© 2026 Denizhan Koçakgöl · Antalya, Turquía",
+  "footer.terms": "Términos del servicio",
+  "footer.privacy": "Privacidad",
+  "footer.refunds": "Reembolsos",
+  "footer.legal_note": "Los documentos legales solo son vinculantes en inglés.",
+
+  "landing.meta_title": "Monitorización automática de subencargados del tratamiento y Trust Center RGPD | TrustPages",
+  "landing.meta_description": "Monitoriza automáticamente las listas de subencargados del tratamiento de tus proveedores, conserva prueba fechada de cada cambio y publica un Trust Center público al que tus clientes puedan suscribirse. Gratis para 3 proveedores, para siempre — sin tarjeta.",
+  "landing.hero_title": "Responde a las revisiones de seguridad antes de que te las envíen",
+  "landing.hero_body": "Tus clientes corporativos preguntarán quién trata sus datos — y si te enterarías en caso de que eso cambiara. TrustPages te da un Trust Center público y siempre actualizado, respaldado por monitorización automática de proveedores, para que las revisiones de seguridad dejen de frenar tus ventas.",
+  "landing.hero_note": "El plan gratuito es permanente. Las cuentas nuevas empiezan con 14 días del plan de pago.",
+  "landing.card1_title": "Cierra antes",
+  "landing.card1_body": "Envía un enlace en lugar de rellenar las mismas preguntas sobre proveedores en cada revisión de seguridad. Tus compradores ven una presencia de cumplimiento profesional y auditable — aunque seáis un equipo de cinco.",
+  "landing.card2_title": "No se te escapa ningún cambio de proveedor",
+  "landing.card2_body": "Tu DPA (contrato de encargo de tratamiento) promete a tus clientes avisar de los cambios de subencargados — pero los proveedores los cambian en silencio. Revisamos sus páginas por ti y clasificamos cada cambio con IA, para que solo los cambios reales requieran tu atención.",
+  "landing.card3_title": "Informa a tus clientes automáticamente",
+  "landing.card3_body": "Los cambios aprobados se publican en tu Trust Center y avisan por correo a tus suscriptores — tu obligación de información, resuelta sin un solo anuncio manual.",
+  "landing.notion_title": "¿Por qué no una simple página de Notion?",
+  "landing.notion_body": "Una página estática no te avisa cuando Stripe añade discretamente un nuevo subencargado, ni escribe a tus clientes. TrustPages es la diferencia entre afirmar que controlas a tus proveedores y poder demostrarlo — con un historial vivo que tus compradores pueden auditar. Y cuesta una fracción de las plataformas de cumplimiento corporativas que todavía no necesitas.",
+  "landing.audit_title": "Lo que puedes entregar a un auditor",
+  "landing.audit_sub": "Una captura de pantalla tomada la semana de la auditoría no prueba nada sobre lo que decía la página hace tres meses.",
+  "landing.audit1_title": "Los documentos, no solo el diff",
+  "landing.audit1_body": "Cada cambio detectado guarda la página del proveedor tal y como se leía antes y después, cada una con su hash de contenido y su marca de tiempo — además de quién la revisó y cuándo la aprobó.",
+  "landing.audit2_title": "Un CSV con todo el historial",
+  "landing.audit2_body": "Exporta cada cambio en un único archivo: fechas, proveedores, clasificaciones, hashes y decisiones. También en el plan gratuito — es justo el archivo que acaban pidiéndote.",
+  "landing.audit3_title": "El aviso al cliente, ya redactado",
+  "landing.audit3_body": "Tu DPA promete a tus clientes un aviso previo conforme al artículo 28.2 del RGPD. Lo redactamos a partir del propio cambio, de modo que el paso que suele saltarse se convierte en una revisión y no en una página en blanco.",
+  "landing.demo_title": "Verlo funcionando",
+  "landing.demo_sub": "Un panel para ti, un Trust Center público para tus clientes.",
+  "landing.demo_cap1": "Tu panel: añade URLs, revisa los cambios señalados, aprueba con un clic.",
+  "landing.demo_cap2": "Tu Trust Center público: estado en vivo, historial de cambios, avisos a suscriptores.",
+  "landing.demo_see_live": "Ver el nuestro en vivo →",
+  "landing.demo_alt1": "Panel de TrustPages con las URLs de subencargados monitorizadas y su estado",
+  "landing.demo_alt2": "Trust Center público con los subencargados autorizados, el historial de cambios y la suscripción por correo",
+  "landing.final_title": "Preparado para grandes clientes antes de que llegue el cuestionario",
+  "landing.final_body": "Cinco minutos de configuración — solo te avisamos cuando algo cambia de verdad.",
+
+  "pricing.meta_title": "Precios — monitoriza subencargados del tratamiento desde 0 € | TrustPages",
+  "pricing.meta_description": "Precios de TrustPages: plan gratuito permanente para 3 páginas de proveedores, o Growth por 99 $/mes para 25. Conserva un registro fechado y auditable de cada cambio que tus proveedores hagan en sus listas de subencargados y publícalo en un Trust Center al que tus clientes puedan suscribirse.",
+  "pricing.h1": "Empieza gratis. Paga cuando la lista se alargue.",
+  "pricing.sub": "Revisar a mano las páginas de subencargados de tus proveedores es la tarde recurrente de alguien. Esto lo hace cada día y deja un registro que puedes entregar a un auditor.",
+  "pricing.free_name": "Gratis",
+  "pricing.free_unit": "/ mes, para siempre",
+  "pricing.free_f1": "Sigue 3 páginas de subencargados del tratamiento",
+  "pricing.free_f2": "Revisión diaria, la misma monitorización que Growth",
+  "pricing.free_f3": "Prueba fechada y exportación CSV",
+  "pricing.free_f4": "Un Trust Center público al que tus clientes pueden suscribirse",
+  "pricing.free_f5": "Sin tarjeta, sin caducidad",
+  "pricing.free_cta": "Empezar gratis",
+  "pricing.free_after": "Las cuentas nuevas disfrutan primero de 14 días de Growth y luego se quedan aquí.",
+  "pricing.growth_name": "Growth",
+  "pricing.growth_unit": "/ mes",
+  "pricing.growth_f1": "Sigue hasta 25 páginas de subencargados del tratamiento",
+  "pricing.growth_f2": "Revisión diaria — te enteras de un cambio por nosotros, no por un cliente",
+  "pricing.growth_f3": "Prueba fechada de cada cambio: qué decía la página, qué dice ahora y cuándo se movió",
+  "pricing.growth_f4": "La IA separa los cambios sustanciales de las ediciones cosméticas, así solo revisas lo que importa",
+  "pricing.growth_f5": "Cola de aprobación con comparación lado a lado — nada llega a tu Trust Center sin ti",
+  "pricing.growth_f6": "Exporta todo el historial en CSV — hashes, marcas de tiempo y quién aprobó qué",
+  "pricing.growth_f7": "Un aviso del artículo 28.2 redactado para cada cambio, listo para enviar a tus clientes",
+  "pricing.growth_f8": "Un Trust Center público al que tus propios clientes pueden suscribirse",
+  "pricing.growth_f9": "Correo a tus suscriptores en cada cambio publicado",
+  "pricing.growth_cta": "Probar 14 días",
+  "pricing.growth_note": "Sin tarjeta de crédito · Cancela cuando quieras ·",
+  "pricing.growth_guarantee": "garantía de devolución de 14 días",
+  "pricing.growth_paddle": "La facturación la gestiona Paddle como merchant of record. Los precios no incluyen los impuestos aplicables, que Paddle calcula al pagar.",
+  "pricing.why_title": "Por qué hay equipos que pagan por esto",
+  "pricing.why1_t": "El plazo para oponerse es corto y empieza sin ti",
+  "pricing.why1_b": "Conforme al artículo 28.2 del RGPD, un encargado que actúa con autorización general debe informarte antes de añadir o sustituir a un subencargado, y dispones de un plazo para oponerte — normalmente de 10 a 30 días en un DPA comercial. En la práctica, ese aviso es una actualización silenciosa de una página de su web. Si nadie mira la página, el plazo se agota solo.",
+  "pricing.why2_t": "«¿Cuándo cambió eso?» es una pregunta que se responde con una fecha",
+  "pricing.why2_b": "Una captura tomada la semana de la auditoría no prueba nada sobre lo que decía la página hace tres meses. Aquí cada cambio se guarda con su diff y su marca de tiempo, desde el día en que empezaste a monitorizar.",
+  "pricing.why3_t": "Tus clientes te hacen la misma pregunta que tú haces a tus proveedores",
+  "pricing.why3_b": "El Trust Center convierte tu respuesta en algo que publicas una vez, en lugar de reescribirla en cada cuestionario de seguridad — un historial público y fechado de tus cambios de subencargados al que los clientes pueden suscribirse.",
+  "pricing.faq_title": "Preguntas",
+  "pricing.faq1_q": "¿Sirve esto para DORA?",
+  "pricing.faq1_a": "En parte, y conviene precisar en qué parte. DORA obliga a las entidades financieras de la UE a mantener un Registro de Información sobre sus proveedores TIC y los subcontratistas de esos proveedores, que se presenta cada año al supervisor. TrustPages mantiene actualizada y fechada la mitad correspondiente a los subcontratistas. No es una herramienta de presentación y no elabora el registro por ti.",
+  "pricing.faq2_q": "¿Cómo distingue la IA un cambio sustancial de uno cosmético?",
+  "pricing.faq2_a": "Cada diff detectado se clasifica como sustancial o cosmético. Los cambios cosméticos — erratas, reformateo, un titular movido — se publican automáticamente. Todo lo que pueda afectar a tus clientes, como un nuevo subencargado o un nuevo país de tratamiento, pasa antes por tu cola de aprobación. La última palabra siempre es tuya.",
+  "pricing.faq3_q": "¿Qué pasa después de los 14 días de prueba?",
+  "pricing.faq3_a": "No se cobra nada y la cuenta no deja de funcionar: pasa al plan gratuito, donde tus 3 páginas más antiguas se siguen revisando a diario. Lo que exceda se desactiva, no se borra, de modo que una mejora posterior lo reactiva con su historial intacto.",
+  "pricing.faq4_q": "¿Y si necesito seguir a más de 25 proveedores?",
+  "pricing.faq4_a": "25 cubre la lista de proveedores de la mayoría de equipos de este tamaño. Si necesitas más, escríbenos y ampliamos el límite en el plan Growth.",
+  "pricing.faq5_q": "¿Puedo cancelar cuando quiera?",
+  "pricing.faq5_a": "Sí, desde la página de facturación de tu panel. Conservas Growth hasta el final del periodo que ya has pagado y después la cuenta continúa en el plan gratuito en lugar de cerrarse — tu Trust Center sigue online y tu historial intacto, así que cancelar no retira una página pública que tus clientes puedan tener guardada.",
+  "pricing.faq5_link": "Consulta nuestra política de reembolso y la garantía de devolución de 14 días sobre tu primer periodo pagado.",
+
+  "compare.meta_title": "Comparativa de herramientas para monitorizar subencargados del tratamiento | TrustPages",
+  "compare.meta_description": "Los cuatro tipos de herramienta que vigilan las páginas de subencargados, cuánto cuesta cada uno y cuál elegir — incluido cuando la respuesta no somos nosotros.",
+  "compare.h1": "Dónde encaja TrustPages",
+  "compare.intro": "Si buscas algo que vigile las páginas de subencargados de tus proveedores, te encontrarás con cuatro formas de producto. Tienen precios distintos porque resuelven problemas distintos, y para algunos de ellos nosotros somos la respuesta equivocada.",
+  "compare.figures_note": "Rangos de precio leídos en las webs de los proveedores el {date}. Esta categoría se mueve; comprueba los precios actuales antes de decidir.",
+  "compare.strengths_label": "Mejores que nosotros en",
+  "compare.limits_label": "Dónde se detienen",
+  "compare.pick_label": "Elige eso en su lugar si:",
+  "compare.ours_title": "Dónde se sitúa TrustPages",
+  "compare.ours_line": "{free} gratis, o {paid}. Un solo trabajo, hecho pensando en la auditoría.",
+  "compare.gaps_title": "Lo que no tenemos",
+  "compare.gaps_note": "Si alguno de estos puntos es un requisito, una de las categorías de arriba es mejor compra que nosotros.",
+
+  "compare.categories": [
+    {
+      "slug": "lightweight-registries",
+      "name": "Registros ligeros de subencargados",
+      "shape": "Una página alojada que lista tus subencargados, actualizada mediante comprobaciones diarias de los proveedores que indiques. Lo más parecido a lo que hacemos nosotros.",
+      "price": "Gratis para un puñado de proveedores, entre 19 y 49 $/mes para más o ilimitado",
+      "strengths": [
+        "La vía más barata con diferencia hacia proveedores ilimitados",
+        "Subdominio propio para la página pública ya en los primeros planes de pago",
+        "Existen planes gratuitos, aunque suelen llevar la marca del proveedor en tu página"
+      ],
+      "limits": [
+        "Lo que se conserva suele ser el estado actual más alertas, no un documento fechado por cambio",
+        "La revisión previa a publicar es escasa o inexistente — las actualizaciones tienden a pasar solas",
+        "La cobertura se limita a los proveedores que la herramienta ya sigue"
+      ],
+      "pick_them_when": "Tienes una lista larga de proveedores, poco presupuesto y nadie va a pedirte que demuestres qué decía una página el trimestre pasado."
+    },
+    {
+      "slug": "privacy-suites",
+      "name": "Suites de evidencia para equipos de privacidad",
+      "shape": "Pensadas para una función de privacidad con varias personas: monitorización más colas de revisión, captura de evidencias y módulos de registro de actividades de tratamiento y evaluación de transferencias.",
+      "price": "Unos 99 €/mes de entrada, 299 € para el flujo de revisión, 999 € para roles y módulos",
+      "strengths": [
+        "Acceso por roles para privacidad, legal y compras sobre la misma cola",
+        "RAT y Transfer Impact Assessment junto a la monitorización",
+        "Residencia de datos en la UE declarada y DPA disponible antes de comprar"
+      ],
+      "limits": [
+        "El flujo de revisión y la exportación de auditoría están dos planes más arriba, no en el de entrada",
+        "La evidencia mira hacia dentro, hacia tu auditor — no hay página pública para tus clientes",
+        "Las pruebas son cortas y no existe un plan gratuito permanente"
+      ],
+      "pick_them_when": "Más de una persona revisa los cambios de proveedores, o necesitas RAT y evaluación de transferencias en la misma herramienta. A un equipo de privacidad de dos personas no podemos servirle; ellos sí."
+    },
+    {
+      "slug": "page-monitors",
+      "name": "Monitores genéricos de cambios en páginas",
+      "shape": "No son productos de cumplimiento. Vigilan cualquier URL y te avisan de que se ha movido, con un resumen por IA y una puntuación de importancia.",
+      "price": "Gratis para un puñado de páginas, entre 13 y 85 $/mes para cientos",
+      "strengths": [
+        "Mucho más barato por página, y cientos de páginas en lugar de decenas",
+        "Alertas en cualquier sitio — Slack, Teams, Discord, webhooks",
+        "Selectores a nivel de elemento y descubrimiento automático de páginas nuevas"
+      ],
+      "limits": [
+        "La salida es una notificación, no una prueba: sin rastro de decisiones, sin exportación para auditoría",
+        "Nada que enseñar a un cliente — ni página pública ni aviso a suscriptores",
+        "Nada redacta el aviso del artículo 28.2 que promete tu DPA"
+      ],
+      "pick_them_when": "Quieres saber cuándo cambian las páginas y te encargarás tú del lado de cumplimiento, en una hoja de cálculo que ya mantienes."
+    },
+    {
+      "slug": "trust-platforms",
+      "name": "Plataformas de Trust Center y GRC",
+      "shape": "El extremo corporativo: un Trust Center completo con automatización de cuestionarios, certificaciones y documentos protegidos por NDA, donde los subencargados son una sección más.",
+      "price": "Normalmente contratos anuales, de cuatro a cinco cifras",
+      "strengths": [
+        "Responde a toda la revisión de seguridad, no solo a la parte de subencargados",
+        "Bibliotecas de documentos, control de accesos, integraciones con el resto del stack",
+        "El nombre en la página pesa ante un comprador corporativo"
+      ],
+      "limits": [
+        "Precio y alcance pensados para una empresa con función de cumplimiento propia",
+        "La monitorización de subencargados es una función, no el foco, y a menudo es manual",
+        "Semanas de implantación en lugar de una tarde"
+      ],
+      "pick_them_when": "Los cuestionarios de seguridad son un coste recurrente en toda la empresa y tienes presupuesto para resolverlo todo de una vez."
+    }
+  ],
+
+  "compare.position": [
+    {
+      "title": "Los documentos, no solo el diff",
+      "body": "Cada cambio detectado guarda la página del proveedor tal y como se leía antes y después, cada una con su hash y su marca de tiempo, además de quién la revisó y cuándo. «Qué decía esta página en marzo» tiene respuesta."
+    },
+    {
+      "title": "Nada se publica sin ti",
+      "body": "Los cambios se clasifican como sustanciales o cosméticos, y solo las ediciones cosméticas de alta confianza se publican solas. Todo lo demás espera en una cola con la comparación lado a lado."
+    },
+    {
+      "title": "Exportación en todos los planes",
+      "body": "Todo el historial sale en un único CSV — fechas, proveedores, clasificaciones, hashes, decisiones — también en el plan gratuito. Es el archivo que acaban pidiéndote."
+    },
+    {
+      "title": "El aviso al cliente, ya redactado",
+      "body": "Tu DPA promete a tus clientes un aviso previo conforme al artículo 28.2 del RGPD. Lo redactamos a partir del propio cambio, así el paso que suele saltarse se convierte en una revisión y no en una página en blanco."
+    },
+    {
+      "title": "Cualquier URL, incluidas las incómodas",
+      "body": "Las páginas que solo se muestran con JavaScript se descargan con un navegador real, así que la cobertura no termina en una lista de proveedores que casualmente sigamos."
+    }
+  ],
+
+  "compare.gaps": [
+    "25 páginas en el plan de pago, donde herramientas más baratas ofrecen ilimitado.",
+    "El Trust Center público vive en una dirección de usetrustpages.com; todavía no hay dominio propio.",
+    "Solo avisos por correo — sin Slack, sin webhooks, sin API.",
+    "Un único acceso por cuenta: sin roles para un equipo de privacidad que trabaja junto.",
+    "Sin RAT, sin evaluaciones de impacto de transferencias, sin automatización de cuestionarios."
+  ],
+
+  "vendors.meta_title": "Listas de subencargados de {count} proveedores, revisadas a diario | TrustPages",
+  "vendors.meta_description": "Un directorio de listas de subencargados del tratamiento — a quién recurre cada proveedor y qué ha cambiado. Cada página se vuelve a comprobar a diario contra la fuente del propio proveedor.",
+  "vendors.h1": "Directorio de subencargados del tratamiento",
+  "vendors.intro": "A quién entregan tus datos tus proveedores y cuándo cambió eso por última vez. Cada página se relee a diario desde la lista publicada por el proveedor — el mismo motor que nuestros clientes apuntan a sus propios suministradores.",
+  "vendors.count_one": "1 subencargado",
+  "vendors.count_many": "{count} subencargados",
+  "vendors.updated": "actualizado el {date}",
+  "vendors.view": "Ver",
+  "vendors.empty": "El directorio se está llenando — las páginas aparecen aquí en cuanto se ha leído su primera lista.",
+  "vendors.cta_title": "¿Lo mismo para tus propios proveedores?",
+  "vendors.cta_body": "Apunta TrustPages a los suministradores que de verdad usas. Vigilamos sus páginas, te avisamos cuando algo sustancial cambia, conservamos prueba fechada y publicamos un Trust Center al que tus propios clientes pueden suscribirse.",
+
+  "vendor.meta_title": "Subencargados de {vendor} — monitorizados a diario | TrustPages",
+  "vendor.meta_description": "Los subencargados del tratamiento que publica {vendor}, con el historial de cambios registrado desde que empezó la monitorización. Comprobado a diario contra la propia página de {vendor}.",
+  "vendor.banner": "¿Usas {vendor} en tu producto? Automatiza los avisos del DPA que debes a tus propios clientes cuando esta lista cambie.",
+  "vendor.banner_cta": "Añadir {vendor} a TrustPages",
+  "vendor.breadcrumb": "Directorio de proveedores",
+  "vendor.h1": "Subencargados de {vendor}",
+  "vendor.intro": "{vendor} publica la lista siguiente en su propio sitio. Comprobamos esa página a diario y registramos lo que se mueve, así que aquí ves la lista actual y lo que cambió antes.",
+  "vendor.stat_entries": "Entradas",
+  "vendor.stat_updated": "Lista actualizada",
+  "vendor.stat_checked": "Última comprobación",
+  "vendor.stat_source": "Fuente",
+  "vendor.source_link": "la página de {vendor}",
+  "vendor.current_title": "Subencargados actuales",
+  "vendor.th_name": "Subencargado",
+  "vendor.th_purpose": "Finalidad",
+  "vendor.th_location": "Ubicación",
+  "vendor.no_entries": "En la última comprobación no se pudo leer ninguna entrada de la página.",
+  "vendor.history_title": "Historial de cambios",
+  "vendor.added": "Añadido:",
+  "vendor.removed": "Eliminado:",
+  "vendor.no_changes": "Sin cambios desde que empezó la monitorización.",
+  "vendor.watching_since": "Esta página se vigila a diario desde el {date}.",
+  "vendor.why_title": "Por qué importa si usas {vendor}",
+  "vendor.why_body": "Conforme al artículo 28.2 del RGPD, tus propios clientes suelen tener derecho a un aviso previo antes de que añadas o sustituyas a un subencargado — y los subencargados de {vendor} forman parte de esa cadena. El plazo de aviso en un DPA habitual es de 10 a 30 días, y empieza cuando el proveedor actualiza su página, no cuando tú te enteras.",
+  "vendor.footer_cta": "Monitorizar {vendor} en tu propio Trust Center — gratis",
+  "vendor.free_note": "3 proveedores gratis, para siempre. Sin tarjeta.",
+  "vendor.classification_material": "Sustancial",
+  "vendor.classification_cosmetic": "Cosmética"
+}

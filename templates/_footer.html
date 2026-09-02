@@ -1,13 +1,21 @@
+{# The legal pages stay English on purpose: they are the contract, and a
+   translated contract raises "which version governs" — so the localized
+   footer links to the English originals and says so. #}
 <footer class="border-t border-slate-200 bg-white">
-    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-        <p>© 2026 Denizhan Koçakgöl · Antalya, Turkey</p>
-        <nav class="flex items-center gap-5">
-            <a href="/pricing" class="hover:text-slate-900">Pricing</a>
-            <a href="/vendors" class="hover:text-slate-900">Directory</a>
-            <a href="/compare" class="hover:text-slate-900">Compare</a>
-            <a href="/terms" class="hover:text-slate-900">Terms of Service</a>
-            <a href="/privacy" class="hover:text-slate-900">Privacy Policy</a>
-            <a href="/refunds" class="hover:text-slate-900">Refund Policy</a>
-        </nav>
+    <div class="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-3 text-sm text-slate-500">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p>{{ t('footer.copyright') if t else '© 2026 Denizhan Koçakgöl · Antalya, Turkey' }}</p>
+            <nav class="flex flex-wrap items-center justify-center gap-5">
+                <a href="{{ u('/pricing') if u else '/pricing' }}" class="hover:text-slate-900">{{ t('nav.pricing') if t else 'Pricing' }}</a>
+                <a href="{{ u('/vendors') if u else '/vendors' }}" class="hover:text-slate-900">{{ t('nav.directory') if t else 'Directory' }}</a>
+                <a href="{{ u('/compare') if u else '/compare' }}" class="hover:text-slate-900">{{ t('nav.compare') if t else 'Compare' }}</a>
+                <a href="/terms" class="hover:text-slate-900">{{ t('footer.terms') if t else 'Terms of Service' }}</a>
+                <a href="/privacy" class="hover:text-slate-900">{{ t('footer.privacy') if t else 'Privacy Policy' }}</a>
+                <a href="/refunds" class="hover:text-slate-900">{{ t('footer.refunds') if t else 'Refund Policy' }}</a>
+            </nav>
+        </div>
+        {% if t and t('footer.legal_note') %}
+        <p class="text-xs text-slate-400 text-center md:text-right">{{ t('footer.legal_note') }}</p>
+        {% endif %}
     </div>
 </footer>

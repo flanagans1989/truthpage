@@ -1,29 +1,14 @@
 {% extends "base.html" %}
-{% block title %}How TrustPages compares — sub-processor monitoring options{% endblock %}
-{% block meta_description %}The four kinds of tool that watch vendor sub-processor pages, what each costs, and which one to pick — including when the answer is not us. Figures checked {{ verified_on }}.{% endblock %}
+{% block title %}{{ t('compare.meta_title') }}{% endblock %}
+{% block meta_description %}{{ t('compare.meta_description') }}{% endblock %}
 {% block content %}
 <div class="min-h-screen flex flex-col">
-    <header class="border-b border-slate-200 bg-white">
-        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-            <a href="/" class="text-blue-600 font-bold text-xl">TrustPages</a>
-            <div class="flex items-center gap-4">
-                <a href="/pricing" class="text-sm text-slate-600 hover:text-slate-900">Pricing</a>
-                <a href="/auth/login" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">Sign in</a>
-            </div>
-        </div>
-    </header>
+    {% with width = 'max-w-4xl' %}{% include "_header.html" %}{% endwith %}
 
     <main class="flex-1 max-w-4xl mx-auto px-6 py-16 w-full">
-        <h1 class="text-3xl font-bold text-slate-900 mb-4">How TrustPages compares</h1>
-        <p class="text-slate-700 leading-relaxed mb-3">
-            If you are shopping for something to watch your vendors' sub-processor pages, you will
-            meet four shapes of product. They are priced differently because they are solving
-            different problems, and for some of those problems we are the wrong answer.
-        </p>
-        <p class="text-sm text-slate-500 mb-12">
-            Price ranges read off live vendor sites on {{ verified_on }}. This category moves;
-            check current pricing before you decide.
-        </p>
+        <h1 class="text-3xl font-bold text-slate-900 mb-4">{{ t('compare.h1') }}</h1>
+        <p class="text-slate-700 leading-relaxed mb-3">{{ t('compare.intro') }}</p>
+        <p class="text-sm text-slate-500 mb-12">{{ t('compare.figures_note', date=verified_on) }}</p>
 
         <div class="space-y-6 mb-16">
             {% for c in categories %}
@@ -35,47 +20,50 @@
                 <p class="text-sm text-slate-600 leading-relaxed mb-5">{{ c.shape }}</p>
                 <div class="grid sm:grid-cols-2 gap-6">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Stronger than us at</p>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">{{ t('compare.strengths_label') }}</p>
                         <ul class="space-y-1.5 text-sm text-slate-600">
                             {% for item in c.strengths %}<li>· {{ item }}</li>{% endfor %}
                         </ul>
                     </div>
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Where they stop</p>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">{{ t('compare.limits_label') }}</p>
                         <ul class="space-y-1.5 text-sm text-slate-600">
                             {% for item in c.limits %}<li>· {{ item }}</li>{% endfor %}
                         </ul>
                     </div>
                 </div>
                 <p class="mt-5 pt-5 border-t border-slate-100 text-sm text-slate-700">
-                    <strong class="font-semibold">Pick this instead if:</strong> {{ c.pick_them_when }}
+                    <strong class="font-semibold">{{ t('compare.pick_label') }}</strong> {{ c.pick_them_when }}
                 </p>
             </div>
             {% endfor %}
         </div>
 
-        <h2 class="text-2xl font-bold text-slate-900 mb-2">Where TrustPages sits</h2>
-        <p class="text-slate-600 mb-8">{{ ours.free }} free, or {{ ours.paid }}. One job, done with an audit in mind.</p>
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">{{ t('compare.ours_title') }}</h2>
+        <p class="text-slate-600 mb-8">{{ t('compare.ours_line', free=ours.free, paid=ours.paid) }}</p>
         <div class="grid sm:grid-cols-2 gap-6 mb-16">
-            {% for title, body in our_position %}
+            {% for item in our_position %}
             <div>
-                <h3 class="font-semibold text-slate-900 mb-1">{{ title }}</h3>
-                <p class="text-sm text-slate-600 leading-relaxed">{{ body }}</p>
+                <h3 class="font-semibold text-slate-900 mb-1">{{ item.title }}</h3>
+                <p class="text-sm text-slate-600 leading-relaxed">{{ item.body }}</p>
             </div>
             {% endfor %}
         </div>
 
         <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-16">
-            <h2 class="font-semibold text-slate-900 mb-3">What we don't have</h2>
+            <h2 class="font-semibold text-slate-900 mb-3">{{ t('compare.gaps_title') }}</h2>
             <ul class="space-y-2 text-sm text-slate-600">
                 {% for gap in our_gaps %}<li>· {{ gap }}</li>{% endfor %}
             </ul>
-            <p class="text-xs text-slate-400 mt-4">If one of these is a requirement, one of the categories above is a better buy than we are.</p>
+            <p class="text-xs text-slate-400 mt-4">{{ t('compare.gaps_note') }}</p>
         </div>
 
         <div class="text-center">
-            <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg text-sm">Start free — 3 vendors, no card</a>
-            <p class="text-xs text-slate-500 mt-3">New accounts get 14 days of the paid plan first. <a href="/pricing" class="text-blue-600 hover:underline">See pricing</a>.</p>
+            <a href="/auth/login" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg text-sm">{{ t('cta.start_free') }}</a>
+            <p class="text-xs text-slate-500 mt-3">
+                {{ t('cta.trial_note') }}
+                <a href="{{ u('/pricing') }}" class="text-blue-600 hover:underline">{{ t('cta.pricing_link') }}</a>
+            </p>
         </div>
     </main>
 

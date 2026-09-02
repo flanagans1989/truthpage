@@ -16,6 +16,7 @@ from app.routers import (
     auth,
     billing,
     dashboard,
+    localized,
     onboarding,
     pages,
     public,
@@ -138,3 +139,10 @@ async def trigger_sweep(x_admin_secret: str = Header(...)):
         raise HTTPException(status_code=403, detail="Forbidden")
     await run_sweep_cycle(AsyncSessionLocal)
     return {"status": "sweep triggered"}
+
+
+# Registered after every other route, including the @app.get ones above: the
+# localized router's paths begin with /{lang}, which would otherwise match
+# any single-segment URL — /healthz included, which is what Render polls.
+# See app/routers/localized.py.
+app.include_router(localized.router)

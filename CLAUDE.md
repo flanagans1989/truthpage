@@ -59,6 +59,31 @@ python run_sweep.py                    # manual sweep
   path — that tenant is the showcase trust page
 - Article 28(2) notice drafts are stored on the change event and only redrawn on request; the
   tenant may already have sent the earlier wording
+- **English is the root, every other language is a prefix.** `/pricing` is English, `/de/pricing`
+  German; `/en/...` 301s to the root rather than serving a second copy of the same text.
+  `app/routers/localized.py` holds the `/{lang}/...` routes and **must stay the last router
+  registered in `main.py`** — its paths start with `/{lang}`, which otherwise matches any
+  single-segment URL, `/healthz` included. That is the health check Render polls
+- Copy lives in `locales/<lang>.json`, flat dotted keys; a missing key falls back to English and
+  logs. A test asserts the four catalogues have identical key sets, that placeholders survive
+  translation, and that **no competitor name appears in any language** — the `/compare` rule now
+  has four files to break it in
+- Translations use each market's regulatory vocabulary, not a rendering of ours:
+  Unterauftragsverarbeiter / AVV / DSGVO, sous-traitants ultérieurs / RGPD,
+  subencargados / RGPD. That is where the search volume is, so a "cleaner" literal translation
+  is a downgrade. Tests pin the terms
+- **`/terms`, `/privacy` and `/refunds` are English-only on purpose** — they are the contract, and
+  a translated contract raises which-version-governs. `/de/terms` 301s to `/terms`, and the
+  localized footer says the English text is the binding one
+- The canonical vendor URL is `/vendors/{slug}-subprocessors` (that is the search phrase);
+  `/vendors/{slug}` 301s to it, in whatever language it was requested
+- The root path nudges a visitor to their own language once: `/` only, never a deep link, never
+  a crawler UA, and never once the `lang` cookie is set. Any localized page view sets that
+  cookie. Do not extend the redirect to other paths — an auto-redirect a crawler can hit is how
+  a language's pages stop being indexed
+- hreflang is emitted from `base.html` for every public page and must stay reciprocal and
+  complete (four languages + x-default); `sitemap.xml` repeats the same set as `xhtml:link`
+  alternates on every entry. A partial set is ignored wholesale by search engines
 - **A trust page is 404 until `tenants.onboarded_at` is set.** The onboarding wizard's Publish
   button is what sets it; migration 0011 backfilled every pre-wizard tenant to `created_at` so
   no live page went dark. `/trust/{slug}` and its subscribe endpoint both check it — a list

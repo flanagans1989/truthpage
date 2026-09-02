@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang | default('en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,6 +22,14 @@
         gtag('js', new Date());
         gtag('config', '{{ ga_measurement_id }}');
     </script>
+    {% endif %}
+    {% if alternates %}
+    {# hreflang has to be reciprocal and complete on every page, x-default
+       included, or search engines quietly ignore the whole set. #}
+    <link rel="canonical" href="{{ canonical_url }}">
+    {% for alt in alternates %}
+    <link rel="alternate" hreflang="{{ alt.hreflang }}" href="{{ alt.href }}">
+    {% endfor %}
     {% endif %}
     {% block head_extra %}{% endblock %}
     {% block canonical %}{% endblock %}
