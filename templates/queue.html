@@ -5,12 +5,21 @@
 {% block content %}
 <div class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0">
-        <div class="px-6 py-5 border-b border-slate-200">
+    <!-- Sidebar: hidden off-canvas on mobile until the hamburger opens it
+         (inline style, not a class, so the JS toggle can't lose a cascade
+         fight with the "hidden md:flex" responsive default below), a normal
+         in-flow column from md: up. -->
+    <aside id="sidebar" class="hidden md:flex flex-col fixed md:static inset-0 z-50 w-full md:w-64 bg-white border-r border-slate-200 shrink-0">
+        <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
             <span class="text-blue-600 font-bold text-lg tracking-tight">TrustPages</span>
+            <button type="button" onclick="document.getElementById('sidebar').style.display='none'"
+                    class="md:hidden p-1 -mr-1 text-slate-400 hover:text-slate-600" aria-label="Close menu">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
         </div>
-        <nav class="flex-1 px-3 py-4 space-y-0.5">
+        <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
             <a href="/dashboard"
                class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,11 +79,23 @@
     <!-- Main area -->
     <div class="flex-1 flex flex-col overflow-hidden">
 
+        <!-- Mobile top bar: the sidebar is off-canvas below md:, so this is
+             the only way to reach it (and the only place the wordmark shows). -->
+        <div class="md:hidden flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white shrink-0">
+            <span class="text-blue-600 font-bold text-lg tracking-tight">TrustPages</span>
+            <button type="button" onclick="document.getElementById('sidebar').style.display='flex'"
+                    class="p-2 -mr-2 text-slate-600" aria-label="Open menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+
         <!-- Top bar -->
-        <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-3">
-                <h2 class="text-base font-semibold text-slate-900">{{ tenant.name }}</h2>
-                <span class="text-xs px-2.5 py-0.5 rounded-full font-medium
+        <header class="bg-white border-b border-slate-200 px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div class="flex items-center gap-3 min-w-0">
+                <h2 class="text-base font-semibold text-slate-900 truncate">{{ tenant.name }}</h2>
+                <span class="shrink-0 text-xs px-2.5 py-0.5 rounded-full font-medium
                     {% if tenant.subscription_status == 'active' %}bg-green-100 text-green-700
                     {% elif tenant.subscription_status == 'trialing' %}bg-blue-100 text-blue-700
                     {% elif tenant.subscription_status == 'past_due' %}bg-amber-100 text-amber-700
@@ -88,7 +109,7 @@
         </header>
 
         <!-- Content -->
-        <main class="flex-1 overflow-y-auto p-8">
+        <main class="flex-1 overflow-y-auto p-4 sm:p-8">
 
             <div class="mb-6">
                 <h1 class="text-2xl font-bold text-slate-900">Approval Queue</h1>
