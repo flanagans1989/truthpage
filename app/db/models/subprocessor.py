@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, Uuid
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -48,6 +48,25 @@ class Subprocessor(TimestampMixin, Base):
     # to NULL on recovery so a later, separate failure streak alerts again
     # right away rather than waiting out a stale dedupe window.
     monitoring_alert_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Why the last check failed, for the dashboard tooltip. NULL on a healthy
+    # source. Set alongside consecutive_failure_count, cleared on recovery.
+    last_failure_reason: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # True for exactly the tick where a check was skipped for lack of Tier-2
+    # budget (see tier2_budget.py) — cleared the moment a real fetch attempt
+    # runs again, success or failure. Not a failure: doesn't touch
+    # consecutive_failure_count. This is what makes a budget-queued source
+    # visible on the dashboard instead of just quietly not being scraped.
+    tier2_deferred: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    # Per-source Tier-2 daily quota (TIER2_DAILY_PER_SOURCE) — the primary
+    # cost control. Separate from the tenant-level pool below (a safety valve,
+    # not a feature limit); see tier2_budget.py for why both exist.
+    tier2_daily_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    tier2_daily_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # Second, independent alarm from the failure-count one above: fires once
+    # last_checked_at is older than STALENESS_ALERT_DAYS, no matter why (a
+    # failure streak, a long budget deferral, a dead worker, anything) — the
+    # only question it asks is "was this source actually looked at recently".
+    staleness_alert_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     tenant: Mapped["Tenant"] = relationship(  # noqa: F821
         "Tenant",
@@ -61,10 +80,42 @@ class Subprocessor(TimestampMixin, Base):
     )
 
     @property
+    def is_stale(self) -> bool:
+        """A source is stale once it's been longer than STALENESS_ALERT_DAYS
+        since it was actually, successfully looked at — regardless of cause
+        (a failure streak, a long Tier-2 budget deferral, a dropped worker,
+        anything unforeseen). Falls back to created_at for a source that has
+        never had a successful check yet, so a page added seconds ago isn't
+        immediately flagged before its first check has had a chance to run.
+        """
+        from datetime import UTC
+
+        from app.core.config import settings
+        from app.db.models.mixins import utc_now
+
+        reference = self.last_checked_at or self.created_at
+        if reference is None:
+            return False
+        # SQLite (tests only) hands back naive datetimes; we only ever write
+        # UTC into either column, so that's the correct zone to attach.
+        if reference.tzinfo is None:
+            reference = reference.replace(tzinfo=UTC)
+        age = utc_now() - reference
+        return age >= timedelta(days=settings.STALENESS_ALERT_DAYS)
+
+    @property
     def has_monitoring_alert(self) -> bool:
-        """Persistent badge condition — independent of whether the dedupe
-        window has already sent the email, so the dashboard keeps showing the
-        warning for the whole outage, not just the day the email went out."""
+        """Persistent badge condition — independent of whether either
+        dedupe window has already sent its email, so the dashboard keeps
+        showing the warning for the whole outage, not just the day an email
+        went out. True on EITHER signal: a failure streak past threshold, or
+        staleness past STALENESS_ALERT_DAYS — two different questions
+        ("is it erroring" vs. "has it actually been checked recently") that
+        can each be true without the other (a budget deferral trips
+        staleness with zero failures recorded)."""
         from app.core.config import settings
 
-        return self.consecutive_failure_count >= settings.MONITORING_ALERT_FAILURE_THRESHOLD
+        return (
+            self.consecutive_failure_count >= settings.MONITORING_ALERT_FAILURE_THRESHOLD
+            or self.is_stale
+        )

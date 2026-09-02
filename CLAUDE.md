@@ -22,12 +22,26 @@ python run_sweep.py                    # manual sweep
   its 5-min scale-to-zero window whether or not work is due. 30-min ticks burn ~124 compute-hours
   a month against a 100-hour cap — that took the site down for a week (2026-08-24). It is 3h now.
   Don't shorten it without redoing the arithmetic.
-- **Tier-2 (Playwright) is plan-independent, not plan-gated.** Every tenant's bot-walled sources
-  escalate to a real headless browser, Free included — the only per-plan lever is
-  `TIER2_DAILY_LIMIT_{FREE,STARTER,GROWTH}`, a daily run cap per tenant that queues an over-budget
-  check (via `Tenant.consume_tier2_budget`) rather than skipping it. Raising those caps is a
-  compute-cost decision, same arithmetic as the sweep interval above — a source already flagged
-  `requires_browser=True` spends the budget on every single check, forever.
+- **Tier-2 (Playwright) is plan-independent, not plan-gated — and not a pricing differentiator.**
+  Every tenant's bot-walled sources escalate to a real headless browser, Free included; never say
+  otherwise in pricing/marketing copy. Cost is capped by two *internal* pools, neither is a
+  feature: `TIER2_DAILY_PER_SOURCE` (the real control — each source's own quota) and
+  `TIER2_DAILY_LIMIT_{FREE,STARTER,GROWTH}` (a per-tenant safety valve sized well above what
+  per-source quotas should ever add up to; tripping it is logged as abnormal and emails admins).
+  Both are spent via `app/services/tier2_budget.py`'s atomic UPDATE, never an ORM
+  read-modify-write — a plain `+1` there is a lost-update race under concurrent workers. Raising
+  either cap is a compute-cost decision, same arithmetic as the sweep interval above — a source
+  already flagged `requires_browser=True` spends its quota on every single check, forever.
+- **A bot-wall challenge page returns HTTP 200 — it is not a fetch error, it looks like success.**
+  `app/core/scraper/content_health.py` is the one place both the fetcher (escalation decision) and
+  `monitoring.py` (final accept/reject) check for it — a Cloudflare/Turnstile/hCaptcha
+  interstitial, or under-`CONTENT_HEALTH_MIN_TEXT_LENGTH` visible text, is a failure
+  (`last_failure_reason` "bot_wall"/"empty_content"), never a snapshot: it must never become the
+  new `last_content_hash`, or the diff engine reports "no change" on a challenge page forever
+  while the tenant believes they're covered. Two *separate* alarms watch for this failing
+  silently: the failure-count one (`MONITORING_ALERT_FAILURE_THRESHOLD`) and, independent of it,
+  `STALENESS_ALERT_DAYS` — "has this source actually been looked at recently," which also catches
+  a long Tier-2 budget deferral that never counted as a failure at all.
 - **CSS is compiled, not CDN.** Rerun the Tailwind command above after any class change, and note
   it scans `app/**/*.py` too because routers contain inline HTML.
 - **`preDeployCommand` is silently ignored on Render free.** Migrations run from the Dockerfile

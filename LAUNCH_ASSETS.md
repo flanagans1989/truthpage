@@ -75,7 +75,6 @@ wait to be asked if the thread is slow):
 - *"Can it read pages that need JavaScript to render?"* — Yes, every plan
   (Free included) escalates to a real headless browser automatically when a
   page is behind bot protection or client-rendered; no configuration needed.
-  Growth just gets a bigger daily budget for how often that can happen.
 - *"Is my data monitored, or am I setting this up to protect myself?"* —
   Both directions: you add the vendors you use (nobody publishes on your
   behalf), and separately there's a public directory of already-verified

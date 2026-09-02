@@ -78,7 +78,6 @@
   "pricing.growth_f2": "Kryptografisches Prüfnachweis-Paket: ein herunterladbares ZIP mit SHA-256-Verifizierungsanker, dem rohen HTML vor und nach der Änderung, dem Diff und Ihrem Entscheidungsverlauf",
   "pricing.growth_f3": "Vollständiger CSV-Export Ihrer gesamten Änderungshistorie — Hashes, Zeitstempel und Freigaben",
   "pricing.growth_f4": "Das „Powered by TrustPages“-Badge von Ihrem Trust Center entfernen",
-  "pricing.growth_f5": "Höheres tägliches Tier-2-Kontingent (Headless-Browser) für bot-geschützte oder JavaScript-lastige Anbieterseiten — jeder Plan bekommt die automatische Eskalation von Tier-1 zu Tier-2, Growth hat nur den größten Spielraum (30 Läufe/Tag statt 3 im kostenlosen Plan)",
   "pricing.growth_cta": "14 Tage testen",
   "pricing.growth_note": "Keine Kreditkarte nötig · Jederzeit kündbar ·",
   "pricing.growth_guarantee": "14 Tage Geld-zurück-Garantie",

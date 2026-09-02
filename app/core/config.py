@@ -43,20 +43,40 @@ class Settings(BaseSettings):
     ADMIN_EMAILS: str = ""
 
     # A source is flagged with a persistent "Monitoring Alert" once its
-    # consecutive failed checks (4xx/5xx, timeout, empty content) reach this.
+    # consecutive failed checks (4xx/5xx, timeout, empty content, bot wall)
+    # reach this, OR once it's simply gone stale — see STALENESS_ALERT_DAYS.
     MONITORING_ALERT_FAILURE_THRESHOLD: int = 3
-    # Once the alert email fires for a source, don't fire it again for this
-    # many days even if it keeps failing — a page that's been down a week
-    # doesn't need a fresh email every single day.
+    # Once an alert email fires for a source, don't fire the same alert again
+    # for this many days even if the condition persists — resends again after
+    # this window if still unresolved (see monitoring.py); cleared entirely on
+    # recovery so a later, unrelated occurrence alerts immediately.
     MONITORING_ALERT_DEDUPE_DAYS: int = 7
+    # Independent of the failure counter above: a source not successfully
+    # checked in this many days alerts regardless of *why* — a failure
+    # streak, a long Tier-2 budget deferral, a dropped worker, anything.
+    # The failure counter answers "is it erroring"; this answers "has it
+    # actually been looked at" — a budget deferral trips this with zero
+    # recorded failures.
+    STALENESS_ALERT_DAYS: int = 3
 
     # Tier-2 (Playwright) runs are the expensive path — a real browser launch,
-    # not an httpx GET. These are per-tenant, per-UTC-day ceilings on how many
-    # Tier-2 runs a tenant's already-bot-walled sources may consume; going over
-    # queues the check for the next day rather than skipping it silently.
-    TIER2_DAILY_LIMIT_FREE: int = 3
-    TIER2_DAILY_LIMIT_STARTER: int = 10
-    TIER2_DAILY_LIMIT_GROWTH: int = 30
+    # not an httpx GET. TIER2_DAILY_PER_SOURCE is the real cost control: each
+    # already-bot-walled source may run Tier-2 at most this many times per UTC
+    # day. TIER2_DAILY_LIMIT_{FREE,STARTER,GROWTH} is a separate, tenant-wide
+    # SAFETY VALVE (not a feature tier) sized well above what per-source quotas
+    # should ever add up to — see Tenant.tier2_daily_limit and
+    # app/services/tier2_budget.py. Either cap queues the check rather than
+    # skipping it silently.
+    TIER2_DAILY_PER_SOURCE: int = 2
+    TIER2_DAILY_LIMIT_FREE: int = 6
+    TIER2_DAILY_LIMIT_STARTER: int = 20
+    TIER2_DAILY_LIMIT_GROWTH: int = 60
+
+    # Below this many characters of normalized, visible text, a fetched page
+    # is treated as unhealthy (a bot-wall interstitial, an empty shell, a
+    # script-only render) rather than as real content — never stored as a
+    # snapshot, never diffed. See app/core/scraper/content_health.py.
+    CONTENT_HEALTH_MIN_TEXT_LENGTH: int = 500
 
     @property
     def admin_email_set(self) -> frozenset[str]:

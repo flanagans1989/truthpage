@@ -345,5 +345,102 @@ class MailerService:
 </html>"""
         await self._send(email, subject, body)
 
+    async def send_staleness_alert(
+        self,
+        email: str,
+        subprocessor_name: str,
+        monitored_url: str,
+        days_since_check: int,
+    ) -> None:
+        """Independent of send_monitoring_alert above: fires purely on
+        elapsed time since the last successful check, whatever the cause —
+        a failure streak, a long Tier-2 budget deferral, a dropped worker.
+        The failure-count alert may never fire in a pure-deferral case, so
+        this is the only guarantee a silently-unwatched source gets caught."""
+        subject = f"Monitoring Alert: {subprocessor_name} hasn't been checked in {days_since_check} days"
+        dashboard_url = f"{settings.APP_URL}/dashboard"
+
+        safe_name = html.escape(subprocessor_name)
+        safe_url = html.escape(monitored_url)
+
+        body = f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:48px 0;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:48px 40px;">
+        <tr><td>
+          <p style="margin:0 0 4px;font-size:12px;color:#b45309;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">
+            Monitoring Alert
+          </p>
+          <p style="margin:0 0 8px;font-size:20px;font-weight:700;color:#0f172a;">
+            {safe_name} hasn't been successfully checked in {days_since_check} days
+          </p>
+          <p style="margin:0 0 24px;font-size:14px;color:#64748b;line-height:1.6;">
+            TrustPages hasn't recorded a successful check of
+            <a href="{safe_url}" style="color:#2563eb;">{safe_url}</a>
+            recently. This can happen for more than one reason — repeated
+            fetch failures, or this source using up its daily automated-browser
+            budget on a persistently difficult page — but either way, change
+            detection for it has effectively been paused.
+          </p>
+          <a href="{dashboard_url}"
+             style="display:inline-block;background:#2563eb;color:#ffffff;font-size:14px;
+                    font-weight:600;padding:14px 28px;border-radius:8px;text-decoration:none;">
+            Review in dashboard
+          </a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+        await self._send(email, subject, body)
+
+    async def send_tier2_safety_valve_alert(
+        self,
+        email: str,
+        tenant_name: str,
+        count: int,
+        limit: int,
+    ) -> None:
+        """Internal/admin-only: the tenant-wide Tier-2 safety-valve pool
+        (not a feature limit — see Tenant.tier2_daily_limit) was hit, which
+        should not happen under normal operation since per-source quotas are
+        sized well below it. Signals a cost anomaly worth investigating, not
+        a tenant-facing problem."""
+        subject = f"Tier-2 safety valve hit: {tenant_name} ({count}/{limit} today)"
+        safe_tenant = html.escape(tenant_name)
+        body = f"""
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:48px 0;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:48px 40px;">
+        <tr><td>
+          <p style="margin:0 0 4px;font-size:12px;color:#b91c1c;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">
+            Tier-2 safety valve
+          </p>
+          <p style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;">
+            {safe_tenant} hit its tenant-wide Tier-2 cap ({count}/{limit} today)
+          </p>
+          <p style="margin:0;font-size:14px;color:#64748b;line-height:1.6;">
+            Per-source Tier-2 quotas are sized so this pool should never fill
+            up during normal operation — worth checking whether one source
+            is retrying unusually often, or the tenant's vendor count and
+            per-source quota need reconciling.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+        await self._send(email, subject, body)
+
 
 mailer = MailerService()
