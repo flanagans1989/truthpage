@@ -23,9 +23,23 @@ def test_masks_hex_tokens():
     assert "[HASH]" in out
 
 
-def test_collapses_whitespace():
+def test_each_block_becomes_its_own_line():
+    """Line structure is what makes a line diff mean anything — see
+    normalizer.NORMALIZER_VERSION and detector.py."""
     html = "<body><p>one</p>\n\n   <p>two</p></body>"
-    assert _n.normalize(html) == "one two"
+    assert _n.normalize(html) == "one\ntwo"
+
+
+def test_whitespace_inside_a_block_still_collapses():
+    html = "<body><p>one    two\n\n   three</p></body>"
+    assert _n.normalize(html) == "one two three"
+
+
+def test_a_table_row_stays_on_one_line():
+    """A sub-processor row is one record. Splitting its cells across lines
+    would smear a single added vendor over several diff lines."""
+    html = "<body><table><tr><td>Acme</td><td>hosting</td><td>EU</td></tr></table></body>"
+    assert _n.normalize(html) == "Acme hosting EU"
 
 
 def test_empty_html_returns_empty_string():

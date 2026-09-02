@@ -12,10 +12,10 @@ from sqlalchemy.orm import selectinload
 from app.core.config import settings
 from app.core.llm.analyzer import LLMDiffAnalyzer
 from app.core.scraper.content_health import content_health_issue
-from app.core.scraper.detector import ChangeDetector
+from app.core.scraper.detector import ChangeDetector, diff_for_llm
 from app.core.scraper.fetcher import fetch_raw_html, mark_subprocessor_requires_browser
 from app.core.scraper.hasher import ContentHasher
-from app.core.scraper.normalizer import HTMLNormalizer
+from app.core.scraper.normalizer import HTMLNormalizer, NORMALIZER_VERSION
 from app.db.models.change_event import (
     REVIEW_ACTION_AUTO_PUBLISHED_COSMETIC,
     ChangeEvent,
@@ -267,6 +267,7 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         subprocessor.last_content_text = canonical_text
         subprocessor.last_raw_html = raw_html
         subprocessor.last_raw_html_hash = new_raw_html_hash
+        subprocessor.content_format_version = NORMALIZER_VERSION
         subprocessor.last_checked_at = now
         subprocessor.next_check_at = next_check
         # This baseline is the only capture of this source that will NEVER
@@ -277,6 +278,30 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         # moving with every later check.
         subprocessor.baseline_raw_html_hash = new_raw_html_hash
         subprocessor.baseline_timestamp_status = TimestampStatus.pending.value
+        _reset_health(subprocessor)
+        await session.commit()
+        return
+
+    # e2) Our own reading of the page changed, not the page. Re-baseline
+    # silently: comparing a hash produced by an older normalizer against
+    # one produced by the current one is meaningless, and treating the
+    # difference as a change would open a review for every source at once
+    # and email every tenant's subscribers about vendor changes that never
+    # happened. See migration 0021.
+    if subprocessor.content_format_version != NORMALIZER_VERSION:
+        logger.info(
+            "Normalizer v%d→v%d — re-baselining subprocessor %s without a change event",
+            subprocessor.content_format_version,
+            NORMALIZER_VERSION,
+            subprocessor_id,
+        )
+        subprocessor.last_content_hash = new_hash
+        subprocessor.last_content_text = canonical_text
+        subprocessor.last_raw_html = raw_html
+        subprocessor.last_raw_html_hash = new_raw_html_hash
+        subprocessor.content_format_version = NORMALIZER_VERSION
+        subprocessor.last_checked_at = now
+        subprocessor.next_check_at = next_check
         _reset_health(subprocessor)
         await session.commit()
         return
@@ -298,10 +323,12 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
     )
     logger.info("Change detected for subprocessor %s", subprocessor_id)
 
-    # g) Analyze diff with LLM before persisting (truncate to ~12k chars ≈ ~3k tokens)
-    diff_for_llm = raw_diff[:12_000] if len(raw_diff) > 12_000 else raw_diff
+    # g) Analyze diff with LLM before persisting. Trimmed by whole hunks,
+    # not by a head-crop: a long page's change is usually near the bottom,
+    # and the longest pages belong to the biggest vendors. See
+    # detector.diff_for_llm.
     try:
-        analysis = await _llm_analyzer.analyze(diff_for_llm)
+        analysis = await _llm_analyzer.analyze(diff_for_llm(raw_diff))
         logger.info(
             "LLM analysis for subprocessor %s: %s (confidence=%.2f)",
             subprocessor_id,

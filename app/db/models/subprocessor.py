@@ -29,6 +29,13 @@ class Subprocessor(TimestampMixin, Base):
     monitored_url: Mapped[str] = mapped_column(String(2048), nullable=False)
     monitoring_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
     last_content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Which normalizer version produced last_content_hash. A mismatch with
+    # NORMALIZER_VERSION means our own reading changed, not the page — the
+    # sweep re-baselines silently instead of inventing a change event. See
+    # app/core/scraper/normalizer.py and migration 0021.
+    content_format_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="1", default=1
+    )
     last_content_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Raw HTML of the last successful fetch, carried forward so the next
     # change event has a "before" document to store — not just its

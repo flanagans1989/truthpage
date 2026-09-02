@@ -18,10 +18,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.llm.analyzer import LLMDiffAnalyzer
 from app.core.llm.extractor import SubProcessorExtractor, diff_entries
 from app.core.scraper.content_health import content_health_issue
-from app.core.scraper.detector import ChangeDetector
+from app.core.scraper.detector import ChangeDetector, diff_for_llm
 from app.core.scraper.fetcher import fetch_raw_html
 from app.core.scraper.hasher import ContentHasher
-from app.core.scraper.normalizer import HTMLNormalizer
+from app.core.scraper.normalizer import NORMALIZER_VERSION, HTMLNormalizer
 from app.db.models.mixins import utc_now
 from app.db.models.vendor import Vendor, VendorChange
 
@@ -120,6 +120,7 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
         rows = await _refresh_entries(vendor, canonical_text)
         vendor.last_content_hash = new_hash
         vendor.last_content_text = canonical_text
+        vendor.content_format_version = NORMALIZER_VERSION
         vendor.last_checked_at = now
         vendor.next_check_at = next_check
         if rows is not None:
@@ -129,6 +130,24 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
             logger.info("Vendor %s published with %d entries", vendor.slug, len(rows))
         else:
             logger.info("Vendor %s baselined but not published — no list found", vendor.slug)
+        await session.commit()
+        return
+
+    # Our own reading of the page changed, not the page — re-baseline
+    # silently rather than publishing a fabricated change for every vendor
+    # in the directory at once. See migration 0021.
+    if vendor.content_format_version != NORMALIZER_VERSION:
+        logger.info(
+            "Normalizer v%d→v%d — re-baselining vendor %s without a change",
+            vendor.content_format_version,
+            NORMALIZER_VERSION,
+            vendor.slug,
+        )
+        vendor.last_content_hash = new_hash
+        vendor.last_content_text = canonical_text
+        vendor.content_format_version = NORMALIZER_VERSION
+        vendor.last_checked_at = now
+        vendor.next_check_at = next_check
         await session.commit()
         return
 
@@ -143,7 +162,7 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
         new_text=canonical_text,
         label=vendor.monitored_url,
     )
-    analysis = await _analyzer.analyze(raw_diff[:12_000])
+    analysis = await _analyzer.analyze(diff_for_llm(raw_diff))
     rows = await _refresh_entries(vendor, canonical_text)
     added, removed = diff_entries(vendor.entries, rows) if rows is not None else ([], [])
 

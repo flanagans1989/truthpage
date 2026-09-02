@@ -12,6 +12,7 @@ import pytest
 from app.db.models.change_event import ChangeEvent
 from app.db.models.subprocessor import Subprocessor
 from app.db.models.tenant import Tenant
+from app.core.scraper.normalizer import NORMALIZER_VERSION
 from app.services.monitoring import run_subprocessor_check
 
 
@@ -23,6 +24,11 @@ async def _make_tenant_and_subprocessor(session_factory, last_content_hash=None)
         sp = Subprocessor(
             tenant_id=tenant.id, name="Vendor", monitored_url="https://vendor.example.com/privacy",
             last_content_hash=last_content_hash,
+            # An existing hash implies it was produced by the CURRENT
+            # normalizer; leaving this at the default would send the
+            # source down the silent re-baseline path instead
+            # (app/services/monitoring.py, migration 0021).
+            content_format_version=NORMALIZER_VERSION,
         )
         session.add(sp)
         await session.commit()
