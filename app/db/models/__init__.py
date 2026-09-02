@@ -6,6 +6,7 @@ from app.db.models.vendor import Vendor, VendorChange
 from app.db.models.lead import Lead
 from app.db.models.notification import DeliveryEventType, NotificationDeliveryEvent, NotificationRecipient
 from app.db.models.objection import Objection
+from app.db.models.system_state import SystemState
 
 __all__ = [
     "Tenant",
@@ -21,4 +22,5 @@ __all__ = [
     "NotificationRecipient",
     "NotificationDeliveryEvent",
     "Objection",
+    "SystemState",
 ]

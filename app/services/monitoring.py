@@ -22,7 +22,7 @@ from app.db.models.change_event import (
     ChangeStatus,
     TimestampStatus,
 )
-from app.db.models.mixins import utc_now
+from app.db.models.mixins import as_utc, utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.services.mailer import mailer
 from app.services.tier2_budget import try_spend_source_budget, try_spend_tenant_budget
@@ -44,13 +44,8 @@ _BUDGET_RETRY = timedelta(hours=1)
 _FETCH_FAILURE_RETRY = timedelta(minutes=30)
 
 
-def _naive_to_utc(value: datetime | None) -> datetime | None:
-    """SQLite (tests only — Postgres round-trips tz-aware values) hands back
-    a naive datetime; we only ever write UTC into these columns, so that's
-    the correct zone to attach."""
-    if value is not None and value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value
+# Kept as a module-local name: this file's call sites read better with it.
+_naive_to_utc = as_utc
 
 
 async def _dedupe_and_send(

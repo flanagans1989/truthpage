@@ -56,6 +56,25 @@ class Settings(BaseSettings):
     # Comma-separated emails allowed to open /admin (matched against tenant.email)
     ADMIN_EMAILS: str = ""
 
+    # Shared secret for POST /internal/sweep. Deliberately NOT JWT_SECRET:
+    # that key signs login sessions, and a manual sweep trigger is a far
+    # lower-trust thing to hand to a cron provider, a status page, or a
+    # teammate. One secret for both meant leaking the cron header also
+    # meant forging any user's session. Blank disables the endpoint
+    # entirely (503) rather than silently falling back to JWT_SECRET —
+    # a fallback would quietly re-create the coupling this removes.
+    SWEEP_SECRET: str = ""
+    # GET /healthz/monitoring reports "degraded" once the last COMPLETED
+    # sweep is older than this. The scheduler ticks every 3 hours (see
+    # app/main.py), so this is three missed ticks plus slack: long enough
+    # that one slow cycle is not an alarm, short enough that a dead
+    # scheduler is caught the same day.
+    SWEEP_MAX_AGE_HOURS: float = 10.0
+    # Grace period after process start before a missing heartbeat counts
+    # as degraded. A fresh deploy has no completed sweep yet and must not
+    # fail its own probe on the way up.
+    SWEEP_BOOT_GRACE_MINUTES: float = 20.0
+
     # RFC 3161 timestamping — see app/core/tsa.py and app/services/tsa_retry.py.
     # FreeTSA only for now (see docs/manifest_v2.md); TSA_FALLBACK_URL stays
     # blank until a second provider's CA chain is sourced and bundled — do not

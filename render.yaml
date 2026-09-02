@@ -23,6 +23,11 @@ services:
         sync: false
       - key: PADDLE_WEBHOOK_SECRET
         sync: false
+      # Separate from JWT_SECRET on purpose — see Settings.SWEEP_SECRET.
+      # Blank leaves POST /internal/sweep disabled (503); the in-process
+      # scheduler keeps running either way.
+      - key: SWEEP_SECRET
+        sync: false
 
       # ── Uygulama URL'i (deploy sonrası Render'ın verdiği URL ile güncelle) ──
       - key: APP_URL
@@ -39,7 +44,13 @@ services:
         value: /opt/playwright-browsers
       - key: PYTHONUNBUFFERED
         value: "1"
+      # Committed in plain text until 2026-09-02. A DSN grants no read
+      # access, but it does let anyone who reads this public repo POST
+      # fabricated events into the project and exhaust the free-tier
+      # quota — which would hide real errors exactly when they matter.
+      # Rotate the DSN in Sentry, then set the new one in the Render
+      # dashboard like every other secret here.
       - key: SENTRY_DSN
-        value: https://56e126ab8f6c7fce9783f665c4d8e100@o4511912176058368.ingest.de.sentry.io/4511912189624400
+        sync: false
       - key: GA_MEASUREMENT_ID
         value: G-GCKYQVMXDY
