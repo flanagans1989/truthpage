@@ -11,6 +11,13 @@ Implemented by `app/services/evidence.py` (`_render_manifest_v2`,
 `parse_manifest_v2`, `detect_manifest_version`). If code and this document
 ever disagree, this document is the spec and the code has a bug.
 
+> **This schema may change until its first production deploy.** Once
+> deployed, no field name, order, or value may change — a change after that
+> point requires a new version number (v3), never a silent edit of v2. Two
+> corrections were made to this exact section before any deploy happened
+> (see the changelog at the bottom); that window is now closed once this
+> reaches production.
+
 ## Rules
 
 - **Always English.** `manifest.txt` is generated in English regardless of
@@ -39,15 +46,17 @@ ever disagree, this document is the spec and the code has a bug.
   gdpr compliant, meets article 28
   ```
 
-  **Known tension, flagged for PR 4:** the schema's own `review_action`
-  field takes the value `approved_for_notification` (see below), which
-  contains the substring "approved". PR 2's own output never triggers this
-  (`review_action` stays `not_available` until PR 4), so the forbidden-term
-  scan is a simple whole-text substring check for now. PR 4 will need to
-  either exempt structured enum field *values* from this scan (as opposed
-  to prose fields, which is what the rule is actually protecting) or
-  rename the enum value — that decision is for PR 4's review, not assumed
-  here.
+  **Resolved before any deploy:** an earlier draft of this schema had
+  `review_action` take the value `approved_for_notification`, which
+  collided with this exact list ("approved"). The fix was the value, not
+  the rule — `review_action`'s permitted values are now
+  `notice_released_by_reviewer` and `auto_published_cosmetic` (see
+  `[REVIEW]` below): the system records the observed action only
+  ("released" — a human let a drafted notice go out), never a legal
+  characterization ("approved") of it. No exception to the forbidden-terms
+  check was added; `validate_review_action` enforces this the same way
+  `validate_objection_status` enforces the four permitted objection
+  statuses below.
 - **`[OBJECTION WINDOW]`'s `objection_status` may only take one of four
   exact forms** (`validate_objection_status` raises `ValueError` for
   anything else):
@@ -97,10 +106,12 @@ before_html_file:
 before_sha256:
 after_html_file:
 after_sha256:
+before_text_file:
+before_text_sha256:
+after_text_file:
+after_text_sha256:
 diff_file:
 diff_sha256:
-raw_text_file:
-raw_text_sha256:
 
 [TIMESTAMP]                      # PR 3 fills this in
 timestamp_status:                # timestamped | pending | failed | not_available (pre-TSA)
@@ -114,7 +125,7 @@ verification_instructions: See README.txt — run ./verify.sh offline.
 reviewed_by_name:
 reviewed_by_email:
 reviewed_at:
-review_action:                   # approved_for_notification | auto_published_cosmetic
+review_action:                   # notice_released_by_reviewer | auto_published_cosmetic
 
 [NOTIFICATION]                   # PR 4 fills this in
 notice_frozen_at:
@@ -155,13 +166,16 @@ A few fields worth calling out:
   collection, out of scope for a format-only PR.
 - **`current_snapshot_captured_at`** reuses `detected_at` — in the current
   pipeline, detection and current-snapshot-capture are the same instant.
-- **`raw_text_file` / `raw_text_sha256`** point at `after.txt` — the
-  current (post-change) normalized text — the same "current state" framing
-  as `after_html_file`/`after_sha256`. `before.txt` is still a real file in
-  the ZIP and still listed (with its own hash) under `[PACK CONTENTS]`; it
-  just has no dedicated shortcut field of its own in `[EVIDENCE]`. If a
-  `before_text_sha256`-style field is wanted, that's a schema change for a
-  future PR to propose, not an assumption made silently here.
+- **`before_text_file`/`before_text_sha256`/`after_text_file`/`after_text_sha256`**
+  are symmetric with the HTML pair — `before.txt`/`after.txt` are real
+  files in the ZIP (the normalized text used for the diff), and every file
+  named in `[PACK CONTENTS]` needs a field here saying what it is. (An
+  earlier draft of this schema had one combined `raw_text_file` field
+  pointing only at `after.txt`, leaving `before.txt` in the pack with no
+  schema counterpart — fixed before any deploy, since a file an auditor
+  can't identify from the manifest defeats the point of it.)
+  Both are populated with real values today (not `not_available`) — the
+  normalized text already exists on every event.
 - **`before_sha256` / `after_sha256`** read the digest TrustPages computed
   at capture time (`Subprocessor.last_raw_html_hash` /
   `ChangeEvent.old_raw_html_hash` / `new_raw_html_hash`), not a hash
@@ -205,9 +219,19 @@ No signing scheme exists in this codebase today (checked: no `sign`,
 `signature`, or `hmac` usage anywhere in `app/services/evidence.py` or the
 dashboard routes that call it). `manifest.sha256` is a plain content-hash
 file, not a cryptographic signature — there is nothing here to "preserve
-the mechanism of" because no mechanism currently exists. If a signing
-requirement was assumed to already exist, it doesn't; this is worth
-confirming before PR 3 builds anything that assumes otherwise.
+the mechanism of" because no mechanism currently exists.
+
+**No signature is being added here, deliberately.** A signature made with
+TrustPages' own key would carry the same epistemic weight as the SHA-256
+digest already does — "TrustPages says this is what it captured" — since
+both are things only TrustPages controls. It would not be independent
+proof of anything a self-hashed file doesn't already claim. The actual
+independent corroboration is PR 3's RFC 3161 timestamp token, issued by a
+third-party TSA that TrustPages doesn't control. Every place in product
+copy that used to say "signed manifest" has been corrected to describe
+what the file actually is (`manifest.txt` with SHA-256 digests of every
+file) rather than implying a cryptographic guarantee that doesn't exist —
+see the PR description for the full list of what changed.
 
 ## Backward compatibility (non-negotiable)
 
@@ -225,3 +249,15 @@ Their verifiability must never break:
   are read as-is, never regenerated, converted, or "upgraded". A test
   (`test_v1_packs_are_never_regenerated_or_upgraded`) exists specifically
   as a trip-wire against that ever being added by accident.
+
+## Changelog (pre-deploy only — see the frozen-schema note at the top)
+
+- **v2 draft 2:** `review_action`'s permitted values changed from
+  `approved_for_notification` / `auto_published_cosmetic` to
+  `notice_released_by_reviewer` / `auto_published_cosmetic` (the old value
+  collided with the forbidden-terms list). `raw_text_file`/`raw_text_sha256`
+  (one field, pointing only at `after.txt`) replaced with symmetric
+  `before_text_file`/`before_text_sha256`/`after_text_file`/`after_text_sha256`
+  (`before.txt` had no schema counterpart before this). Both fixed before
+  any production deploy of this schema.
+- **v2 draft 1:** initial freeze.

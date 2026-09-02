@@ -142,6 +142,27 @@ def validate_objection_status(text: str) -> str:
     raise ValueError(f"objection_status is not one of the four permitted forms: {text!r}")
 
 
+# The system records the observed action only ("released" — a human let a
+# drafted notice go out, or the pipeline auto-published a cosmetic change).
+# "Approved" is a legal characterization this manifest never makes — see
+# docs/manifest_v2.md's [REVIEW] notes. No exception to the forbidden-terms
+# check exists for this: the fix was correcting the value, not loosening
+# the invariant.
+_ALLOWED_REVIEW_ACTIONS = (
+    "notice_released_by_reviewer",
+    "auto_published_cosmetic",
+    NOT_AVAILABLE,
+)
+
+
+def validate_review_action(text: str) -> str:
+    """Returns `text` unchanged if it's one of the permitted review_action
+    values; raises ValueError otherwise."""
+    if text in _ALLOWED_REVIEW_ACTIONS:
+        return text
+    raise ValueError(f"review_action is not one of the permitted values: {text!r}")
+
+
 def _sha256(content: str | bytes | None) -> str:
     if content is None:
         return NOT_AVAILABLE
@@ -211,14 +232,15 @@ def _render_manifest_v2(event: Any, app_url: str, tenant: Any, pack_files: dict[
         f"before_sha256: {_na(event.old_raw_html_hash)}",
         "after_html_file: after.html",
         f"after_sha256: {_na(event.new_raw_html_hash)}",
+        # Symmetric with the HTML pair above — before.txt/after.txt are real
+        # files in the pack (see [PACK CONTENTS]); every file named there
+        # must have a field here explaining what it is.
+        "before_text_file: before.txt",
+        f"before_text_sha256: {_sha256(event.old_content_text)}",
+        "after_text_file: after.txt",
+        f"after_text_sha256: {_sha256(event.new_content_text)}",
         "diff_file: diff.txt",
         f"diff_sha256: {_sha256(diff_text) if diff_text else NOT_AVAILABLE}",
-        # The current (after) normalized text — the "raw" pre-diff text
-        # extracted from after.html — paired the same way after_sha256 is;
-        # before.txt is still present in the pack and listed under [PACK
-        # CONTENTS] below, just without its own named EVIDENCE field.
-        "raw_text_file: after.txt",
-        f"raw_text_sha256: {_sha256(event.new_content_text)}",
         "",
         "[TIMESTAMP]",
         f"timestamp_status: {NOT_AVAILABLE}",
@@ -232,7 +254,7 @@ def _render_manifest_v2(event: Any, app_url: str, tenant: Any, pack_files: dict[
         f"reviewed_by_name: {NOT_AVAILABLE}",
         f"reviewed_by_email: {NOT_AVAILABLE}",
         f"reviewed_at: {NOT_AVAILABLE}",
-        f"review_action: {NOT_AVAILABLE}",
+        f"review_action: {validate_review_action(NOT_AVAILABLE)}",
         "",
         "[NOTIFICATION]",
         f"notice_frozen_at: {NOT_AVAILABLE}",

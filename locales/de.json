@@ -114,7 +114,7 @@
   "compare.pick_label": "Nehmen Sie stattdessen das, wenn:",
   "compare.ours_title": "Wo TrustPages steht",
   "compare.ours_line": "{free} kostenlos, oder {paid}. Eine Aufgabe, mit Blick auf die Prüfung erledigt.",
-  "compare.sample_zip_line": "Sehen Sie die echte Datei, bevor Sie sich anmelden — SHA-256-Anker, rohes HTML, Unified Diff und ein signiertes Manifest, anhand einer Beispieländerung.",
+  "compare.sample_zip_line": "Sehen Sie die echte Datei, bevor Sie sich anmelden — SHA-256-Anker, rohes HTML, Unified Diff und eine manifest.txt mit SHA-256-Prüfsummen jeder Datei, anhand einer Beispieländerung.",
   "compare.gaps_title": "Was wir nicht haben",
   "compare.gaps_note": "Wenn eines davon Voraussetzung ist, ist eine der Kategorien oben der bessere Kauf als wir.",
   "compare.categories": [

@@ -20,6 +20,7 @@ from app.services.evidence import (
     iso_utc,
     parse_manifest_v2,
     validate_objection_status,
+    validate_review_action,
 )
 
 APP_URL = "https://usetrustpages.com/"
@@ -173,7 +174,8 @@ class TestManifestV2Schema:
         "detected_at", "previous_snapshot_captured_at", "current_snapshot_captured_at",
         "classification", "classifier_model", "classifier_note",
         "hash_algorithm", "before_html_file", "before_sha256", "after_html_file",
-        "after_sha256", "diff_file", "diff_sha256", "raw_text_file", "raw_text_sha256",
+        "after_sha256", "before_text_file", "before_text_sha256",
+        "after_text_file", "after_text_sha256", "diff_file", "diff_sha256",
         "timestamp_status", "tsa_token_file", "tsa_authority_url", "tsa_time_utc",
         "tsa_chain_file", "verification_instructions",
         "reviewed_by_name", "reviewed_by_email", "reviewed_at", "review_action",
@@ -223,6 +225,17 @@ class TestManifestV2Schema:
         assert fields["after_sha256"] == "d" * 64
         assert fields["change_id"] == "11111111-2222-3333-4444-555555555555"
 
+    def test_the_two_text_fields_carry_real_values_today_not_available(self):
+        # before.txt/after.txt already exist on every event — unlike the
+        # TIMESTAMP/REVIEW/NOTIFICATION/OBJECTION WINDOW sections, there's
+        # no reason for these to read not_available.
+        manifest, _ = self._manifest()
+        fields = parse_manifest_v2(manifest)
+        assert fields["before_text_file"] == "before.txt"
+        assert fields["after_text_file"] == "after.txt"
+        assert fields["before_text_sha256"] == hashlib.sha256(b"Old page text.").hexdigest()
+        assert fields["after_text_sha256"] == hashlib.sha256(b"New page text.").hexdigest()
+
     def test_manifest_is_always_english_regardless_of_ui_language(self):
         # No locale plumbing exists in evidence_zip at all — asserting the
         # literal fixed English section headers is the guard against one
@@ -257,6 +270,26 @@ class TestPackContents:
         files = _zip_files(evidence_zip(_event(), APP_URL, _tenant()))
         expected = hashlib.sha256(files["manifest.txt"].encode("utf-8")).hexdigest()
         assert files["manifest.sha256"].strip() == expected
+
+    def test_every_pack_file_has_a_schema_counterpart(self):
+        # No file may sit in the ZIP unexplained — an auditor's "what is
+        # this file" question must have an answer in manifest.txt. The
+        # EVIDENCE section's *_file fields name the evidentiary documents;
+        # manifest.sha256 and README.txt are the two documented utility
+        # files (see docs/manifest_v2.md), not evidence, so they're the
+        # only files allowed to lack an EVIDENCE *_file counterpart.
+        files = _zip_files(evidence_zip(_event(), APP_URL, _tenant()))
+        fields = parse_manifest_v2(files["manifest.txt"])
+        evidence_file_values = {
+            fields["before_html_file"], fields["after_html_file"],
+            fields["before_text_file"], fields["after_text_file"],
+            fields["diff_file"],
+        }
+        known_utility_files = {"manifest.sha256", "README.txt"}
+        for name in fields["pack_contents"]:
+            assert name in evidence_file_values or name in known_utility_files, (
+                f"{name} is in the ZIP but named by no schema field"
+            )
 
 
 class TestForbiddenLanguage:
@@ -294,6 +327,27 @@ class TestObjectionStatusValidator:
     def test_anything_else_raises(self, text):
         with pytest.raises(ValueError):
             validate_objection_status(text)
+
+
+class TestReviewActionValidator:
+    @pytest.mark.parametrize("text", [
+        "notice_released_by_reviewer",
+        "auto_published_cosmetic",
+        "not_available",
+    ])
+    def test_the_permitted_values_pass(self, text):
+        assert validate_review_action(text) == text
+
+    @pytest.mark.parametrize("text", [
+        "approved_for_notification",  # the old, rejected value
+        "approved",
+        "Approved",
+        "compliant",
+        "",
+    ])
+    def test_anything_else_raises(self, text):
+        with pytest.raises(ValueError):
+            validate_review_action(text)
 
 
 class TestManifestVersionDetection:
