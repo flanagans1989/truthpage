@@ -88,6 +88,11 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         await session.commit()
         return
     new_hash = _hasher.hash(canonical_text)
+    # Digest of the document itself, for the evidence bundle — distinct from
+    # new_hash above, which is over the normalized text change detection
+    # compares. A tenant re-hashing the downloaded after.html must get this
+    # value, not the normalized one.
+    new_raw_html_hash = _hasher.hash(raw_html)
 
     now = utc_now()
     next_check = now + timedelta(minutes=subprocessor.check_interval_minutes)
@@ -99,6 +104,7 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         subprocessor.last_content_hash = new_hash
         subprocessor.last_content_text = canonical_text
         subprocessor.last_raw_html = raw_html
+        subprocessor.last_raw_html_hash = new_raw_html_hash
         subprocessor.last_checked_at = now
         subprocessor.next_check_at = next_check
         await session.commit()
@@ -154,6 +160,8 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         new_content_text=canonical_text,
         old_raw_html=subprocessor.last_raw_html,
         new_raw_html=raw_html,
+        old_raw_html_hash=subprocessor.last_raw_html_hash,
+        new_raw_html_hash=new_raw_html_hash,
         llm_summary=analysis.summary,
         llm_classification=analysis.classification,
         llm_confidence=analysis.confidence,
@@ -165,6 +173,7 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
     subprocessor.last_content_hash = new_hash
     subprocessor.last_content_text = canonical_text
     subprocessor.last_raw_html = raw_html
+    subprocessor.last_raw_html_hash = new_raw_html_hash
     subprocessor.last_checked_at = now
     subprocessor.next_check_at = next_check
 

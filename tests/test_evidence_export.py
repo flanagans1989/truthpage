@@ -5,7 +5,7 @@ from io import BytesIO, StringIO
 from types import SimpleNamespace
 from uuid import UUID
 
-from app.services.evidence import COLUMNS, evidence_csv, evidence_zip, iso_utc
+from app.services.evidence import COLUMNS, display_utc, evidence_csv, evidence_zip, iso_utc
 
 APP_URL = "https://usetrustpages.com/"
 
@@ -32,6 +32,8 @@ def _event(**overrides):
         new_content_text="New page text.",
         old_raw_html="<html>old</html>",
         new_raw_html="<html>new</html>",
+        old_raw_html_hash="c" * 64,
+        new_raw_html_hash="d" * 64,
         notice_subject=None,
         notice_body=None,
     )
@@ -153,3 +155,32 @@ class TestEvidenceZip:
         event = _event(status="auto_published", approved_at=None, approved_by=None)
         manifest = _zip_files(evidence_zip(event, APP_URL))["manifest.txt"]
         assert "auto-published" in manifest
+
+
+class TestDisplayUtc:
+    def test_formats_for_a_human_reader(self):
+        assert display_utc(datetime(2026, 9, 2, 11, 59, 0, tzinfo=timezone.utc)) == "2026-09-02 11:59 UTC"
+
+    def test_missing_timestamp_is_empty(self):
+        assert display_utc(None) == ""
+
+
+class TestCryptographicAnchor:
+    def test_anchor_carries_source_url_timestamp_hash_and_status(self):
+        manifest = _zip_files(evidence_zip(_event(), APP_URL))["manifest.txt"]
+        anchor = manifest.split("Cryptographic verification anchor")[1]
+        assert "https://www.cloudflare.com/gdpr/subprocessors/cloudflare-services/" in anchor
+        assert "2026-09-01 07:05 UTC" in anchor
+        assert "d" * 64 in anchor
+        assert "Cryptographically verified" in anchor
+
+    def test_missing_hash_reports_not_available_rather_than_faking_it(self):
+        event = _event(new_raw_html_hash=None)
+        anchor = _zip_files(evidence_zip(event, APP_URL))["manifest.txt"].split("Cryptographic verification anchor")[1]
+        assert "not captured for this change" in anchor
+        assert "Not available" in anchor
+        assert "Cryptographically verified" not in anchor
+
+    def test_previous_capture_hash_is_included(self):
+        anchor = _zip_files(evidence_zip(_event(), APP_URL))["manifest.txt"].split("Cryptographic verification anchor")[1]
+        assert "c" * 64 in anchor

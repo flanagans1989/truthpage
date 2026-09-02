@@ -80,6 +80,42 @@
             {% endif %}
         </div>
 
+        <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+            <div class="flex items-center gap-2 mb-4">
+                <h2 class="text-base font-semibold text-slate-900">Cryptographic verification anchor</h2>
+                {% if event.new_raw_html_hash %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-xs font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Cryptographically Verified Snapshot
+                </span>
+                {% endif %}
+            </div>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Source URL</dt>
+                    <dd class="text-slate-900 font-medium break-all">{{ event.subprocessor.monitored_url }}</dd>
+                </div>
+                <div>
+                    <dt class="text-slate-400 text-xs mb-0.5">Captured Timestamp</dt>
+                    <dd class="text-slate-900 font-medium">{{ event.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</dd>
+                </div>
+                <div class="sm:col-span-2">
+                    <dt class="text-slate-400 text-xs mb-0.5">Content Hash (SHA-256, after.html)</dt>
+                    <dd class="text-slate-900 font-mono text-xs break-all">{{ event.new_raw_html_hash or 'not captured for this change' }}</dd>
+                </div>
+                <div class="sm:col-span-2">
+                    <dt class="text-slate-400 text-xs mb-0.5">Verification Status</dt>
+                    <dd class="text-slate-600 text-sm">
+                        {% if event.new_raw_html_hash %}
+                        Cryptographically verified — this digest is computed from the raw HTML in the downloaded audit ZIP. Any edit to that file breaks the match.
+                        {% else %}
+                        <span class="text-slate-400">Not available — this change was recorded before raw-HTML hashing was added.</span>
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
         <h2 class="text-base font-semibold text-slate-900 mb-4">Captured page text</h2>
         {% if event.old_content_text or event.new_content_text %}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">

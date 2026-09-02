@@ -49,6 +49,12 @@ class ChangeEvent(TimestampMixin, Base):
     # asks for. Nullable: events recorded before 0012 have neither.
     old_raw_html: Mapped[str | None] = mapped_column(Text, nullable=True)
     new_raw_html: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # SHA-256 of old_raw_html / new_raw_html — the digest of the document
+    # itself. Deliberately separate from old_hash/new_hash above, which hash
+    # the normalized text change detection compares; those two would not
+    # match a hash a tenant computes over the downloaded before.html/after.html.
+    old_raw_html_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    new_raw_html_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     llm_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     llm_classification: Mapped[str | None] = mapped_column(String(100), nullable=True)
     llm_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)

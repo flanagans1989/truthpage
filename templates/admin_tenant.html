@@ -115,6 +115,7 @@
                             <th class="px-4 py-3 font-medium">Sınıflandırma</th>
                             <th class="px-4 py-3 font-medium">Durum</th>
                             <th class="px-4 py-3 font-medium">Özet</th>
+                            <th class="px-4 py-3 font-medium">Kanıt</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -125,9 +126,20 @@
                             <td class="px-4 py-3 text-xs">{{ ev.llm_classification or "—" }}{% if ev.llm_confidence is not none %} <span class="text-slate-400">(%{{ (ev.llm_confidence * 100) | round | int }})</span>{% endif %}</td>
                             <td class="px-4 py-3 text-xs">{{ EVENT_STATUS_TR.get(ev.status, ev.status) }}</td>
                             <td class="px-4 py-3 text-xs text-slate-500 max-w-md truncate">{{ ev.llm_summary or "—" }}</td>
+                            <td class="px-4 py-3 text-xs whitespace-nowrap">
+                                {% if ev.new_raw_html_hash %}
+                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 font-medium"
+                                      title="SHA-256 {{ ev.new_raw_html_hash }}">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    Cryptographically Verified Snapshot
+                                </span>
+                                {% else %}
+                                <span class="text-slate-400">— önceki (hash yok)</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">Değişiklik olayı yok.</td></tr>
+                        <tr><td colspan="6" class="px-6 py-8 text-center text-slate-400">Değişiklik olayı yok.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

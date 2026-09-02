@@ -69,6 +69,45 @@ def evidence_csv(events: Iterable[Any], app_url: str) -> str:
     return buffer.getvalue()
 
 
+def display_utc(value: datetime | None) -> str:
+    """Human-facing UTC stamp for the manifest's anchor box, e.g.
+    '2026-09-02 11:59 UTC'. iso_utc() above stays the machine-readable form
+    used in the CSV; this one is what a person reads in the ZIP."""
+    return value.strftime("%Y-%m-%d %H:%M UTC") if value is not None else ""
+
+
+def _anchor_box(event: Any) -> list[str]:
+    """The four fields an auditor checks before trusting anything else in the
+    bundle: where the page was, when it was captured, its SHA-256, and
+    whether that digest still matches the file sitting next to it. Anchored
+    to the *after* capture — the state actually being evidenced — with the
+    prior digest listed alongside for continuity.
+
+    Absent for events recorded before raw-HTML hashing existed: reported as
+    such, never left silently blank or backfilled with the normalized-text
+    hash, which would not match a hash a tenant computes over after.html.
+    """
+    verified = event.new_raw_html_hash is not None
+    return [
+        "Cryptographic verification anchor",
+        "-" * 55,
+        f"Source URL:            {event.subprocessor.monitored_url}",
+        f"Captured Timestamp:    {display_utc(event.created_at)}",
+        f"Content Hash (SHA-256): {event.new_raw_html_hash or 'not captured for this change'}",
+        "Verification Status:   "
+        + (
+            "Cryptographically verified — this is the SHA-256 digest of "
+            "after.html in this bundle. Any change to that file after "
+            "download no longer matches it."
+            if verified
+            else "Not available — this change was recorded before raw-HTML "
+            "hashing was added; before.html/after.html may still be present "
+            "above without a digest."
+        ),
+        "Previous capture hash (SHA-256): " + (event.old_raw_html_hash or "not captured"),
+    ]
+
+
 def _manifest(event: Any, app_url: str) -> str:
     """The one file in the ZIP meant to be read, not diffed against.
 
@@ -96,6 +135,8 @@ def _manifest(event: Any, app_url: str) -> str:
             else "not yet decided"
         ),
         f"Subscribers notified:  {iso_utc(event.notified_at) or 'not notified'}",
+        "",
+        *_anchor_box(event),
         "",
         "Summary",
         "-" * 55,
