@@ -60,3 +60,28 @@ class SubProcessorList(BaseModel):
         default_factory=list,
         description="Every sub-processor listed on the page, in the order they appear. Empty if the page lists none.",
     )
+
+
+class OutreachTemplate(BaseModel):
+    """One cold-outreach angle, drafted in both languages together so the
+    two stay in step — a German version drafted separately tends to drift
+    into a different argument by the second paragraph."""
+
+    approach: str = Field(
+        description="Short label for the angle this template takes, e.g. 'Direct compliance gap', "
+        "'Curiosity opener', 'Social proof'. Three templates must use three different angles."
+    )
+    channel: Literal["linkedin", "email"] = Field(
+        description="Where this is meant to be sent. LinkedIn messages are short (under ~80 words, "
+        "no subject line); email can run longer and needs a subject."
+    )
+    subject_en: str = Field(default="", description="Email subject line in English. Empty for linkedin.")
+    subject_de: str = Field(default="", description="Email subject line in German. Empty for linkedin.")
+    body_en: str = Field(description="The message body in English, ready to paste and send as-is.")
+    body_de: str = Field(description="The message body in German, ready to paste and send as-is.")
+
+
+class OutreachDraft(BaseModel):
+    templates: list[OutreachTemplate] = Field(
+        description="Exactly three templates, each a different angle, each with both language versions."
+    )

@@ -1,0 +1,11 @@
+{# Lead magnet: posts straight to the ZIP-returning endpoint, so submitting
+   the form IS the download — no JS, no intermediate page. #}
+<form method="post" action="/tools/sample-evidence-pack"
+      class="flex flex-col sm:flex-row gap-2 max-w-md {{ extra_class | default('mx-auto') }}">
+    <input type="email" name="email" required placeholder="you@company.com"
+           class="flex-1 border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <button type="submit"
+            class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition">
+        {{ t('cta.sample_zip') if t else 'Download Sample Audit Evidence (.zip)' }}
+    </button>
+</form>

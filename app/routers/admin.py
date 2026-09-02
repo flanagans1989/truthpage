@@ -1,12 +1,13 @@
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.llm.outreach import OutreachDrafter
 from app.core.templating import templates as _templates
 from app.db.models.change_event import ChangeEvent
 from app.db.models.subprocessor import Subprocessor
@@ -17,6 +18,8 @@ from app.routers.deps import CurrentAdmin
 from app.services.admin_stats import collect_admin_stats
 
 logger = logging.getLogger(__name__)
+
+_outreach_drafter = OutreachDrafter()
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -77,4 +80,44 @@ async def admin_tenant_detail(
             "events": events,
             "subscribers": subscribers,
         },
+    )
+
+
+@router.get("/outreach", response_class=HTMLResponse)
+async def outreach_form(request: Request, admin: CurrentAdmin):
+    return _templates.TemplateResponse(
+        request, "admin_outreach.html", {"admin": admin, "draft": None, "error": None}
+    )
+
+
+@router.post("/outreach", response_class=HTMLResponse)
+async def outreach_generate(
+    request: Request,
+    admin: CurrentAdmin,
+    company: str = Form(...),
+    founder: str = Form(...),
+    vendor1: str = Form(...),
+    vendor2: str = Form(...),
+):
+    """Drafts three cold-outreach angles, in English and German, for a
+    named prospect. Never sends anything — the admin reads, edits and
+    sends each one by hand from their own LinkedIn/email account."""
+    form = {"company": company, "founder": founder, "vendor1": vendor1, "vendor2": vendor2}
+    try:
+        draft = await _outreach_drafter.draft(
+            company=company, founder=founder, vendor1=vendor1, vendor2=vendor2
+        )
+    except Exception:
+        logger.exception("Outreach draft failed for target '%s'", company)
+        return _templates.TemplateResponse(
+            request,
+            "admin_outreach.html",
+            {"admin": admin, "draft": None, "error": "Draft failed — try again in a moment.", "form": form},
+        )
+
+    logger.info("Outreach drafted by admin %s for target '%s'", admin.slug, company)
+    return _templates.TemplateResponse(
+        request,
+        "admin_outreach.html",
+        {"admin": admin, "draft": draft, "error": None, "form": form},
     )

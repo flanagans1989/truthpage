@@ -40,15 +40,17 @@ async def create_subprocessor(
     )
     limit = tenant.subprocessor_limit
     if count_result.scalar_one() >= limit:
-        raise HTTPException(
-            status_code=422,
-            detail=(
-                f"Free plan limit reached ({limit} monitored URLs). "
-                "Upgrade to Growth for 25."
-                if tenant.is_free_plan
-                else f"Plan limit reached ({limit} monitored URLs). "
-                "Contact support to increase it."
-            ),
+        # 200, not 422: this is an htmx request whose hx-target is the table,
+        # and a non-2xx response there swaps in nothing rather than showing
+        # the tenant why nothing happened. The table re-renders unchanged and
+        # the upgrade modal rides along as an out-of-band swap — see
+        # partials/limit_reached.html.
+        logger.info(
+            "Subprocessor add blocked at plan limit (%d) for tenant %s", limit, tenant.id
+        )
+        rows = await _load_subprocessors(tenant.id, db)
+        return _templates.TemplateResponse(
+            request, "partials/limit_reached.html", {"rows": rows, "limit": limit}
         )
 
     await validate_url(monitored_url)

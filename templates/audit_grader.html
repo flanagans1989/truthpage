@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Free Sub-processor Scanner & Audit Grader — TrustPages{% endblock %}
+{% block meta_description %}Paste any company's privacy policy URL and see which known sub-processors (Stripe, AWS, Postmark and more) it names — and whether it can prove when they last changed.{% endblock %}
+{% block content %}
+<div class="min-h-screen flex flex-col">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="text-blue-600 font-bold text-xl">TrustPages</a>
+            <a href="/pricing" class="text-sm text-slate-600 hover:text-slate-900">Pricing</a>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-3xl mx-auto px-6 py-16 w-full">
+        <p class="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2">Free tool · no signup</p>
+        <h1 class="text-3xl font-bold text-slate-900 mb-3">Sub-processor Scanner & Audit Grader</h1>
+        <p class="text-slate-600 mb-8 leading-relaxed">
+            Paste a company's homepage or privacy policy URL. We'll scan the page for known
+            sub-processors — Stripe, AWS, Postmark and 29 others — and grade what it can actually
+            prove about them.
+        </p>
+
+        <form method="post" action="/tools/audit-grader" class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+            <label class="block text-xs font-medium text-slate-500 mb-1.5" for="url">Company URL or privacy policy link</label>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="url" id="url" name="url" required placeholder="https://example.com/privacy"
+                       value="{{ submitted_url or '' }}"
+                       class="flex-1 border border-slate-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit"
+                        class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg text-sm transition">
+                    Scan page
+                </button>
+            </div>
+            {% if error %}
+            <p class="text-sm text-red-600 mt-3">{{ error }}</p>
+            {% endif %}
+        </form>
+
+        {% if result %}
+        <div class="bg-white rounded-2xl border-2 border-blue-500 p-8 mb-10">
+            <p class="text-xs text-slate-400 break-all mb-4">{{ result.url }}</p>
+            <div class="flex items-baseline gap-4 mb-4">
+                <span class="text-5xl font-bold text-slate-900">{{ result.grade }}</span>
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">GDPR Article 28(2) Compliance Score</p>
+                    <p class="text-sm text-slate-500">{{ result.label }}</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-600 mb-6">
+                <strong>Sub-processors found: {{ result.found | length }}</strong>
+                {% if result.found %}
+                — {{ result.found | join(", ") }}
+                {% endif %}
+            </p>
+            <div class="border-t border-slate-100 pt-6">
+                <p class="text-sm text-slate-700 mb-4 leading-relaxed">
+                    A page listing sub-processors is not the same as knowing when they last changed,
+                    or being able to prove it to an auditor. That's the part missing here — and the
+                    part TrustPages automates.
+                </p>
+                <a href="/auth/login"
+                   class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg text-sm transition">
+                    Fix the audit-evidence gap — start free with 3 vendors, no card required
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="text-xs text-slate-400 leading-relaxed border-t border-slate-200 pt-6">
+            <p class="font-semibold text-slate-500 mb-1">How this works</p>
+            <p>
+                We fetch the page you paste and check it against our directory of 32 commonly-used
+                vendors — no AI, no guessing, name matches only. The grade reflects how many known
+                sub-processors were found; it always caps below A, because finding a vendor's name
+                on a page is not the same as monitoring that page for changes or holding dated,
+                cryptographically verifiable evidence of what it said before. This is a lightweight
+                heuristic, not a certified compliance audit.
+            </p>
+        </div>
+    </main>
+
+    {% include "_footer.html" %}
+</div>
+{% endblock %}

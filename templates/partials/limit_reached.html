@@ -1,0 +1,8 @@
+{# Response to an add-subprocessor request that hit the plan limit: the
+   table is re-sent unchanged (nothing was added) for the request's normal
+   hx-target, and the upgrade modal rides along as an out-of-band swap into
+   the slot dashboard.html/queue.html keep empty for exactly this. #}
+{% include "partials/subprocessor_table.html" %}
+<div id="upgrade-modal-slot" hx-swap-oob="true">
+    {% include "partials/upgrade_modal.html" %}
+</div>

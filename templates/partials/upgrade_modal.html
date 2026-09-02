@@ -1,0 +1,27 @@
+<div id="upgrade-modal-backdrop" class="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
+        <div class="text-3xl mb-3">🚀</div>
+        <h3 class="text-lg font-bold text-slate-900 mb-2">You're crushing it!</h3>
+        <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+            You've hit the {{ limit }}-vendor limit on the Free plan. Keep monitoring up to
+            10 vendors for <strong>$29/month</strong>, or unlock the full Cryptographic Audit
+            Evidence Pack — SHA-256 verification, downloadable ZIP — with up to 30 vendors for
+            <strong>$89/month</strong>.
+        </p>
+        <div class="flex flex-col gap-2">
+            <a href="/dashboard/billing/checkout?plan=growth"
+               class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition">
+                Upgrade to Growth — $89/mo
+            </a>
+            <a href="/dashboard/billing/checkout?plan=starter"
+               class="block text-center border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold py-2.5 rounded-lg text-sm transition">
+                Upgrade to Starter — $29/mo
+            </a>
+            <button type="button"
+                    onclick="document.getElementById('upgrade-modal-slot').innerHTML=''"
+                    class="text-xs text-slate-400 hover:text-slate-600 mt-1">
+                Not now
+            </button>
+        </div>
+    </div>
+</div>

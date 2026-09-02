@@ -21,6 +21,7 @@ from app.routers import (
     pages,
     public,
     subprocessors,
+    tools,
     vendors,
     webhooks,
 )
@@ -124,6 +125,7 @@ app.include_router(webhooks.router)
 app.include_router(public.router)
 app.include_router(vendors.router)
 app.include_router(admin.router)
+app.include_router(tools.router)
 
 
 @app.get("/healthz")
