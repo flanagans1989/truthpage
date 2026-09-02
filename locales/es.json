@@ -30,7 +30,7 @@
   "landing.notion_title": "¿Por qué no una simple página de Notion?",
   "landing.notion_body": "Una página estática no te avisa cuando Stripe añade discretamente un nuevo subencargado, ni escribe a tus clientes. TrustPages es la diferencia entre afirmar que controlas a tus proveedores y poder demostrarlo — con un historial vivo que tus compradores pueden auditar. Y cuesta una fracción de las plataformas de cumplimiento corporativas que todavía no necesitas.",
   "landing.screenshots_title": "¿Por qué no simplemente capturas de pantalla?",
-  "landing.screenshots_body": "Una captura de pantalla se puede recortar, editar o repetir para decir lo que haga falta la semana de la auditoría — nadie salvo tú puede comprobarlo. Cada cambio que detecta TrustPages guarda en cambio el HTML original del proveedor, con un hash SHA-256 independiente, una marca de tiempo UTC y un diff unificado frente a la versión anterior — todo empaquetado en un ZIP descargable que un auditor puede verificar sin tener que confiar en nuestro panel.",
+  "landing.screenshots_body": "Una captura de pantalla se puede recortar, editar o repetir para decir lo que haga falta la semana de la auditoría — nadie salvo tú puede comprobarlo. Cada cambio que detecta TrustPages guarda en cambio el HTML original del proveedor, con un hash SHA-256 independiente, una marca de tiempo UTC y un diff unificado frente a la versión anterior — empaquetado, en el plan Growth, en un ZIP descargable que un auditor puede verificar sin tener que confiar en nuestro panel.",
   "landing.audit_title": "Lo que puedes entregar a un auditor",
   "landing.audit_sub": "Una captura de pantalla tomada la semana de la auditoría no prueba nada sobre lo que decía la página hace tres meses.",
   "landing.audit1_title": "Los documentos, no solo el diff",
@@ -195,15 +195,15 @@
   "compare.position": [
     {
       "title": "Los documentos, no solo el diff",
-      "body": "Cada cambio detectado guarda la página del proveedor tal y como se leía antes y después, cada una con su hash y su marca de tiempo, además de quién la revisó y cuándo. «Qué decía esta página en marzo» tiene respuesta."
+      "body": "Cada cambio detectado guarda el HTML original de la página del proveedor tal y como se leía antes y después, cada uno con un hash SHA-256 independiente y su marca de tiempo, además de quién lo revisó y cuándo. «Qué decía esta página en marzo» tiene respuesta, y el hash demuestra que el archivo no se ha modificado en silencio desde entonces."
     },
     {
       "title": "Nada se publica sin ti",
-      "body": "Los cambios se clasifican como sustanciales o cosméticos, y solo las ediciones cosméticas de alta confianza se publican solas. Todo lo demás espera en una cola con la comparación lado a lado."
+      "body": "Gemini 2.5 Flash clasifica cada cambio como sustancial o cosmético, y solo las ediciones cosméticas de alta confianza se publican solas. Todo lo demás espera en una cola con la comparación lado a lado."
     },
     {
-      "title": "Exportación en todos los planes",
-      "body": "Todo el historial sale en un único CSV — fechas, proveedores, clasificaciones, hashes, decisiones — también en el plan gratuito. Es el archivo que acaban pidiéndote."
+      "title": "Un paquete de auditoría descargable, no solo un panel",
+      "body": "Todo el historial sale en un único CSV, y cada cambio individual como un ZIP autónomo con su ancla de verificación SHA-256, el HTML original y el historial de decisiones — en el plan Growth. Es el archivo que acaban pidiéndote."
     },
     {
       "title": "El aviso al cliente, ya redactado",

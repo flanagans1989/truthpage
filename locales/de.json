@@ -27,7 +27,7 @@
   "landing.notion_title": "Warum nicht einfach eine Notion-Seite?",
   "landing.notion_body": "Eine statische Seite merkt nicht, wenn Stripe still einen neuen Unterauftragsverarbeiter aufnimmt, und sie schreibt Ihren Kunden keine E-Mail. TrustPages ist der Unterschied zwischen der Behauptung, Sie überwachten Ihre Dienstleister, und dem Nachweis — mit einer lückenlosen Änderungshistorie, die Ihre Kunden prüfen können. Zu einem Bruchteil dessen, was Enterprise-Compliance-Plattformen kosten, die Sie noch nicht brauchen.",
   "landing.screenshots_title": "Warum nicht einfach Screenshots?",
-  "landing.screenshots_body": "Ein Screenshot lässt sich zuschneiden, bearbeiten oder neu aufnehmen, um in der Prüfungswoche genau das zu zeigen, was gebraucht wird — niemand außer Ihnen kann das nachprüfen. Jede von TrustPages erkannte Änderung speichert stattdessen das rohe HTML des Anbieters selbst, mit einem unabhängigen SHA-256-Hash, einem UTC-Zeitstempel und einem Unified Diff gegenüber der vorherigen Version — gebündelt in einem herunterladbaren ZIP, das ein Prüfer verifizieren kann, ohne unserem Dashboard überhaupt vertrauen zu müssen.",
+  "landing.screenshots_body": "Ein Screenshot lässt sich zuschneiden, bearbeiten oder neu aufnehmen, um in der Prüfungswoche genau das zu zeigen, was gebraucht wird — niemand außer Ihnen kann das nachprüfen. Jede von TrustPages erkannte Änderung speichert stattdessen das rohe HTML des Anbieters selbst, mit einem unabhängigen SHA-256-Hash, einem UTC-Zeitstempel und einem Unified Diff gegenüber der vorherigen Version — im Growth-Tarif gebündelt in einem herunterladbaren ZIP, das ein Prüfer verifizieren kann, ohne unserem Dashboard überhaupt vertrauen zu müssen.",
   "landing.audit_title": "Was Sie einem Prüfer vorlegen können",
   "landing.audit_sub": "Ein Screenshot aus der Prüfungswoche beweist nichts darüber, was auf der Seite vor drei Monaten stand.",
   "landing.audit1_title": "Die Dokumente, nicht nur der Diff",
@@ -188,15 +188,15 @@
   "compare.position": [
     {
       "title": "Die Dokumente, nicht nur der Diff",
-      "body": "Zu jeder erkannten Änderung wird die Anbieterseite im Wortlaut davor und danach gespeichert, jeweils mit Prüfsumme und Zeitstempel, dazu wer sie geprüft hat und wann. „Was stand im März auf dieser Seite“ hat eine Antwort."
+      "body": "Zu jeder erkannten Änderung wird das rohe HTML der Anbieterseite davor und danach gespeichert, jeweils mit unabhängigem SHA-256-Hash und Zeitstempel, dazu wer sie geprüft hat und wann. „Was stand im März auf dieser Seite“ hat eine Antwort, und der Hash beweist, dass die Datei seither nicht still verändert wurde."
     },
     {
       "title": "Nichts wird ohne Sie veröffentlicht",
-      "body": "Änderungen werden als wesentlich oder kosmetisch eingestuft, und nur kosmetische Änderungen mit hoher Konfidenz veröffentlichen sich selbst. Alles andere wartet in einer Queue mit Gegenüberstellung."
+      "body": "Gemini 2.5 Flash stuft jede Änderung als wesentlich oder kosmetisch ein, und nur kosmetische Änderungen mit hoher Konfidenz veröffentlichen sich selbst. Alles andere wartet in einer Queue mit Gegenüberstellung."
     },
     {
-      "title": "Export in jedem Tarif",
-      "body": "Die gesamte Historie verlässt das System als eine CSV — Daten, Anbieter, Klassifizierung, Hashes, Entscheidungen — auch im kostenlosen Tarif. Genau diese Datei wird tatsächlich verlangt."
+      "title": "Ein herunterladbares Prüfpaket, nicht nur ein Dashboard",
+      "body": "Die gesamte Historie verlässt das System als eine CSV, und jede einzelne Änderung als eigenständiges ZIP mit SHA-256-Verifizierungsanker, rohem HTML und Entscheidungsverlauf — im Growth-Tarif. Genau diese Datei wird tatsächlich verlangt."
     },
     {
       "title": "Die Kundenmitteilung, vorformuliert",

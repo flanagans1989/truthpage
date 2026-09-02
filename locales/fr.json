@@ -30,7 +30,7 @@
   "landing.notion_title": "Pourquoi pas simplement une page Notion ?",
   "landing.notion_body": "Une page statique ne vous dira pas que Stripe a discrètement ajouté un sous-traitant ultérieur, et elle n'écrira pas à vos clients. TrustPages, c'est la différence entre affirmer que vous suivez vos prestataires et pouvoir le prouver — avec un historique vivant que vos acheteurs peuvent auditer. Pour une fraction du prix des plateformes de conformité pour grands comptes dont vous n'avez pas encore besoin.",
   "landing.screenshots_title": "Pourquoi pas simplement des captures d'écran ?",
-  "landing.screenshots_body": "Une capture d'écran peut être recadrée, modifiée ou reprise pour dire ce que la semaine de l'audit exige — personne d'autre que vous ne peut le vérifier. Chaque changement détecté par TrustPages enregistre au contraire le HTML brut du prestataire lui-même, avec une empreinte SHA-256 indépendante, un horodatage UTC et un diff unifié par rapport à la version précédente — le tout regroupé dans un ZIP téléchargeable qu'un auditeur peut vérifier sans avoir à faire confiance à notre tableau de bord.",
+  "landing.screenshots_body": "Une capture d'écran peut être recadrée, modifiée ou reprise pour dire ce que la semaine de l'audit exige — personne d'autre que vous ne peut le vérifier. Chaque changement détecté par TrustPages enregistre au contraire le HTML brut du prestataire lui-même, avec une empreinte SHA-256 indépendante, un horodatage UTC et un diff unifié par rapport à la version précédente — regroupé, sur l'offre Growth, dans un ZIP téléchargeable qu'un auditeur peut vérifier sans avoir à faire confiance à notre tableau de bord.",
   "landing.audit_title": "Ce que vous pouvez remettre à un auditeur",
   "landing.audit_sub": "Une capture d'écran prise la semaine de l'audit ne prouve rien sur ce que la page disait il y a trois mois.",
   "landing.audit1_title": "Les documents, pas seulement le diff",
@@ -195,15 +195,15 @@
   "compare.position": [
     {
       "title": "Les documents, pas seulement le diff",
-      "body": "Chaque modification détectée conserve la page du prestataire telle qu'elle se lisait avant et après, chacune avec une empreinte et un horodatage, plus qui l'a examinée et quand. « Que disait cette page en mars » a une réponse."
+      "body": "Chaque modification détectée conserve le HTML brut de la page du prestataire tel qu'il se lisait avant et après, chacun avec une empreinte SHA-256 indépendante et un horodatage, plus qui l'a examiné et quand. « Que disait cette page en mars » a une réponse, et l'empreinte prouve que le fichier n'a pas été modifié discrètement depuis."
     },
     {
       "title": "Rien n'est publié sans vous",
-      "body": "Les modifications sont classées substantielles ou cosmétiques, et seules les retouches cosmétiques à forte confiance se publient d'elles-mêmes. Tout le reste attend dans une file, avec la comparaison côte à côte."
+      "body": "Gemini 2.5 Flash classe chaque modification comme substantielle ou cosmétique, et seules les retouches cosmétiques à forte confiance se publient d'elles-mêmes. Tout le reste attend dans une file, avec la comparaison côte à côte."
     },
     {
-      "title": "L'export sur toutes les offres",
-      "body": "Tout l'historique sort en un seul CSV — dates, prestataires, classifications, empreintes, décisions — y compris sur l'offre gratuite. C'est le fichier qu'on vous demande réellement."
+      "title": "Un pack d'audit téléchargeable, pas seulement un tableau de bord",
+      "body": "Tout l'historique sort en un seul CSV, et chaque modification individuelle en ZIP autonome avec son ancre de vérification SHA-256, le HTML brut et l'historique de décision — sur l'offre Growth. C'est le fichier qu'on vous demande réellement."
     },
     {
       "title": "La notification client, déjà rédigée",
