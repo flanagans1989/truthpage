@@ -6,6 +6,11 @@ os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://test:test@localhost/
 os.environ.setdefault("JWT_SECRET", "test-secret-not-for-production")
 os.environ.setdefault("GEMINI_API_KEY", "test")
 os.environ.setdefault("RESEND_API_KEY", "test")
+# The sitemap/evidence-URL tests assert absolute https:// links — true in
+# production, false against the http://localhost:8000 default this falls
+# back to whenever no real APP_URL is set. Locally a .env supplies one, so
+# this only ever bit CI, silently, until someone actually read its output.
+os.environ.setdefault("APP_URL", "https://usetrustpages.com")
 
 
 # ── Shared throwaway database ────────────────────────────────────────────────
