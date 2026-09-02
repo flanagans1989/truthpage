@@ -6,6 +6,7 @@ from google import genai
 from google.genai import types
 
 from app.core.config import settings
+from app.core.llm.rate_limit import gemini_rate_limiter
 from app.core.llm.schemas import DiffAnalysis
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,7 @@ class LLMDiffAnalyzer:
         with a 30-second timeout so the sweep loop is never blocked.
         """
         try:
+            await gemini_rate_limiter.wait_turn()
             return await asyncio.wait_for(
                 asyncio.to_thread(self._call_gemini, raw_diff),
                 timeout=30.0,

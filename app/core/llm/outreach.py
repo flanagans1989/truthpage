@@ -14,6 +14,7 @@ from google import genai
 from google.genai import types
 
 from app.core.config import settings
+from app.core.llm.rate_limit import gemini_rate_limiter
 from app.core.llm.schemas import OutreachDraft
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,7 @@ class OutreachDrafter:
         return draft
 
     async def draft(self, *, company: str, founder: str, vendor1: str, vendor2: str) -> OutreachDraft:
+        await gemini_rate_limiter.wait_turn()
         return await asyncio.wait_for(
             asyncio.to_thread(
                 self._call_gemini, company=company, founder=founder, vendor1=vendor1, vendor2=vendor2

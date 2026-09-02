@@ -17,6 +17,7 @@ from google import genai
 from google.genai import types
 
 from app.core.config import settings
+from app.core.llm.rate_limit import gemini_rate_limiter
 from app.core.llm.schemas import SubProcessorList
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,7 @@ class SubProcessorExtractor:
         return SubProcessorList.model_validate(json.loads(response.text))
 
     async def extract(self, page_text: str) -> SubProcessorList:
+        await gemini_rate_limiter.wait_turn()
         return await asyncio.wait_for(
             asyncio.to_thread(self._call_gemini, page_text), timeout=60.0
         )
