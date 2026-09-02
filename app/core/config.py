@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     PADDLE_PRICE_ID_STARTER_YEARLY: str = ""
     PADDLE_ENVIRONMENT: str = "sandbox"  # "sandbox" | "production"
     GEMINI_API_KEY: str
+    # Google's Gemini free tier caps requests per minute for the whole
+    # account, not per code path — every classifier/extractor/drafter in
+    # this app shares one quota. Hit in production (Sentry TRUSTPAGES-8,
+    # 2026-09-02): "Quota exceeded ... limit: 5" during a directory sweep
+    # tick with several vendor pages due at once, each good for up to two
+    # calls (diff classification + entry extraction). See
+    # app/core/llm/rate_limit.py, which every Gemini call site awaits
+    # before calling the API, so this number is the one place that caps
+    # them all. Raise it only after moving off the free tier.
+    GEMINI_FREE_TIER_RPM: int = 5
     RESEND_API_KEY: str
     RESEND_FROM_EMAIL: str = "TrustPages <onboarding@resend.dev>"
     SENTRY_DSN: str = ""
