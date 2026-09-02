@@ -5,12 +5,24 @@ See app.db.models.lead.Lead for why a lead is its own table rather than a
 passwordless Tenant.
 """
 from datetime import UTC, datetime
+from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.tsa import parse_reply
 from app.db.models.lead import Lead
+
+# A REAL RFC 3161 token, fetched once from FreeTSA for this fixed example's
+# digest (not a fake/placeholder .tsr) — the sample ZIP's whole pitch is
+# "verify this yourself", so it has to hold up to verify.sh actually being
+# run against it. Getting a fresh token for a fictional, unchanging digest
+# is not backdating: there is no real capture event here to misrepresent —
+# see KURAL 0 in docs/manifest_v2.md, which is about never doing this for
+# an actual monitored change.
+_SAMPLE_TSR_PATH = Path(__file__).parent.parent / "static_data" / "sample" / "sample-after-html.sha256.tsr"
 
 
 async def record_lead(
@@ -50,8 +62,11 @@ def sample_change_event() -> SimpleNamespace:
             "(United States), for payment fraud analysis."
         ),
         status="approved",
-        old_hash="a3f5c9e1d7b2f4a6c8e0b1d3f5a7c9e1d3b5f7a9c1e3d5b7f9a1c3e5d7b9f1a3",
-        new_hash="c9e1d3f5a7b9c1e3d5f7a9b1c3e5d7f9a1b3c5e7d9f1a3b5c7e9d1f3a5b7c9e1",
+        # Actually computed sha256() of old_content_text/new_content_text
+        # below — not decorative placeholders, so a visitor who hashes the
+        # extracted files themselves gets a match.
+        old_hash="b7b3eadd213817bebda3e4f92eaf9d540e3a938a94c94c9ebec0dfad4fc6b1fc",
+        new_hash="22e453500c955d89e1e5a00622fdd68ae8f921554f57f088d0d808f61b8d4d89",
         approved_by="sample@example.com",
         approved_at=now,
         notified_at=now,
@@ -78,8 +93,10 @@ def sample_change_event() -> SimpleNamespace:
             "<html><body><p>Sub-processors: AWS, Cloudflare, "
             "Example Cloud Services Inc.</p></body></html>"
         ),
-        old_raw_html_hash="7d9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9",
-        new_raw_html_hash="1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9d1f3",
+        # Actually sha256() of old_raw_html/new_raw_html below — see note
+        # on old_hash/new_hash above.
+        old_raw_html_hash="1ebb60acfc4f8594a25522be9e7b8ab93e8e4f95a6b60e437b1ca8cdb255095d",
+        new_raw_html_hash="271a879deb5a0d25f45792bab8a7e911b19a8d611dd4c3ce4adc397dea3b5101",
         raw_diff=(
             "--- before\n+++ after\n"
             "@@ -1 +1 @@\n"
@@ -87,4 +104,32 @@ def sample_change_event() -> SimpleNamespace:
             "+Sub-processors: AWS (hosting, United States), Cloudflare (CDN, United States), "
             "Example Cloud Services Inc. (payment fraud analysis, United States).\n"
         ),
+        **_sample_timestamp_fields(),
     )
+
+
+def _sample_timestamp_fields() -> dict:
+    """A REAL FreeTSA token for this example's fixed new_raw_html_hash — see
+    the module docstring above on why fetching one now isn't backdating.
+    tsa_time_utc is read out of the token itself (via the same parser
+    production code uses), never hardcoded, so it can't drift out of sync
+    with what the embedded token actually says."""
+    tsr_bytes = _SAMPLE_TSR_PATH.read_bytes()
+    granted, tsa_time = parse_reply(tsr_bytes)
+    if not granted:  # pragma: no cover — the checked-in token is known-good
+        return {
+            "timestamp_status": "failed",
+            "tsa_token": None,
+            "tsa_authority_url": None,
+            "tsa_time_utc": None,
+            "tsa_attempt_count": 1,
+            "tsa_last_error": "sample token failed to parse",
+        }
+    return {
+        "timestamp_status": "timestamped",
+        "tsa_token": tsr_bytes,
+        "tsa_authority_url": settings.TSA_PRIMARY_URL,
+        "tsa_time_utc": tsa_time,
+        "tsa_attempt_count": 1,
+        "tsa_last_error": None,
+    }

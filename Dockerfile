@@ -42,6 +42,12 @@ RUN uv run playwright install-deps chromium
 COPY --from=browsers /ms-playwright /opt/playwright-browsers
 RUN chmod -R o+rx /opt/playwright-browsers
 
+# openssl CLI: app/core/tsa.py and every evidence ZIP's verify.sh both shell
+# out to it for RFC 3161 request/verify — python:3.12-slim ships libssl for
+# Python's own ssl module but not necessarily the openssl binary itself.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Non-root user for security
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser

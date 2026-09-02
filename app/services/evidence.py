@@ -11,6 +11,7 @@ one implementation of it, not the other way around.
 from collections.abc import Iterable
 from datetime import datetime
 from io import BytesIO, StringIO
+from pathlib import Path
 from typing import Any
 import csv
 import hashlib
@@ -19,6 +20,12 @@ import zipfile
 
 from app.core.llm.analyzer import _MODEL as _CLASSIFIER_MODEL
 from app.db.models.mixins import utc_now
+
+# FreeTSA's CA chain (root + signing cert) — checked into the repo, not
+# fetched at runtime, so a ZIP is buildable offline and this file's content
+# is exactly what verify.sh and /verify both trust. Bundled once, alongside
+# app/core/tsa.py's TSA_PRIMARY_URL default.
+_TSA_CHAIN_PATH = Path(__file__).parent.parent / "static_data" / "tsa" / "freetsa-chain.pem"
 
 COLUMNS = (
     "detected_at_utc",
@@ -174,6 +181,40 @@ def _na(value: Any) -> str:
     return str(value) if value not in (None, "") else NOT_AVAILABLE
 
 
+def tsa_token_filename() -> str:
+    """<after_html_file>.sha256.tsr — the token only ever exists for
+    after.html, so the name doubles as saying which file it covers."""
+    return "after.html.sha256.tsr"
+
+
+def _timestamp_section_lines(event: Any) -> list[str]:
+    """[TIMESTAMP]'s five real fields, ahead of the fixed
+    verification_instructions line. timestamp_status is always the
+    column's actual value (pending/retrying/timestamped/failed/
+    not_available_pre_tsa) — never invented. The other four are
+    not_available for every status except `timestamped`, where the token
+    file, the CA chain file, and what the TSA itself reported are the only
+    time these fields carry a value other than not_available.
+    """
+    status = getattr(event, "timestamp_status", None) or NOT_AVAILABLE
+    lines = [f"timestamp_status: {status}"]
+    if status == "timestamped":
+        lines += [
+            f"tsa_token_file: {tsa_token_filename()}",
+            f"tsa_authority_url: {_na(getattr(event, 'tsa_authority_url', None))}",
+            f"tsa_time_utc: {iso_utc(getattr(event, 'tsa_time_utc', None)) or NOT_AVAILABLE}",
+            "tsa_chain_file: tsa-chain.pem",
+        ]
+    else:
+        lines += [
+            f"tsa_token_file: {NOT_AVAILABLE}",
+            f"tsa_authority_url: {NOT_AVAILABLE}",
+            f"tsa_time_utc: {NOT_AVAILABLE}",
+            f"tsa_chain_file: {NOT_AVAILABLE}",
+        ]
+    return lines
+
+
 def _render_manifest_v2(event: Any, app_url: str, tenant: Any, pack_files: dict[str, str]) -> str:
     """Builds manifest.txt per docs/manifest_v2.md. Every field the schema
     lists is always present — a value TrustPages cannot supply today is
@@ -243,11 +284,7 @@ def _render_manifest_v2(event: Any, app_url: str, tenant: Any, pack_files: dict[
         f"diff_sha256: {_sha256(diff_text) if diff_text else NOT_AVAILABLE}",
         "",
         "[TIMESTAMP]",
-        f"timestamp_status: {NOT_AVAILABLE}",
-        f"tsa_token_file: {NOT_AVAILABLE}",
-        f"tsa_authority_url: {NOT_AVAILABLE}",
-        f"tsa_time_utc: {NOT_AVAILABLE}",
-        f"tsa_chain_file: {NOT_AVAILABLE}",
+        *_timestamp_section_lines(event),
         "verification_instructions: See README.txt — run ./verify.sh offline.",
         "",
         "[REVIEW]",
@@ -283,11 +320,11 @@ def _render_manifest_v2(event: Any, app_url: str, tenant: Any, pack_files: dict[
     return text
 
 
-def _readme_v2() -> str:
+def _readme_v2(timestamped: bool) -> str:
     """Plain-English orientation for whoever opens this ZIP without the
-    TrustPages dashboard in front of them. Kept under 20 lines on purpose —
+    TrustPages dashboard in front of them. Kept under 25 lines on purpose —
     the manifest is the reference document, this just points at it."""
-    return "\n".join([
+    lines = [
         "TrustPages Audit Evidence Pack — README",
         "",
         "manifest.txt describes every file in this ZIP and its SHA-256 digest.",
@@ -297,42 +334,121 @@ def _readme_v2() -> str:
         "  before.html / after.html — raw HTML fetched from the vendor's page",
         "  before.txt  / after.txt  — normalized text extracted from that HTML",
         "  diff.txt                — unified diff between before.txt and after.txt",
+        "  verify.sh               — offline check: run it, needs only openssl",
+    ]
+    if timestamped:
+        lines.append("  after.html.sha256.tsr  — RFC 3161 timestamp token for after.html's digest")
+        lines.append("  tsa-chain.pem          — the timestamp authority's CA chain, for offline checking")
+    lines += [
         "",
-        "To verify a file: compute its SHA-256 and compare it to the value",
-        "manifest.txt lists for that file. Any mismatch means the file has",
-        "changed since this pack was generated.",
+        "To verify by hand: compute a file's SHA-256 and compare it to the",
+        "value manifest.txt lists for it. Easier: run ./verify.sh (openssl",
+        "required; on Windows use WSL or Git Bash).",
         "",
-        "This pack does NOT independently prove *when* the capture happened —",
-        "packs generated before RFC 3161 timestamping shipped have no",
-        "independent timestamp ([TIMESTAMP] section reads not_available).",
-        "A future TrustPages release adds ./verify.sh for offline verification.",
-        "",
-        "This pack states observed facts and digests. It is not a legal opinion.",
-    ]) + "\n"
+    ]
+    if timestamped:
+        lines += [
+            "This pack's content hash is attested by an independent third-party",
+            "timestamp authority (RFC 3161) — not just TrustPages' own record.",
+            "The TSA only ever received a SHA-256 digest, never the page content.",
+        ]
+    else:
+        lines += [
+            "This pack has NO independent timestamp — it predates RFC 3161",
+            "timestamping, or one could not be obtained. The content hash above",
+            "is still valid; only the *when* isn't independently attested.",
+        ]
+    lines += ["", "This pack states observed facts and digests. It is not a legal opinion."]
+    return "\n".join(lines) + "\n"
+
+
+def _verify_sh() -> str:
+    """POSIX sh, openssl only, no network access — reads only the files
+    sitting next to it. See docs/manifest_v2.md for the exact PASS/FAIL/NO
+    TIMESTAMP contract this must honor."""
+    return """#!/bin/sh
+# TrustPages audit evidence — offline verification. Uses only openssl and
+# the files in this directory; never touches the network.
+set -e
+cd "$(dirname "$0")"
+
+field() { grep "^$1:" manifest.txt | sed "s/^$1: *//"; }
+
+AFTER_FILE=$(field after_html_file)
+EXPECTED_HASH=$(field after_sha256)
+STATUS=$(field timestamp_status)
+
+if [ -z "$AFTER_FILE" ] || [ ! -f "$AFTER_FILE" ]; then
+    echo "FAIL - manifest.txt does not name a captured HTML file present here"
+    exit 1
+fi
+if [ -z "$EXPECTED_HASH" ] || [ "$EXPECTED_HASH" = "not_available" ]; then
+    echo "FAIL - manifest.txt has no content hash to verify against"
+    exit 1
+fi
+
+ACTUAL_HASH=$(openssl dgst -sha256 -r "$AFTER_FILE" | cut -d' ' -f1)
+if [ "$ACTUAL_HASH" != "$EXPECTED_HASH" ]; then
+    echo "FAIL - content hash mismatch: $AFTER_FILE has changed since this pack was generated"
+    exit 1
+fi
+
+if [ "$STATUS" != "timestamped" ]; then
+    echo "NO TIMESTAMP - pack predates independent timestamping; content hash matches"
+    exit 0
+fi
+
+TOKEN_FILE=$(field tsa_token_file)
+CHAIN_FILE=$(field tsa_chain_file)
+TSA_TIME=$(field tsa_time_utc)
+
+if [ ! -f "$TOKEN_FILE" ] || [ ! -f "$CHAIN_FILE" ]; then
+    echo "FAIL - timestamp_status says timestamped but the token or CA chain file is missing"
+    exit 1
+fi
+
+if openssl ts -verify -in "$TOKEN_FILE" -digest "$EXPECTED_HASH" -CAfile "$CHAIN_FILE" >/dev/null 2>&1; then
+    echo "PASS - content hash matches and timestamp verified ($TSA_TIME)"
+    exit 0
+else
+    echo "FAIL - RFC 3161 timestamp verification failed"
+    exit 1
+fi
+"""
 
 
 def evidence_zip(event: Any, app_url: str, tenant: Any) -> bytes:
     """One detected change as a self-contained ZIP: the documents on both
-    sides of it, the diff, and a manifest describing all of it — everything
-    an auditor asks for, without having to trust a page rendering it
-    correctly. manifest.txt follows docs/manifest_v2.md; `tenant` supplies
-    the SUBJECT section's tenant identity (deliberately passed in rather
-    than read off `event.subprocessor.tenant`, which isn't eager-loaded on
-    every caller today).
+    sides of it, the diff, a manifest describing all of it, and — once
+    stamped — an independent RFC 3161 timestamp token. manifest.txt follows
+    docs/manifest_v2.md; `tenant` supplies the SUBJECT section's tenant
+    identity (deliberately passed in rather than read off
+    `event.subprocessor.tenant`, which isn't eager-loaded on every caller
+    today).
 
-    Missing pieces (an event recorded before raw HTML was captured) become
-    `not_available` in the manifest, never a missing file silently
-    swallowed — before.html/after.html etc. are always present, with a note
-    where the real content isn't.
+    Missing pieces (an event recorded before raw HTML was captured, or not
+    yet/never independently timestamped) become `not_available` in the
+    manifest, never a missing file silently swallowed — before.html/
+    after.html etc. are always present; the timestamp token and CA chain
+    are only ever added when there is a real, granted token to include.
     """
-    pack_files = {
+    timestamped = getattr(event, "timestamp_status", None) == "timestamped"
+
+    pack_files: dict[str, str | bytes] = {
         "before.html": event.old_raw_html or "Not captured for this change.",
         "after.html": event.new_raw_html or "Not captured for this change.",
         "before.txt": event.old_content_text or "Not captured for this change.",
         "after.txt": event.new_content_text or "Not captured for this change.",
         "diff.txt": event.raw_diff or "",
-        "README.txt": _readme_v2(),
+        "verify.sh": _verify_sh(),
+        "README.txt": _readme_v2(timestamped),
     }
+    if timestamped:
+        tsa_token = getattr(event, "tsa_token", None)
+        if tsa_token:
+            pack_files[tsa_token_filename()] = tsa_token
+            pack_files["tsa-chain.pem"] = _TSA_CHAIN_PATH.read_bytes()
+
     pack_hashes = {name: _sha256(content) for name, content in pack_files.items()}
 
     manifest_text = _render_manifest_v2(event, app_url, tenant, pack_hashes)

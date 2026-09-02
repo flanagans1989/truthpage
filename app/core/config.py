@@ -42,6 +42,16 @@ class Settings(BaseSettings):
     # Comma-separated emails allowed to open /admin (matched against tenant.email)
     ADMIN_EMAILS: str = ""
 
+    # RFC 3161 timestamping — see app/core/tsa.py and app/services/tsa_retry.py.
+    # FreeTSA only for now (see docs/manifest_v2.md); TSA_FALLBACK_URL stays
+    # blank until a second provider's CA chain is sourced and bundled — do not
+    # set this without also adding that chain file, or a fallback-issued
+    # token becomes unverifiable offline.
+    TSA_PRIMARY_URL: str = "https://freetsa.org/tsr"
+    TSA_FALLBACK_URL: str = ""
+    TSA_TIMEOUT_SECONDS: float = 20.0
+    TSA_MAX_ATTEMPTS: int = 5
+
     # A source is flagged with a persistent "Monitoring Alert" once its
     # consecutive failed checks (4xx/5xx, timeout, empty content, bot wall)
     # reach this, OR once it's simply gone stale — see STALENESS_ALERT_DAYS.

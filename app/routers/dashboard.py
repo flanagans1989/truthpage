@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.templating import templates as _templates
-from app.db.models.change_event import ChangeEvent, ChangeStatus
+from app.db.models.change_event import ChangeEvent, ChangeStatus, TimestampStatus
 from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
@@ -139,6 +139,31 @@ async def evidence_record(
     decision trail.
     """
     event = await _event_for_tenant(event_id, tenant, db)
+    return _templates.TemplateResponse(
+        request, "evidence.html", {"tenant": tenant, "event": event}
+    )
+
+
+@router.post("/dashboard/events/{event_id}/retry-timestamp", response_class=HTMLResponse)
+async def retry_timestamp(
+    request: Request,
+    event_id: UUID,
+    tenant: CurrentTenant,
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Manual retry after the automated attempts in TSA_MAX_ATTEMPTS are
+    exhausted — 'failed' is not a terminal status (unlike
+    not_available_pre_tsa, which always is). Resets the attempt counter so
+    the next sweep tick gets a fresh full budget of attempts rather than
+    immediately re-failing on attempt N+1.
+    """
+    event = await _event_for_tenant(event_id, tenant, db)
+    if event.timestamp_status == TimestampStatus.failed.value:
+        event.timestamp_status = TimestampStatus.retrying.value
+        event.tsa_attempt_count = 0
+        event.tsa_last_error = None
+        await db.commit()
+        logger.info("Manual timestamp retry requested for change_event %s by tenant %s", event_id, tenant.slug)
     return _templates.TemplateResponse(
         request, "evidence.html", {"tenant": tenant, "event": event}
     )

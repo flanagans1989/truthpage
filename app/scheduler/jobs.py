@@ -11,6 +11,7 @@ from app.db.models.tenant import MONITORED_STATUSES, Tenant
 from app.services.directory import sweep_due_vendors
 from app.services.monitoring import run_subprocessor_check
 from app.services.plans import move_tenant_to_free
+from app.services.tsa_retry import run_timestamp_retry_pass
 
 logger = logging.getLogger(__name__)
 
@@ -105,13 +106,17 @@ async def sweep_due_subprocessors(session_factory: async_sessionmaker[AsyncSessi
 
 
 async def run_sweep_cycle(session_factory: async_sessionmaker[AsyncSession]) -> None:
-    """One tick of the monitor: settle plan transitions, then check what is due.
+    """One tick of the monitor: settle plan transitions, retry any pending
+    RFC 3161 timestamps, then check what is due.
 
     Order matters — a trial that lapsed since the last tick must land on the
     free plan first, or this tick would still scrape its whole vendor list.
     Customers come before the public directory: if the tick runs long, the
-    pages someone is paying for are the ones already done.
+    pages someone is paying for are the ones already done. The timestamp
+    retry pass runs early and is fully independent of everything after it —
+    a slow or unreachable TSA never delays or breaks the scrape itself.
     """
     await downgrade_expired_trials(session_factory)
+    await run_timestamp_retry_pass(session_factory)
     await sweep_due_subprocessors(session_factory)
     await sweep_due_vendors(session_factory)
