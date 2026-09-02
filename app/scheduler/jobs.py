@@ -1,6 +1,6 @@
 import logging
 
-from sqlalchemy import or_, select
+from sqlalchemy import nullsfirst, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import selectinload
 
@@ -81,6 +81,10 @@ async def sweep_due_subprocessors(session_factory: async_sessionmaker[AsyncSessi
                 (Subprocessor.next_check_at <= now) | (Subprocessor.next_check_at == None),  # noqa: E711
             )
             .options(selectinload(Subprocessor.tenant))
+            # Least-recently-checked first — makes starvation structurally
+            # impossible: whatever eats the day's Tier-2 budget first is,
+            # by construction, whatever has gone longest without a look.
+            .order_by(nullsfirst(Subprocessor.last_checked_at))
         )
         due: list[Subprocessor] = list(result.scalars().all())
 

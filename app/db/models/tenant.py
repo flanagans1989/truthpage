@@ -1,7 +1,7 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, String, Uuid
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -131,6 +131,27 @@ class Tenant(TimestampMixin, Base):
     @property
     def shows_powered_by(self) -> bool:
         return not (self.hide_powered_by and self.may_hide_badge)
+
+    # Tier-2 (Playwright) daily cost cap — a SAFETY VALVE now, not a feature
+    # limit. The real per-source quota lives on Subprocessor
+    # (tier2_daily_count/date there); this tenant-wide pool only exists to
+    # bound worst-case cost if something spends far more than expected across
+    # many sources at once. Sized at roughly 2x the vendor cap so normal
+    # operation never gets near it — see app/services/tier2_budget.py, which
+    # does the actual atomic increment (not an ORM read-modify-write, to
+    # stay race-safe under concurrent workers).
+    tier2_daily_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    tier2_daily_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    @property
+    def tier2_daily_limit(self) -> int:
+        from app.core.config import settings
+
+        if self.is_free_plan:
+            return settings.TIER2_DAILY_LIMIT_FREE
+        if self.is_starter_plan:
+            return settings.TIER2_DAILY_LIMIT_STARTER
+        return settings.TIER2_DAILY_LIMIT_GROWTH
 
     @property
     def subprocessor_limit(self) -> int:
