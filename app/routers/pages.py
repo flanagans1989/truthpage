@@ -26,6 +26,11 @@ from app.core.templating import templates as _templates
 from app.db.models.vendor import Vendor
 from app.db.session import get_db_session
 
+# Legal texts are binding in English only (see footer.legal_note), so they
+# are listed in the sitemap once, without hreflang alternates. Kept as one
+# tuple because the sitemap test counts against it.
+ENGLISH_ONLY_LEGAL_PATHS = ("/terms", "/privacy", "/refunds", "/dpa")
+
 router = APIRouter(tags=["pages"])
 
 # Localized static pages. The legal three are deliberately not here: they are
@@ -116,6 +121,19 @@ async def refunds(request: Request):
     return _templates.TemplateResponse(request, "refunds.html", {})
 
 
+@router.get("/dpa", response_class=HTMLResponse)
+async def dpa(request: Request):
+    """Article 28(3) terms, published rather than sent on request.
+
+    We process subscriber and notice-recipient addresses on our customers'
+    behalf, which makes us their processor — so a DPA is not optional, and
+    a buyer's security review asks for one before anything else. Selling
+    the ability to answer that review without being able to answer it
+    ourselves was the sharpest contradiction on the site.
+    """
+    return _templates.TemplateResponse(request, "dpa.html", {})
+
+
 @router.get("/vs/{slug}")
 async def comparison_redirect(slug: str):
     """The per-competitor pages this replaced were live and submitted to
@@ -204,7 +222,7 @@ async def sitemap_xml(db: AsyncSession = Depends(get_db_session)):
             lines.append("  </url>")
 
     # The English-only legal pages, listed once with no alternates.
-    for path in ("/terms", "/privacy", "/refunds"):
+    for path in ENGLISH_ONLY_LEGAL_PATHS:
         lines.append(f"  <url><loc>{base}{path}</loc></url>")
 
     body = "\n".join(lines)

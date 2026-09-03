@@ -102,11 +102,11 @@
 
         <div class="bg-white rounded-xl border border-slate-200 p-6 mb-8">
             <div class="flex items-center gap-2 mb-4">
-                <h2 class="text-base font-semibold text-slate-900">Cryptographic verification anchor</h2>
+                <h2 class="text-base font-semibold text-slate-900">Content digest (SHA-256)</h2>
                 {% if event.new_raw_html_hash %}
                 <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-xs font-medium">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    Cryptographically Verified Snapshot
+                    Digest recorded
                 </span>
                 {% endif %}
             </div>
@@ -127,7 +127,9 @@
                     <dt class="text-slate-400 text-xs mb-0.5">Verification Status</dt>
                     <dd class="text-slate-600 text-sm">
                         {% if event.new_raw_html_hash %}
-                        Cryptographically verified — this digest is computed from the raw HTML in the downloaded audit ZIP. Any edit to that file breaks the match.
+                        This digest is computed from the raw HTML in the downloaded audit ZIP: re-hash <code class="font-mono text-xs">after.html</code> yourself and any edit to that file breaks the match.
+                        On its own it shows the download is the file we recorded — it does not, by itself, establish <em>when</em> the record was made, because we hold both the file and the digest.
+                        That is what the independent RFC 3161 timestamp below is for.
                         {% else %}
                         <span class="text-slate-400">Not available — this change was recorded before raw-HTML hashing was added.</span>
                         {% endif %}

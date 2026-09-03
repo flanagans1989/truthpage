@@ -21,6 +21,14 @@
                         {{ t('vendors.count_one') if n == 1 else t('vendors.count_many', count=n) }}
                         {%- if vendor.entries_updated_at %} · {{ t('vendors.updated', date=d(vendor.entries_updated_at)) }}{% endif %}
                     </p>
+                    {% if vendor.is_stale %}
+                    {# The directory promises a daily re-read. A row whose date
+                       has quietly frozen has to say so, or a reader cannot tell
+                       a current list from an abandoned one. #}
+                    <p class="mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 text-[11px] font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>{{ t('vendors.stale_badge') }}
+                    </p>
+                    {% endif %}
                 </div>
                 <span class="shrink-0 text-xs text-slate-400">{{ t('vendors.view') }} &rarr;</span>
             </a>
@@ -31,6 +39,8 @@
             <p class="text-slate-600 text-sm">{{ t('vendors.empty') }}</p>
         </div>
         {% endif %}
+
+        <p class="mt-8 text-xs text-slate-500 leading-relaxed max-w-2xl">{{ t('vendors.disclaimer') }}</p>
 
         <div class="mt-12 bg-white border border-slate-200 rounded-xl p-6">
             <h2 class="font-semibold text-slate-900 mb-2">{{ t('vendors.cta_title') }}</h2>

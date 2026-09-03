@@ -1,0 +1,77 @@
+{% extends "_legal_base.html" %}
+{% block title %}Data Processing Agreement — TrustPages{% endblock %}
+{% block page_title %}Data Processing Agreement{% endblock %}
+{% block legal_body %}
+<p class="text-sm text-slate-500">This agreement forms part of the <a href="/terms" class="text-blue-600 hover:underline">Terms of Service</a> and applies automatically to every account. You do not need to request or sign a separate copy. Where it conflicts with the Terms on the processing of personal data, this agreement prevails.</p>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">1. Parties and roles</h2>
+    <p>You, the account holder, are the controller. TrustPages, operated by Denizhan Koçakgöl, Antalya, Türkiye, is the processor and acts only on your documented instructions. Your instructions are these terms together with your configuration in the dashboard; we will tell you if we believe an instruction infringes the GDPR or other applicable data protection law.</p>
+    <p>For our own account, billing and security records we act as a controller in our own right — see the <a href="/privacy" class="text-blue-600 hover:underline">Privacy Policy</a>. The vendor pages the Service monitors are published by third parties and are not processed on your behalf.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">2. Subject matter, duration, nature and purpose</h2>
+    <p><strong>Subject matter and purpose:</strong> monitoring the public pages you configure, recording and classifying changes, publishing the changes you approve to your trust page, and sending change notices to the recipients you specify.</p>
+    <p><strong>Duration:</strong> for as long as your account exists, and thereafter only as described in section 8.</p>
+    <p><strong>Categories of data subjects:</strong> you and your colleagues who hold accounts; people who subscribe to your public trust page; recipients you enter for Article 28(2) notices.</p>
+    <p><strong>Categories of personal data:</strong> email addresses; subscription and delivery status; the record of who approved a change and when. No special categories of data under Article 9 are requested, and the Service is not intended for them.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">3. Confidentiality</h2>
+    <p>Anyone we authorise to process this data is bound by an obligation of confidentiality. The Service is currently operated by one person; where that changes, this obligation applies to anyone added.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">4. Security measures (Article 32)</h2>
+    <p>All traffic is served over TLS, and the database connection is TLS-only. Authentication is passwordless: a signed, single-use, time-limited magic link, with a session cookie marked HttpOnly and Secure. Every query that reaches account data is scoped by tenant. Login, subscription and public tool endpoints are rate limited. Secrets are held as environment variables, never in the source repository. Payment card data never reaches our systems: Paddle acts as merchant of record and handles it.</p>
+    <p>We publish a machine-readable monitoring health endpoint so that an interruption to monitoring is externally visible rather than silent.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">5. Sub-processors</h2>
+    <p>You give general written authorisation for the sub-processors below. We will announce any addition or replacement by email to the address on your account at least 14 days before it takes effect. You may object on reasonable data protection grounds within that period; if we cannot resolve the objection, you may terminate and receive a pro-rata refund of the unused paid period.</p>
+    <table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden my-4">
+        <thead class="bg-slate-50">
+            <tr>
+                <th class="text-left font-semibold text-slate-500 px-3 py-2">Sub-processor</th>
+                <th class="text-left font-semibold text-slate-500 px-3 py-2">Purpose</th>
+                <th class="text-left font-semibold text-slate-500 px-3 py-2">Location</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            <tr><td class="px-3 py-2 font-medium text-slate-900">Render</td><td class="px-3 py-2 text-slate-600">Application hosting</td><td class="px-3 py-2 text-slate-600">EU (Frankfurt), company USA</td></tr>
+            <tr><td class="px-3 py-2 font-medium text-slate-900">Neon</td><td class="px-3 py-2 text-slate-600">Database hosting</td><td class="px-3 py-2 text-slate-600">EU, company USA</td></tr>
+            <tr><td class="px-3 py-2 font-medium text-slate-900">Resend</td><td class="px-3 py-2 text-slate-600">Transactional and notification email</td><td class="px-3 py-2 text-slate-600">USA</td></tr>
+            <tr><td class="px-3 py-2 font-medium text-slate-900">Paddle</td><td class="px-3 py-2 text-slate-600">Payments, as merchant of record</td><td class="px-3 py-2 text-slate-600">UK/EU</td></tr>
+            <tr><td class="px-3 py-2 font-medium text-slate-900">Google (Gemini API)</td><td class="px-3 py-2 text-slate-600">Classifying changes to public vendor pages. Receives excerpts of those public pages, not your personal data</td><td class="px-3 py-2 text-slate-600">USA/EU</td></tr>
+            <tr><td class="px-3 py-2 font-medium text-slate-900">Sentry</td><td class="px-3 py-2 text-slate-600">Error monitoring</td><td class="px-3 py-2 text-slate-600">EU</td></tr>
+        </tbody>
+    </table>
+    <p>We remain fully liable to you for a sub-processor's performance of its obligations.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">6. International transfers</h2>
+    <p>Personal data is stored in the EU. Where a sub-processor above is established outside the EEA or the UK, the transfer relies on the European Commission's Standard Contractual Clauses concluded with that provider (together with the UK Addendum where the UK GDPR applies), or on an adequacy decision where one covers the provider. TrustPages itself is operated from Türkiye, which is not covered by an adequacy decision; that transfer likewise relies on the Standard Contractual Clauses incorporated into this agreement.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">7. Assistance, breach notification and audit</h2>
+    <p>We will assist you, taking into account the nature of the processing, in responding to data subject requests, and in meeting your obligations under Articles 32 to 36. Subscribers can unsubscribe themselves from any notice email; for anything else, write to us and we will act within the time you need to meet your own deadline.</p>
+    <p>We will notify you without undue delay, and in any case within 48 hours of becoming aware, of any personal data breach affecting data processed on your behalf, with the information you need for your own Article 33 notification.</p>
+    <p>We will make available the information needed to demonstrate compliance with this agreement and will accept an audit or inspection, once per year or after a breach, on 30 days' notice and under confidentiality.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">8. Deletion and return</h2>
+    <p>You can export your change history and evidence packs at any time while your account is active. On termination, tell us whether you want the data returned or deleted; if you say nothing, we keep it while the account exists so that your public trust page and history stay online, and delete it on request. Deletion covers backups within 30 days.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">9. Contact</h2>
+    <p>Data protection contact: <a href="mailto:support@usetrustpages.com" class="text-blue-600 hover:underline">support@usetrustpages.com</a>. We respond within 30 days, and faster where a deadline of yours depends on it.</p>
+    <p class="text-sm text-slate-500 mt-4">Last updated: 2 September 2026.</p>
+</section>
+{% endblock %}

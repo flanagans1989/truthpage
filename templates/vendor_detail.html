@@ -27,7 +27,7 @@
         <h1 class="text-3xl font-bold text-slate-900 mb-3">{{ t('vendor.h1', vendor=vendor.name) }}</h1>
         <p class="text-slate-600 leading-relaxed mb-6">{{ t('vendor.intro', vendor=vendor.name) }}</p>
 
-        <div class="flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-xl px-5 py-4 mb-10">
+        <div class="flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-600 bg-white border border-slate-200 rounded-xl px-5 py-4 mb-4">
             <span><span class="text-slate-400">{{ t('vendor.stat_entries') }}:</span> <strong class="text-slate-900">{{ entries | length }}</strong></span>
             {% if vendor.entries_updated_at %}
             <span><span class="text-slate-400">{{ t('vendor.stat_updated') }}:</span> <strong class="text-slate-900">{{ d(vendor.entries_updated_at) }}</strong></span>
@@ -40,6 +40,14 @@
                    class="text-blue-600 hover:underline break-all">{{ t('vendor.source_link', vendor=vendor.name) }}</a>
             </span>
         </div>
+
+        {% if vendor.is_stale and vendor.staleness_days is not none %}
+        <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900 leading-relaxed">
+            {{ t('vendor.stale_warning', days=vendor.staleness_days) }}
+        </div>
+        {% endif %}
+
+        <p class="text-xs text-slate-500 leading-relaxed mb-10 max-w-2xl">{{ t('vendor.disclaimer', vendor=vendor.name) }}</p>
 
         <h2 class="text-lg font-semibold text-slate-900 mb-4">{{ t('vendor.current_title') }}</h2>
         {% if entries %}

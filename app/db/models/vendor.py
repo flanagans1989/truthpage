@@ -73,6 +73,29 @@ class Vendor(TimestampMixin, Base):
     )
 
 
+    @property
+    def staleness_days(self) -> int | None:
+        """Whole days since this page was last successfully read, or None if
+        it never has been."""
+        from app.db.models.mixins import as_utc, utc_now
+
+        checked = as_utc(self.last_checked_at)
+        if checked is None:
+            return None
+        return (utc_now() - checked).days
+
+    @property
+    def is_stale(self) -> bool:
+        """The directory says every page here is re-read daily. When that
+        stops being true for a page, the page has to say so itself — a
+        confident-looking list with a quietly frozen date is worse than no
+        list, because a reader has no way to tell the difference."""
+        from app.core.config import settings
+
+        days = self.staleness_days
+        return days is None or days >= settings.STALENESS_ALERT_DAYS
+
+
 class VendorChange(TimestampMixin, Base):
     """One detected movement on a directory page.
 
