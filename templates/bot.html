@@ -1,0 +1,21 @@
+{% extends "_legal_base.html" %}
+{% block title %}TrustPagesBot — TrustPages{% endblock %}
+{% block page_title %}TrustPagesBot{% endblock %}
+{% block legal_body %}
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">What it does</h2>
+    <p>TrustPagesBot reads publicly published sub-processor and privacy pages, once a day per page, and records what changed between readings. It reads pages; it does not submit forms, follow links onto pages it was not pointed at, or collect personal data.</p>
+    <p>It identifies itself as <code class="font-mono text-xs bg-slate-100 px-1 py-0.5 rounded">TrustPagesBot</code> when it asks for your robots.txt.</p>
+</section>
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">Refusing it</h2>
+    <p>For the pages in our <a href="/vendors" class="text-blue-600 hover:underline">public vendor directory</a> — pages we chose to read, on nobody's instruction but our own — a <code class="font-mono text-xs bg-slate-100 px-1 py-0.5 rounded">Disallow</code> in your robots.txt stops us, and the directory page then says so rather than showing a list that has quietly stopped being updated:</p>
+    <pre class="bg-slate-900 text-slate-100 rounded-lg p-4 text-xs overflow-x-auto my-3">User-agent: TrustPagesBot
+Disallow: /</pre>
+    <p>A page one of our customers has configured for their own monitoring is fetched because that customer told us to, under our <a href="/terms" class="text-blue-600 hover:underline">Terms</a>, which require them to have the right to monitor it. If you want such monitoring stopped, write to <a href="mailto:support@usetrustpages.com" class="text-blue-600 hover:underline">support@usetrustpages.com</a> and we will look into it — we would rather hear from you than have you block us at the edge.</p>
+</section>
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">Load</h2>
+    <p>One request per monitored page per day. If a page is behind a bot challenge we may load it once in a headless browser instead, subject to a hard daily cap per page. If our traffic is ever a problem for you, tell us and we will slow down or stop.</p>
+</section>
+{% endblock %}

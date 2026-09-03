@@ -12,17 +12,17 @@ from sqlalchemy.orm import selectinload
 from app.core.config import settings
 from app.core.llm.analyzer import LLMDiffAnalyzer
 from app.core.scraper.content_health import content_health_issue
-from app.core.scraper.detector import ChangeDetector
+from app.core.scraper.detector import ChangeDetector, diff_for_llm
 from app.core.scraper.fetcher import fetch_raw_html, mark_subprocessor_requires_browser
 from app.core.scraper.hasher import ContentHasher
-from app.core.scraper.normalizer import HTMLNormalizer
+from app.core.scraper.normalizer import HTMLNormalizer, NORMALIZER_VERSION
 from app.db.models.change_event import (
     REVIEW_ACTION_AUTO_PUBLISHED_COSMETIC,
     ChangeEvent,
     ChangeStatus,
     TimestampStatus,
 )
-from app.db.models.mixins import utc_now
+from app.db.models.mixins import as_utc, utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.services.mailer import mailer
 from app.services.tier2_budget import try_spend_source_budget, try_spend_tenant_budget
@@ -44,13 +44,8 @@ _BUDGET_RETRY = timedelta(hours=1)
 _FETCH_FAILURE_RETRY = timedelta(minutes=30)
 
 
-def _naive_to_utc(value: datetime | None) -> datetime | None:
-    """SQLite (tests only — Postgres round-trips tz-aware values) hands back
-    a naive datetime; we only ever write UTC into these columns, so that's
-    the correct zone to attach."""
-    if value is not None and value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value
+# Kept as a module-local name: this file's call sites read better with it.
+_naive_to_utc = as_utc
 
 
 async def _dedupe_and_send(
@@ -272,6 +267,7 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         subprocessor.last_content_text = canonical_text
         subprocessor.last_raw_html = raw_html
         subprocessor.last_raw_html_hash = new_raw_html_hash
+        subprocessor.content_format_version = NORMALIZER_VERSION
         subprocessor.last_checked_at = now
         subprocessor.next_check_at = next_check
         # This baseline is the only capture of this source that will NEVER
@@ -282,6 +278,30 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
         # moving with every later check.
         subprocessor.baseline_raw_html_hash = new_raw_html_hash
         subprocessor.baseline_timestamp_status = TimestampStatus.pending.value
+        _reset_health(subprocessor)
+        await session.commit()
+        return
+
+    # e2) Our own reading of the page changed, not the page. Re-baseline
+    # silently: comparing a hash produced by an older normalizer against
+    # one produced by the current one is meaningless, and treating the
+    # difference as a change would open a review for every source at once
+    # and email every tenant's subscribers about vendor changes that never
+    # happened. See migration 0021.
+    if subprocessor.content_format_version != NORMALIZER_VERSION:
+        logger.info(
+            "Normalizer v%d→v%d — re-baselining subprocessor %s without a change event",
+            subprocessor.content_format_version,
+            NORMALIZER_VERSION,
+            subprocessor_id,
+        )
+        subprocessor.last_content_hash = new_hash
+        subprocessor.last_content_text = canonical_text
+        subprocessor.last_raw_html = raw_html
+        subprocessor.last_raw_html_hash = new_raw_html_hash
+        subprocessor.content_format_version = NORMALIZER_VERSION
+        subprocessor.last_checked_at = now
+        subprocessor.next_check_at = next_check
         _reset_health(subprocessor)
         await session.commit()
         return
@@ -303,10 +323,12 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
     )
     logger.info("Change detected for subprocessor %s", subprocessor_id)
 
-    # g) Analyze diff with LLM before persisting (truncate to ~12k chars ≈ ~3k tokens)
-    diff_for_llm = raw_diff[:12_000] if len(raw_diff) > 12_000 else raw_diff
+    # g) Analyze diff with LLM before persisting. Trimmed by whole hunks,
+    # not by a head-crop: a long page's change is usually near the bottom,
+    # and the longest pages belong to the biggest vendors. See
+    # detector.diff_for_llm.
     try:
-        analysis = await _llm_analyzer.analyze(diff_for_llm)
+        analysis = await _llm_analyzer.analyze(diff_for_llm(raw_diff))
         logger.info(
             "LLM analysis for subprocessor %s: %s (confidence=%.2f)",
             subprocessor_id,
@@ -330,6 +352,10 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
 
     change_event = ChangeEvent(
         subprocessor_id=subprocessor.id,
+        # Stamped once, here. A tenant who cancels Growth keeps the packs
+        # for changes captured while they were paying for them — see
+        # migration 0022 and the export routes in dashboard.py.
+        export_entitled=subprocessor.tenant.may_export_evidence,
         old_hash=subprocessor.last_content_hash or "",
         new_hash=new_hash,
         raw_diff=raw_diff,

@@ -15,12 +15,15 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.llm.analyzer import LLMDiffAnalyzer
 from app.core.llm.extractor import SubProcessorExtractor, diff_entries
-from app.core.scraper.detector import ChangeDetector
+from app.core.scraper.content_health import content_health_issue
+from app.core.scraper.detector import ChangeDetector, diff_for_llm
+from app.core.scraper.robots import is_allowed as robots_allow
 from app.core.scraper.fetcher import fetch_raw_html
 from app.core.scraper.hasher import ContentHasher
-from app.core.scraper.normalizer import HTMLNormalizer
+from app.core.scraper.normalizer import NORMALIZER_VERSION, HTMLNormalizer
 from app.db.models.mixins import utc_now
 from app.db.models.vendor import Vendor, VendorChange
 
@@ -71,6 +74,29 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
         logger.warning("Vendor %s not found", vendor_id)
         return
 
+    # Asked before fetched. This directory is crawled on our own
+    # initiative — see app/core/scraper/robots.py — and a compliance
+    # product that ignores the web's one machine-readable "please don't"
+    # is handing a competitor its opening line.
+    if settings.RESPECT_ROBOTS_TXT and not await robots_allow(vendor.monitored_url):
+        logger.warning(
+            "robots.txt disallows %s — unpublishing vendor %s",
+            vendor.monitored_url,
+            vendor.slug,
+        )
+        vendor.robots_blocked = True
+        # Say so on the page rather than letting the date quietly freeze.
+        vendor.is_published = False
+        vendor.last_checked_at = utc_now()
+        vendor.next_check_at = utc_now() + timedelta(minutes=vendor.check_interval_minutes)
+        await session.commit()
+        return
+
+    if vendor.robots_blocked:
+        # Permission was withdrawn and has since been given back.
+        logger.info("robots.txt now allows %s — resuming", vendor.slug)
+        vendor.robots_blocked = False
+
     try:
         raw_html = await asyncio.wait_for(
             fetch_raw_html(
@@ -87,8 +113,25 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
         return
 
     canonical_text = _normalizer.normalize(raw_html)
-    if not canonical_text:
-        logger.warning("Empty content for vendor %s — treating as a fetch failure", vendor.slug)
+
+    # The same gate the tenant pipeline uses (monitoring.py), for the same
+    # reason. Until 2026-09-02 this was a bare `if not canonical_text` —
+    # only a completely empty string counted as a failure. A Cloudflare or
+    # Turnstile interstitial is not empty: it is a few hundred characters
+    # of "Just a moment…", which passed that check, got hashed, published
+    # itself as a real change, and had its entries re-extracted from the
+    # challenge page. On a PUBLIC directory carrying vendor names, silently.
+    #
+    # This is the third caller of content_health.py, and the one that had
+    # been missed — which is exactly why the check lives in a shared module
+    # instead of inside whichever pipeline noticed the problem first.
+    issue = content_health_issue(raw_html, canonical_text)
+    if issue is not None:
+        logger.warning(
+            "Unhealthy content (%s) for vendor %s — treating as a fetch failure",
+            issue,
+            vendor.slug,
+        )
         vendor.next_check_at = utc_now() + _RETRY_AFTER
         await session.commit()
         return
@@ -102,6 +145,7 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
         rows = await _refresh_entries(vendor, canonical_text)
         vendor.last_content_hash = new_hash
         vendor.last_content_text = canonical_text
+        vendor.content_format_version = NORMALIZER_VERSION
         vendor.last_checked_at = now
         vendor.next_check_at = next_check
         if rows is not None:
@@ -111,6 +155,24 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
             logger.info("Vendor %s published with %d entries", vendor.slug, len(rows))
         else:
             logger.info("Vendor %s baselined but not published — no list found", vendor.slug)
+        await session.commit()
+        return
+
+    # Our own reading of the page changed, not the page — re-baseline
+    # silently rather than publishing a fabricated change for every vendor
+    # in the directory at once. See migration 0021.
+    if vendor.content_format_version != NORMALIZER_VERSION:
+        logger.info(
+            "Normalizer v%d→v%d — re-baselining vendor %s without a change",
+            vendor.content_format_version,
+            NORMALIZER_VERSION,
+            vendor.slug,
+        )
+        vendor.last_content_hash = new_hash
+        vendor.last_content_text = canonical_text
+        vendor.content_format_version = NORMALIZER_VERSION
+        vendor.last_checked_at = now
+        vendor.next_check_at = next_check
         await session.commit()
         return
 
@@ -125,7 +187,7 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
         new_text=canonical_text,
         label=vendor.monitored_url,
     )
-    analysis = await _analyzer.analyze(raw_diff[:12_000])
+    analysis = await _analyzer.analyze(diff_for_llm(raw_diff))
     rows = await _refresh_entries(vendor, canonical_text)
     added, removed = diff_entries(vendor.entries, rows) if rows is not None else ([], [])
 

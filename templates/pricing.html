@@ -38,7 +38,15 @@
                     <li>✓ {{ t('pricing.starter_f5') }}</li>
                 </ul>
                 <a href="/auth/login" class="block text-center border border-slate-300 hover:border-slate-400 text-slate-700 font-semibold py-3 rounded-lg text-sm">{{ t('pricing.starter_cta') }}</a>
-                <p class="text-xs text-slate-500 text-center mt-3">{{ t('pricing.starter_note') }}</p>
+                <p class="text-xs text-slate-500 text-center mt-3">
+                    {{ t('pricing.starter_note') }}
+                    {# The refund policy grants this on ANY first paid period,
+                       not just Growth. Showing it only on the Growth card made
+                       the two documents contradict each other, and a
+                       contradiction between a price page and a refund policy
+                       gets read against us in a Paddle dispute. #}
+                    <a href="/refunds" class="text-blue-600 hover:underline">{{ t('pricing.growth_guarantee') }}</a>
+                </p>
             </div>
 
             <div class="bg-white rounded-2xl border-2 border-blue-500 shadow-sm p-8">

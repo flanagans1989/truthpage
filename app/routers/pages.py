@@ -26,6 +26,11 @@ from app.core.templating import templates as _templates
 from app.db.models.vendor import Vendor
 from app.db.session import get_db_session
 
+# Legal texts are binding in English only (see footer.legal_note), so they
+# are listed in the sitemap once, without hreflang alternates. Kept as one
+# tuple because the sitemap test counts against it.
+ENGLISH_ONLY_LEGAL_PATHS = ("/terms", "/privacy", "/refunds", "/dpa", "/security", "/bot")
+
 router = APIRouter(tags=["pages"])
 
 # Localized static pages. The legal three are deliberately not here: they are
@@ -116,6 +121,40 @@ async def refunds(request: Request):
     return _templates.TemplateResponse(request, "refunds.html", {})
 
 
+@router.get("/security", response_class=HTMLResponse)
+async def security(request: Request):
+    """States what we have and, more usefully, what we do not.
+
+    The buyer for this product is a security or legal reviewer. Having no
+    page at all reads worse than having one that admits to no SOC 2 — the
+    first looks like nothing to say, the second like something to check.
+    """
+    return _templates.TemplateResponse(request, "security.html", {})
+
+
+@router.get("/bot", response_class=HTMLResponse)
+async def bot(request: Request):
+    """The address TrustPagesBot gives when it asks for robots.txt.
+
+    A crawler that names a URL it cannot be looked up at is a crawler
+    asking to be blocked at the edge without a conversation.
+    """
+    return _templates.TemplateResponse(request, "bot.html", {})
+
+
+@router.get("/dpa", response_class=HTMLResponse)
+async def dpa(request: Request):
+    """Article 28(3) terms, published rather than sent on request.
+
+    We process subscriber and notice-recipient addresses on our customers'
+    behalf, which makes us their processor — so a DPA is not optional, and
+    a buyer's security review asks for one before anything else. Selling
+    the ability to answer that review without being able to answer it
+    ourselves was the sharpest contradiction on the site.
+    """
+    return _templates.TemplateResponse(request, "dpa.html", {})
+
+
 @router.get("/vs/{slug}")
 async def comparison_redirect(slug: str):
     """The per-competitor pages this replaced were live and submitted to
@@ -204,7 +243,7 @@ async def sitemap_xml(db: AsyncSession = Depends(get_db_session)):
             lines.append("  </url>")
 
     # The English-only legal pages, listed once with no alternates.
-    for path in ("/terms", "/privacy", "/refunds"):
+    for path in ENGLISH_ONLY_LEGAL_PATHS:
         lines.append(f"  <url><loc>{base}{path}</loc></url>")
 
     body = "\n".join(lines)

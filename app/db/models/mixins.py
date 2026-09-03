@@ -9,6 +9,17 @@ def utc_now() -> datetime:
     return datetime.now(UTC)
 
 
+def as_utc(value: datetime | None) -> datetime | None:
+    """SQLite (tests only — Postgres round-trips tz-aware values) hands
+    back a naive datetime; we only ever write UTC into these columns, so
+    that's the correct zone to attach. Subtracting one of these from a
+    tz-aware now() is otherwise a TypeError that only ever shows up under
+    test, which is the worst possible place for it to hide."""
+    if value is not None and value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value
+
+
 class TimestampMixin:
     """Adds created_at / updated_at columns to any model."""
 

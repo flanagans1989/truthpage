@@ -10,6 +10,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    false as sa_false,
     JSON,
     Boolean,
     DateTime,
@@ -48,6 +49,19 @@ class Vendor(TimestampMixin, Base):
     entries_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     last_content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Set when this vendor's robots.txt refuses TrustPagesBot. The page
+    # then says so instead of showing a list that has quietly stopped
+    # being refreshed — see app/core/scraper/robots.py and migration 0023.
+    robots_blocked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=sa_false()
+    )
+    # Which normalizer version produced last_content_hash. A mismatch with
+    # NORMALIZER_VERSION means our own reading changed, not the page — the
+    # sweep re-baselines silently instead of inventing a change event. See
+    # app/core/scraper/normalizer.py and migration 0021.
+    content_format_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="1", default=1
+    )
     last_content_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     requires_browser: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
@@ -64,6 +78,29 @@ class Vendor(TimestampMixin, Base):
         lazy="raise",
         cascade="all, delete-orphan",
     )
+
+
+    @property
+    def staleness_days(self) -> int | None:
+        """Whole days since this page was last successfully read, or None if
+        it never has been."""
+        from app.db.models.mixins import as_utc, utc_now
+
+        checked = as_utc(self.last_checked_at)
+        if checked is None:
+            return None
+        return (utc_now() - checked).days
+
+    @property
+    def is_stale(self) -> bool:
+        """The directory says every page here is re-read daily. When that
+        stops being true for a page, the page has to say so itself — a
+        confident-looking list with a quietly frozen date is worse than no
+        list, because a reader has no way to tell the difference."""
+        from app.core.config import settings
+
+        days = self.staleness_days
+        return days is None or days >= settings.STALENESS_ALERT_DAYS
 
 
 class VendorChange(TimestampMixin, Base):
