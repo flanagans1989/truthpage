@@ -29,7 +29,7 @@ from app.db.session import get_db_session
 # Legal texts are binding in English only (see footer.legal_note), so they
 # are listed in the sitemap once, without hreflang alternates. Kept as one
 # tuple because the sitemap test counts against it.
-ENGLISH_ONLY_LEGAL_PATHS = ("/terms", "/privacy", "/refunds", "/dpa")
+ENGLISH_ONLY_LEGAL_PATHS = ("/terms", "/privacy", "/refunds", "/dpa", "/security", "/bot")
 
 router = APIRouter(tags=["pages"])
 
@@ -119,6 +119,27 @@ async def privacy(request: Request):
 @router.get("/refunds", response_class=HTMLResponse)
 async def refunds(request: Request):
     return _templates.TemplateResponse(request, "refunds.html", {})
+
+
+@router.get("/security", response_class=HTMLResponse)
+async def security(request: Request):
+    """States what we have and, more usefully, what we do not.
+
+    The buyer for this product is a security or legal reviewer. Having no
+    page at all reads worse than having one that admits to no SOC 2 — the
+    first looks like nothing to say, the second like something to check.
+    """
+    return _templates.TemplateResponse(request, "security.html", {})
+
+
+@router.get("/bot", response_class=HTMLResponse)
+async def bot(request: Request):
+    """The address TrustPagesBot gives when it asks for robots.txt.
+
+    A crawler that names a URL it cannot be looked up at is a crawler
+    asking to be blocked at the edge without a conversation.
+    """
+    return _templates.TemplateResponse(request, "bot.html", {})
 
 
 @router.get("/dpa", response_class=HTMLResponse)

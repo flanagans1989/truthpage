@@ -15,10 +15,12 @@ from uuid import UUID
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.llm.analyzer import LLMDiffAnalyzer
 from app.core.llm.extractor import SubProcessorExtractor, diff_entries
 from app.core.scraper.content_health import content_health_issue
 from app.core.scraper.detector import ChangeDetector, diff_for_llm
+from app.core.scraper.robots import is_allowed as robots_allow
 from app.core.scraper.fetcher import fetch_raw_html
 from app.core.scraper.hasher import ContentHasher
 from app.core.scraper.normalizer import NORMALIZER_VERSION, HTMLNormalizer
@@ -71,6 +73,29 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
     if vendor is None:
         logger.warning("Vendor %s not found", vendor_id)
         return
+
+    # Asked before fetched. This directory is crawled on our own
+    # initiative — see app/core/scraper/robots.py — and a compliance
+    # product that ignores the web's one machine-readable "please don't"
+    # is handing a competitor its opening line.
+    if settings.RESPECT_ROBOTS_TXT and not await robots_allow(vendor.monitored_url):
+        logger.warning(
+            "robots.txt disallows %s — unpublishing vendor %s",
+            vendor.monitored_url,
+            vendor.slug,
+        )
+        vendor.robots_blocked = True
+        # Say so on the page rather than letting the date quietly freeze.
+        vendor.is_published = False
+        vendor.last_checked_at = utc_now()
+        vendor.next_check_at = utc_now() + timedelta(minutes=vendor.check_interval_minutes)
+        await session.commit()
+        return
+
+    if vendor.robots_blocked:
+        # Permission was withdrawn and has since been given back.
+        logger.info("robots.txt now allows %s — resuming", vendor.slug)
+        vendor.robots_blocked = False
 
     try:
         raw_html = await asyncio.wait_for(

@@ -10,6 +10,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    false as sa_false,
     JSON,
     Boolean,
     DateTime,
@@ -48,6 +49,12 @@ class Vendor(TimestampMixin, Base):
     entries_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     last_content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Set when this vendor's robots.txt refuses TrustPagesBot. The page
+    # then says so instead of showing a list that has quietly stopped
+    # being refreshed — see app/core/scraper/robots.py and migration 0023.
+    robots_blocked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=sa_false()
+    )
     # Which normalizer version produced last_content_hash. A mismatch with
     # NORMALIZER_VERSION means our own reading changed, not the page — the
     # sweep re-baselines silently instead of inventing a change event. See

@@ -352,6 +352,10 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
 
     change_event = ChangeEvent(
         subprocessor_id=subprocessor.id,
+        # Stamped once, here. A tenant who cancels Growth keeps the packs
+        # for changes captured while they were paying for them — see
+        # migration 0022 and the export routes in dashboard.py.
+        export_entitled=subprocessor.tenant.may_export_evidence,
         old_hash=subprocessor.last_content_hash or "",
         new_hash=new_hash,
         raw_diff=raw_diff,

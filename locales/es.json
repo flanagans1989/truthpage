@@ -16,6 +16,9 @@
   "footer.privacy": "Privacidad",
   "footer.refunds": "Reembolsos",
   "footer.dpa": "DPA (encargo)",
+  "footer.security": "Seguridad",
+  "vendor.robots_blocked": "{vendor} pide a los lectores automatizados que no descarguen esta página, así que hemos dejado de monitorizarla. El enlace de arriba sigue llevando a su propia lista.",
+  "vendors.robots_badge": "monitorización detenida a petición del proveedor",
   "footer.legal_note": "Los documentos legales solo son vinculantes en inglés.",
 
   "landing.meta_title": "Monitorización automática de subencargados del tratamiento y Trust Center RGPD | TrustPages",

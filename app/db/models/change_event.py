@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, Float, ForeignKey, Integer, LargeBinary, String, Text, Uuid
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Integer, LargeBinary, String, Text, Uuid, false as sa_false
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from app.db.base import Base
@@ -94,6 +94,13 @@ class ChangeEvent(TimestampMixin, Base):
     )
     old_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     new_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    # Whether the tenant was entitled to a downloadable evidence pack at the
+    # moment this change was captured. Stamped once and never revisited:
+    # cancelling Growth must not retract access to packs already earned. See
+    # migration 0022.
+    export_entitled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=sa_false()
+    )
     raw_diff: Mapped[str] = mapped_column(Text, nullable=False)
     # Full page text on both sides of the change. The diff alone cannot answer
     # "what did this page say in March?" — an auditor asks for the document,

@@ -21,7 +21,11 @@
                         {{ t('vendors.count_one') if n == 1 else t('vendors.count_many', count=n) }}
                         {%- if vendor.entries_updated_at %} · {{ t('vendors.updated', date=d(vendor.entries_updated_at)) }}{% endif %}
                     </p>
-                    {% if vendor.is_stale %}
+                    {% if vendor.robots_blocked %}
+                    <p class="mt-1 inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-600 border border-slate-300 px-2 py-0.5 text-[11px] font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>{{ t('vendors.robots_badge') }}
+                    </p>
+                    {% elif vendor.is_stale %}
                     {# The directory promises a daily re-read. A row whose date
                        has quietly frozen has to say so, or a reader cannot tell
                        a current list from an abandoned one. #}

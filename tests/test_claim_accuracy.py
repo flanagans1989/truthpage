@@ -87,3 +87,23 @@ def test_the_refund_guarantee_is_shown_on_every_paid_plan():
 def test_the_directory_carries_a_disclaimer(anon_client):
     body = anon_client.get("/vendors").text
     assert "not an official statement by the vendor" in body
+
+
+def test_security_page_states_what_we_do_not_have(anon_client):
+    """A security page that only lists strengths is the one a reviewer
+    stops trusting. The absences are the useful part."""
+    body = anon_client.get("/security").text
+    assert body.count("SOC 2") >= 1
+    assert "What we do not have" in body
+    assert "/healthz/monitoring" in body
+
+
+def test_the_crawler_url_it_advertises_actually_resolves(anon_client):
+    """TrustPagesBot names this URL when it asks for robots.txt. A crawler
+    citing a page that 404s is asking to be blocked without a conversation."""
+    from app.core.scraper.robots import ROBOTS_USER_AGENT
+
+    response = anon_client.get("/bot")
+    assert response.status_code == 200
+    assert ROBOTS_USER_AGENT in response.text
+    assert "Disallow: /" in response.text

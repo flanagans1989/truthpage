@@ -342,17 +342,24 @@ async def evidence_bundle(
     no session state to hold one in, so the link the checked box produces
     is what carries the choice.
 
-    Growth-tier only — Free and Starter still see the same record on the
+    Growth-tier feature — Free and Starter still see the same record on the
     dashboard page itself, just not the exportable file.
+
+    The gate is the RECORD's entitlement, not today's plan. A pack is
+    usually wanted for something that happened months ago, so gating on the
+    current subscription meant cancelling took away evidence the customer
+    had already paid to have captured — while we kept it, and kept showing
+    it to them. Growth buys evidence packs; it does not un-buy the earned
+    ones.
     """
-    if not tenant.may_export_evidence:
+    if delivery_variant not in ("redacted", "full"):
+        raise HTTPException(status_code=422, detail="delivery_variant must be 'redacted' or 'full'")
+    event = await _event_for_tenant(event_id, tenant, db)
+    if not (tenant.may_export_evidence or event.export_entitled):
         raise HTTPException(
             status_code=402,
             detail="Downloadable audit evidence is part of the Growth plan.",
         )
-    if delivery_variant not in ("redacted", "full"):
-        raise HTTPException(status_code=422, detail="delivery_variant must be 'redacted' or 'full'")
-    event = await _event_for_tenant(event_id, tenant, db)
     zip_bytes = evidence_zip(event, settings.APP_URL, tenant, delivery_variant=delivery_variant)
 
     filename = f"trustpages-audit-{event.subprocessor.name.lower().replace(' ', '-')}-{str(event.id)[:8]}.zip"
@@ -379,21 +386,28 @@ async def evidence_export(
     carries both hashes and the record URL, which is what a reviewer follows
     to see the documents themselves.
 
-    Growth-tier only, same reasoning as the ZIP endpoint above.
+    Growth-tier feature, same reasoning as the ZIP endpoint above: a tenant
+    who has cancelled still exports the rows that were captured while they
+    were entitled, and only those. An empty result is a 402 rather than an
+    empty file, so the reason is legible.
     """
-    if not tenant.may_export_evidence:
-        raise HTTPException(
-            status_code=402,
-            detail="CSV export is part of the Growth plan.",
-        )
+    entitled_only = not tenant.may_export_evidence
     result = await db.execute(
         select(ChangeEvent)
         .join(ChangeEvent.subprocessor)
-        .where(Subprocessor.tenant_id == tenant.id)
+        .where(
+            Subprocessor.tenant_id == tenant.id,
+            *([ChangeEvent.export_entitled == True] if entitled_only else []),  # noqa: E712
+        )
         .options(selectinload(ChangeEvent.subprocessor))
         .order_by(ChangeEvent.created_at.desc())
     )
     events = list(result.scalars().all())
+    if entitled_only and not events:
+        raise HTTPException(
+            status_code=402,
+            detail="CSV export is part of the Growth plan.",
+        )
 
     csv_text = evidence_csv(events, settings.APP_URL)
 

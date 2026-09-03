@@ -41,7 +41,11 @@
             </span>
         </div>
 
-        {% if vendor.is_stale and vendor.staleness_days is not none %}
+        {% if vendor.robots_blocked %}
+        <div class="mb-6 rounded-xl border border-slate-300 bg-slate-100 px-5 py-4 text-sm text-slate-700 leading-relaxed">
+            {{ t('vendor.robots_blocked', vendor=vendor.name) }}
+        </div>
+        {% elif vendor.is_stale and vendor.staleness_days is not none %}
         <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900 leading-relaxed">
             {{ t('vendor.stale_warning', days=vendor.staleness_days) }}
         </div>

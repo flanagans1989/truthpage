@@ -16,6 +16,9 @@
   "footer.privacy": "Confidentialité",
   "footer.refunds": "Remboursement",
   "footer.dpa": "DPA (sous-traitance)",
+  "footer.security": "Sécurité",
+  "vendor.robots_blocked": "{vendor} demande aux lecteurs automatisés de ne pas récupérer cette page ; nous avons donc arrêté la surveillance. Le lien ci-dessus mène toujours à leur propre liste.",
+  "vendors.robots_badge": "surveillance arrêtée à la demande du prestataire",
   "footer.legal_note": "Les documents juridiques ne font foi qu'en anglais.",
 
   "landing.meta_title": "Surveillance automatique des sous-traitants ultérieurs & Trust Center RGPD | TrustPages",

@@ -64,6 +64,12 @@ class Settings(BaseSettings):
     # entirely (503) rather than silently falling back to JWT_SECRET —
     # a fallback would quietly re-create the coupling this removes.
     SWEEP_SECRET: str = ""
+    # Honour robots.txt for the PUBLIC VENDOR DIRECTORY only — pages we
+    # crawl on our own initiative, with no customer relationship and all
+    # the exposure on us. Tenant-monitored URLs are fetched on a
+    # customer's instruction under the Terms and are not gated on this;
+    # see app/core/scraper/robots.py for the reasoning.
+    RESPECT_ROBOTS_TXT: bool = True
     # GET /healthz/monitoring reports "degraded" once the last COMPLETED
     # sweep is older than this. The scheduler ticks every 3 hours (see
     # app/main.py), so this is three missed ticks plus slack: long enough

@@ -11,6 +11,12 @@ os.environ.setdefault("RESEND_API_KEY", "test")
 # back to whenever no real APP_URL is set. Locally a .env supplies one, so
 # this only ever bit CI, silently, until someone actually read its output.
 os.environ.setdefault("APP_URL", "https://usetrustpages.com")
+# The directory pipeline asks robots.txt before fetching. Left on, every
+# test that drives a vendor check would make a real network call to a
+# domain that does not exist — slow, flaky, and dependent on the sandbox
+# having egress at all. Tests that are actually about robots turn it back
+# on explicitly (tests/test_robots.py).
+os.environ.setdefault("RESPECT_ROBOTS_TXT", "false")
 
 
 # ── Shared throwaway database ────────────────────────────────────────────────
