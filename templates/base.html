@@ -21,6 +21,9 @@
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', '{{ ga_measurement_id }}');
+        {% for ev in (ga_events or []) %}
+        gtag('event', {{ ev.name|tojson }}, {{ (ev.params or {})|tojson }});
+        {% endfor %}
     </script>
     {% endif %}
     {% if alternates %}

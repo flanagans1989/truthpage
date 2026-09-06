@@ -7,3 +7,5 @@ __pycache__/
 
 # Local build tools (40MB binary, not committed)
 tools/
+
+Claude outputs/

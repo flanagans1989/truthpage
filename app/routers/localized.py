@@ -22,6 +22,7 @@ from app.core.i18n import DEFAULT_LANG, SUPPORTED_LANGS, localized_path
 from app.db.session import get_db_session
 from app.routers import vendors as vendors_router
 from app.routers.pages import _remember_language, render_compare, render_landing, render_pricing
+from app.services.analytics import anon_id_from, source_from, track
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +59,13 @@ async def english_prefix(rest: str):
 # ── the localized pages ─────────────────────────────────────────────────────
 
 @router.get("/{lang}", response_class=HTMLResponse)
-async def landing(request: Request, lang: str):
-    return _remember_language(render_landing(request, _check(lang)), lang)
+async def landing(request: Request, lang: str, db: AsyncSession = Depends(get_db_session)):
+    checked = _check(lang)
+    await track(
+        db, "landing_view",
+        anon_id=anon_id_from(request), source=source_from(request), meta={"lang": checked},
+    )
+    return _remember_language(render_landing(request, checked), lang)
 
 
 @router.get("/{lang}/pricing", response_class=HTMLResponse)

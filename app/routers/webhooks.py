@@ -18,6 +18,7 @@ from app.db.models.mixins import utc_now
 from app.db.models.notification import DeliveryEventType, NotificationDeliveryEvent, NotificationRecipient
 from app.db.models.tenant import Tenant
 from app.db.session import get_db_session
+from app.services.analytics import track
 from app.services.plans import move_tenant_to_free
 
 logger = logging.getLogger(__name__)
@@ -214,8 +215,13 @@ async def paddle_webhook(
         await _handle_transaction_completed(data, db)
     elif event_type == "subscription.updated" or event_type == "subscription.activated":
         await _handle_subscription_updated(data, db)
+        if event_type == "subscription.activated":
+            tenant = await _find_tenant_by_customer(data.get("customer_id", ""), db)
+            await track(db, "subscription_started", tenant_id=tenant.id if tenant else None)
     elif event_type == "subscription.canceled":
         await _handle_subscription_canceled(data, db)
+        tenant = await _find_tenant_by_customer(data.get("customer_id", ""), db)
+        await track(db, "subscription_canceled", tenant_id=tenant.id if tenant else None)
     else:
         logger.debug("webhook: unhandled event type %s — ignoring", event_type)
 

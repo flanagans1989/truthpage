@@ -15,6 +15,7 @@ from app.core.config import settings
 from app.core.ratelimit import SlidingWindowLimiter, get_client_ip
 from app.db.models.tenant import Tenant
 from app.db.session import get_db_session
+from app.services.analytics import anon_id_from, source_from, track
 from app.services.mailer import mailer
 
 logger = logging.getLogger(__name__)
@@ -125,7 +126,9 @@ async def login_page():
 
 
 @router.post("/request", response_class=HTMLResponse)
-async def request_magic_link(request: Request, email: str = Form(...)):
+async def request_magic_link(
+    request: Request, email: str = Form(...), db: AsyncSession = Depends(get_db_session)
+):
     email = email.strip().lower()
     client_ip = get_client_ip(request)
     if not _limiter.allow(f"ip:{client_ip}") or not _limiter.allow(f"email:{email}"):
@@ -134,6 +137,8 @@ async def request_magic_link(request: Request, email: str = Form(...)):
             status_code=429,
             detail="Too many requests. Please wait a minute before trying again.",
         )
+
+    await track(db, "signup_requested", anon_id=anon_id_from(request), source=source_from(request))
 
     token = _make_magic_token(email)
     magic_url = f"{settings.APP_URL}/auth/verify?token={token}"
@@ -162,6 +167,7 @@ async def request_magic_link(request: Request, email: str = Form(...)):
 
 @router.get("/verify")
 async def verify_magic_link(
+    request: Request,
     token: str,
     db: AsyncSession = Depends(get_db_session),
 ):
@@ -214,6 +220,10 @@ async def verify_magic_link(
         db.add(tenant)
         await db.commit()
         logger.info("verify_magic_link: new tenant created slug='%s' for email='%s'", slug, email)
+        await track(
+            db, "signup_completed",
+            tenant_id=tenant.id, anon_id=anon_id_from(request), source=source_from(request),
+        )
     else:
         logger.info("verify_magic_link: existing tenant slug='%s' for email='%s'", tenant.slug, email)
 

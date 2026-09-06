@@ -22,6 +22,7 @@ from app.db.models.mixins import utc_now
 from app.db.models.subprocessor import Subprocessor
 from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
+from app.services.analytics import anon_id_from, source_from, track
 from app.services.onboarding import add_providers, existing_keys, import_candidates
 
 logger = logging.getLogger(__name__)
@@ -86,7 +87,10 @@ async def add_from_library(
     db: AsyncSession = Depends(get_db_session),
 ):
     """Checked boxes → monitored pages. Over-cap picks are reported, not fatal."""
+    had_none = len(await _tenant_rows(tenant.id, db)) == 0
     result = await add_providers(slugs, tenant, db)
+    if had_none and result.added:
+        await track(db, "onboarding_completed", tenant_id=tenant.id, anon_id=anon_id_from(request))
     return _templates.TemplateResponse(
         request,
         "partials/onboarding_state.html",
@@ -130,6 +134,7 @@ async def add_custom(
         )
 
     await validate_url(monitored_url.strip())
+    had_none = len(rows) == 0
     db.add(
         Subprocessor(
             tenant_id=tenant.id,
@@ -140,6 +145,8 @@ async def add_custom(
     )
     await db.commit()
     logger.info("Onboarding: tenant %s added custom vendor '%s'", tenant.slug, name)
+    if had_none:
+        await track(db, "onboarding_completed", tenant_id=tenant.id, anon_id=anon_id_from(request))
     return _templates.TemplateResponse(
         request,
         "partials/onboarding_state.html",

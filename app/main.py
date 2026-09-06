@@ -1,6 +1,7 @@
 import hmac
 import logging
 import logging.config
+import uuid
 from contextlib import asynccontextmanager
 from datetime import timedelta
 
@@ -11,6 +12,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
 from app.core.ratelimit import SlidingWindowLimiter, get_client_ip
@@ -21,6 +23,7 @@ from app.db.models.system_state import (
     SWEEP_LAST_ERROR,
 )
 from app.db.session import AsyncSessionLocal, engine, get_db_session
+from app.services.analytics import ANON_ID_COOKIE
 from app.routers import (
     admin,
     auth,
@@ -90,9 +93,76 @@ _BOOT_AT = utc_now()
 _sweep_limiter = SlidingWindowLimiter(max_requests=4, window_seconds=3600)
 
 
+def _paddle_required_vars() -> dict[str, str]:
+    return {
+        "PADDLE_API_KEY": settings.PADDLE_API_KEY,
+        "PADDLE_CLIENT_TOKEN": settings.PADDLE_CLIENT_TOKEN,
+        "PADDLE_WEBHOOK_SECRET": settings.PADDLE_WEBHOOK_SECRET,
+        "PADDLE_PRICE_ID_GROWTH": settings.PADDLE_PRICE_ID_GROWTH,
+    }
+
+
+def billing_status() -> str:
+    """"configured" | "misconfigured" — a blank or malformed Paddle price id
+    used to fail silently at checkout time, with nothing to notice it had
+    happened until a sale didn't. Sandbox is exempt: only a production
+    misconfiguration is a real money problem."""
+    if settings.PADDLE_ENVIRONMENT != "production":
+        return "configured"
+    if any(not value for value in _paddle_required_vars().values()):
+        return "misconfigured"
+    if not settings.PADDLE_PRICE_ID_GROWTH.startswith("pri_"):
+        return "misconfigured"
+    return "configured"
+
+
+def _check_paddle_config() -> None:
+    """Startup check only — logs, never raises. A silently-broken checkout
+    should not also take the whole site down; it should be loud in the logs
+    where an admin (or an alert on them) will actually see it."""
+    if settings.PADDLE_ENVIRONMENT != "production":
+        return
+    for name, value in _paddle_required_vars().items():
+        if not value:
+            logger.critical("PADDLE CONFIG: %s is blank in production — checkout will fail silently", name)
+    if settings.PADDLE_PRICE_ID_GROWTH and not settings.PADDLE_PRICE_ID_GROWTH.startswith("pri_"):
+        logger.critical(
+            "PADDLE CONFIG: PADDLE_PRICE_ID_GROWTH=%r does not look like a Paddle price id (expected 'pri_...')",
+            settings.PADDLE_PRICE_ID_GROWTH,
+        )
+
+
+class AnonIdMiddleware(BaseHTTPMiddleware):
+    """Stamps every visitor with a random tp_aid cookie (1 year, SameSite=Lax,
+    not httponly — it's read by nothing client-side today, but it carries no
+    secret either) so funnel_events rows across an anonymous visit can be
+    tied together. Deliberately just a uuid4: no IP, no user-agent — nothing
+    that would make this cookie personal data.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        anon_id = request.cookies.get(ANON_ID_COOKIE)
+        is_new = anon_id is None
+        if is_new:
+            anon_id = str(uuid.uuid4())
+        request.state.anon_id = anon_id
+        response = await call_next(request)
+        if is_new:
+            response.set_cookie(
+                key=ANON_ID_COOKIE,
+                value=anon_id,
+                max_age=60 * 60 * 24 * 365,
+                httponly=False,
+                samesite="lax",
+                secure=settings.APP_URL.startswith("https"),
+            )
+        return response
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- startup ---
+    _check_paddle_config()
     # Every sweep wakes the Neon compute, which then stays up for its 5-minute
     # scale-to-zero window whether or not anything was due. At 30-minute ticks
     # that is 48 wake-ups a day, roughly 4 compute-hours daily and ~124 a month
@@ -123,6 +193,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="TrustPages", version="0.1.0", lifespan=lifespan)
+app.add_middleware(AnonIdMiddleware)
 
 
 class RevalidatedStaticFiles(StaticFiles):
@@ -162,7 +233,7 @@ async def healthz():
     """
     async with AsyncSessionLocal() as session:
         await session.execute(text("SELECT 1"))
-    return {"status": "ok", "database": "reachable"}
+    return {"status": "ok", "database": "reachable", "billing": billing_status()}
 
 
 @app.get("/healthz/monitoring")

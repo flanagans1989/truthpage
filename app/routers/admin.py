@@ -16,6 +16,7 @@ from app.db.models.tenant import Tenant
 from app.db.session import get_db_session
 from app.routers.deps import CurrentAdmin
 from app.services.admin_stats import collect_admin_stats
+from app.services.funnel_stats import collect_funnel_stats
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,16 @@ async def admin_tenant_detail(
             "subscribers": subscribers,
         },
     )
+
+
+@router.get("/funnel", response_class=HTMLResponse)
+async def admin_funnel(
+    request: Request,
+    admin: CurrentAdmin,
+    db: AsyncSession = Depends(get_db_session),
+):
+    stats = await collect_funnel_stats(db)
+    return _templates.TemplateResponse(request, "admin_funnel.html", {"admin": admin, "stats": stats})
 
 
 @router.get("/outreach", response_class=HTMLResponse)

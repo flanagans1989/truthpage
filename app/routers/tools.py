@@ -18,6 +18,7 @@ from app.core.scraper.normalizer import HTMLNormalizer
 from app.core.templating import templates as _templates
 from app.core.urlguard import validate_url
 from app.db.session import get_db_session
+from app.services.analytics import anon_id_from, source_from, track
 from app.services.evidence import evidence_zip
 from app.services.leads import record_lead, sample_change_event, sample_tenant
 
@@ -38,7 +39,9 @@ async def audit_grader_form(request: Request):
 
 
 @router.post("/tools/audit-grader", response_class=HTMLResponse)
-async def audit_grader_scan(request: Request, url: str = Form(...)):
+async def audit_grader_scan(
+    request: Request, url: str = Form(...), db: AsyncSession = Depends(get_db_session)
+):
     client_ip = get_client_ip(request)
     if not _scan_limiter.allow(f"ip:{client_ip}"):
         return _templates.TemplateResponse(
@@ -97,6 +100,10 @@ async def audit_grader_scan(request: Request, url: str = Form(...)):
     grade, label = grade_for(len(found))
     logger.info("Audit grader: %s -> %d known vendor(s), grade %s", url, len(found), grade)
 
+    await track(
+        db, "grader_used",
+        anon_id=anon_id_from(request), source=source_from(request), meta={"grade": grade},
+    )
     return _templates.TemplateResponse(
         request,
         "audit_grader.html",
@@ -122,6 +129,10 @@ async def sample_evidence_pack(
         raise HTTPException(status_code=429, detail="Too many requests — try again in a minute.")
 
     await record_lead(email=email, source="sample_evidence_pack", context=None, session=db)
+    await track(
+        db, "lead_captured",
+        anon_id=anon_id_from(request), source=source_from(request), meta={"magnet": "sample_evidence_pack"},
+    )
 
     zip_bytes = evidence_zip(sample_change_event(), "https://usetrustpages.com", sample_tenant())
     return Response(

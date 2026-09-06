@@ -1,12 +1,15 @@
 import logging
 
 import httpx
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.templating import templates as _templates
+from app.db.session import get_db_session
 from app.routers.deps import CurrentTenant
+from app.services.analytics import anon_id_from, track
 
 logger = logging.getLogger(__name__)
 
@@ -29,20 +32,50 @@ _PRICE_IDS = {
 }
 
 
+_MISCONFIGURED_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TrustPages — Checkout unavailable</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/tailwind.css">
+</head>
+<body class="min-h-screen bg-slate-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 w-full max-w-md text-center">
+        <span class="text-blue-600 font-bold text-xl">TrustPages</span>
+        <h1 class="text-2xl font-bold text-slate-900 mt-4 mb-1">Checkout is temporarily unavailable</h1>
+        <p class="text-slate-500 text-sm">Billing isn't configured for this plan yet. We've been notified —
+        please try again shortly, or reach out if this keeps happening.</p>
+        <a href="/dashboard" class="text-blue-600 text-sm hover:underline mt-6 inline-block">← Back to dashboard</a>
+    </div>
+</body>
+</html>"""
+
+
 @router.get("/checkout")
 async def checkout(
     request: Request,
     tenant: CurrentTenant,
     plan: str = "growth",
     interval: str = "monthly",
+    db: AsyncSession = Depends(get_db_session),
 ):
     if plan not in ("starter", "growth") or interval not in ("monthly", "yearly"):
         raise HTTPException(status_code=404)
 
     price_id = _PRICE_IDS[(plan, interval)]
     if not price_id or not settings.PADDLE_CLIENT_TOKEN:
-        raise HTTPException(status_code=503, detail="Billing not configured")
+        logger.error(
+            "Checkout blocked: billing misconfigured for plan=%s interval=%s "
+            "(price_id set=%s, client_token set=%s)",
+            plan, interval, bool(price_id), bool(settings.PADDLE_CLIENT_TOKEN),
+        )
+        return HTMLResponse(content=_MISCONFIGURED_HTML, status_code=503)
 
+    await track(
+        db, "checkout_opened",
+        tenant_id=tenant.id, anon_id=anon_id_from(request), meta={"plan": plan, "interval": interval},
+    )
     return _templates.TemplateResponse(
         request,
         "checkout.html",
@@ -54,6 +87,7 @@ async def checkout(
             "tenant_id": str(tenant.id),
             "customer_email": tenant.email,
             "success_url": f"{settings.APP_URL}/dashboard?checkout=success",
+            "ga_events": [{"name": "checkout_opened", "params": {"plan": plan, "interval": interval}}],
         },
     )
 

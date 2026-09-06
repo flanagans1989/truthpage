@@ -25,6 +25,7 @@ from app.core.i18n import (
 from app.core.templating import templates as _templates
 from app.db.models.vendor import Vendor
 from app.db.session import get_db_session
+from app.services.analytics import anon_id_from, source_from, track
 
 # Legal texts are binding in English only (see footer.legal_note), so they
 # are listed in the sitemap once, without hreflang alternates. Kept as one
@@ -46,7 +47,11 @@ _LANG_COOKIE = "lang"
 # ── render functions, shared with routers.localized ──────────────────────────
 
 def render_landing(request: Request, lang: str) -> HTMLResponse:
-    return _templates.TemplateResponse(request, "landing.html", page_context(request, lang))
+    return _templates.TemplateResponse(
+        request,
+        "landing.html",
+        page_context(request, lang, ga_events=[{"name": "landing_view", "params": {"lang": lang}}]),
+    )
 
 
 def render_pricing(request: Request, lang: str) -> HTMLResponse:
@@ -80,6 +85,7 @@ async def landing(
     request: Request,
     accept_language: str | None = Header(default=None),
     user_agent: str | None = Header(default=None),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """The English landing page, or a nudge to the visitor's own language.
 
@@ -93,6 +99,10 @@ async def landing(
         guess = preferred_language(accept_language)
         if guess and guess != DEFAULT_LANG:
             return RedirectResponse(url=f"/{guess}", status_code=302)
+    await track(
+        db, "landing_view",
+        anon_id=anon_id_from(request), source=source_from(request), meta={"lang": DEFAULT_LANG},
+    )
     return _remember_language(render_landing(request, DEFAULT_LANG), DEFAULT_LANG)
 
 

@@ -7,6 +7,7 @@ from app.db.models.lead import Lead
 from app.db.models.notification import DeliveryEventType, NotificationDeliveryEvent, NotificationRecipient
 from app.db.models.objection import Objection
 from app.db.models.system_state import SystemState
+from app.db.models.funnel_event import FunnelEvent
 
 __all__ = [
     "Tenant",
@@ -23,4 +24,5 @@ __all__ = [
     "NotificationDeliveryEvent",
     "Objection",
     "SystemState",
+    "FunnelEvent",
 ]
