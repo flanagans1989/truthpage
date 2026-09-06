@@ -208,11 +208,11 @@ class TestSitemap:
         assert 'xmlns:xhtml="http://www.w3.org/1999/xhtml"' in xml
         assert '<xhtml:link rel="alternate" hreflang="x-default"' in xml
         # Four languages plus x-default, on each of the four language URLs.
-        from app.routers.pages import ENGLISH_ONLY_LEGAL_PATHS
+        from app.routers.pages import ENGLISH_ONLY_GUIDE_PATHS, ENGLISH_ONLY_LEGAL_PATHS
 
         assert xml.count('hreflang="de"') == xml.count("<url>") - len(
-            ENGLISH_ONLY_LEGAL_PATHS
-        )  # legal pages carry none
+            ENGLISH_ONLY_LEGAL_PATHS + ENGLISH_ONLY_GUIDE_PATHS
+        )  # legal and guide pages carry none
 
     def test_the_english_only_legal_pages_are_listed_without_alternates(self, anon_client):
         xml = anon_client.get("/sitemap.xml").text

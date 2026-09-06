@@ -32,6 +32,14 @@ from app.services.analytics import anon_id_from, source_from, track
 # tuple because the sitemap test counts against it.
 ENGLISH_ONLY_LEGAL_PATHS = ("/terms", "/privacy", "/refunds", "/dpa", "/security", "/bot")
 
+# Same "one page, one language, no alternates" shape as the legal pages
+# above, for a different reason: these quote GDPR/DORA text and reference
+# our own English-language DPA, so translating them raises the same
+# which-version-governs question. Kept separate from the legal tuple so
+# the two stay easy to tell apart in the sitemap and in the test that
+# counts against them.
+ENGLISH_ONLY_GUIDE_PATHS = ("/guides/article-28-notice-template", "/guides/dora-ict-register")
+
 router = APIRouter(tags=["pages"])
 
 # Localized static pages. The legal three are deliberately not here: they are
@@ -165,6 +173,22 @@ async def dpa(request: Request):
     return _templates.TemplateResponse(request, "dpa.html", {})
 
 
+@router.get("/guides/article-28-notice-template", response_class=HTMLResponse)
+async def guide_article28(request: Request):
+    """Content marketing, not a product page — targets the search volume
+    around the notice a Growth-plan account already gets drafted for it
+    (see services.notice), but stands alone for anyone who lands on it
+    without an account. English only, like the legal pages: it quotes GDPR
+    text, and a translated quote of a regulation is a downgrade the same
+    way a translated contract is (see ENGLISH_ONLY_LEGAL_PATHS above)."""
+    return _templates.TemplateResponse(request, "guide_article28.html", {})
+
+
+@router.get("/guides/dora-ict-register", response_class=HTMLResponse)
+async def guide_dora_register(request: Request):
+    return _templates.TemplateResponse(request, "guide_dora_register.html", {})
+
+
 @router.get("/vs/{slug}")
 async def comparison_redirect(slug: str):
     """The per-competitor pages this replaced were live and submitted to
@@ -252,8 +276,8 @@ async def sitemap_xml(db: AsyncSession = Depends(get_db_session)):
             lines.extend(alt_lines)
             lines.append("  </url>")
 
-    # The English-only legal pages, listed once with no alternates.
-    for path in ENGLISH_ONLY_LEGAL_PATHS:
+    # The English-only legal and guide pages, listed once with no alternates.
+    for path in ENGLISH_ONLY_LEGAL_PATHS + ENGLISH_ONLY_GUIDE_PATHS:
         lines.append(f"  <url><loc>{base}{path}</loc></url>")
 
     body = "\n".join(lines)
