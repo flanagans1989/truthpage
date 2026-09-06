@@ -5,12 +5,10 @@
   "nav.pricing": "Tarifs",
   "nav.signin": "Se connecter",
   "nav.language": "Langue",
-
   "cta.start_free": "Commencer gratuitement — 3 prestataires, sans carte",
   "cta.trial_note": "Les nouveaux comptes commencent par 14 jours de l'offre payante.",
   "cta.pricing_link": "Tarifs",
   "cta.sample_zip": "Télécharger un exemple de preuve d'audit (.zip)",
-
   "footer.copyright": "© 2026 Denizhan Koçakgöl · Antalya, Turquie",
   "footer.terms": "Conditions générales",
   "footer.privacy": "Confidentialité",
@@ -20,11 +18,10 @@
   "vendor.robots_blocked": "{vendor} demande aux lecteurs automatisés de ne pas récupérer cette page ; nous avons donc arrêté la surveillance. Le lien ci-dessus mène toujours à leur propre liste.",
   "vendors.robots_badge": "surveillance arrêtée à la demande du prestataire",
   "footer.legal_note": "Les documents juridiques ne font foi qu'en anglais.",
-
   "landing.meta_title": "Surveillance automatique des sous-traitants ultérieurs & Trust Center RGPD | TrustPages",
   "landing.meta_description": "Surveillez automatiquement les listes de sous-traitants ultérieurs de vos prestataires, conservez une preuve datée de chaque modification et publiez un Trust Center public que vos clients peuvent suivre. Gratuit pour 3 prestataires, à vie — sans carte bancaire.",
   "landing.hero_title": "Conformité sous-traitants avec des preuves vérifiables et horodatées — automatisée.",
-  "landing.hero_body": "Suivez les mises à jour des politiques de confidentialité de vos prestataires, filtrez le bruit par IA, validez les vrais changements et remettez aux auditeurs des preuves qu'ils peuvent vérifier eux-mêmes : le HTML brut du prestataire, son empreinte SHA-256 et un horodatage RFC 3161 indépendant. Configuré en 60 secondes.",
+  "landing.hero_body": "Suivez les mises à jour des politiques de confidentialité de vos prestataires, filtrez le bruit par IA, validez les vrais changements et remettez aux auditeurs des preuves qu'ils peuvent vérifier eux-mêmes : le HTML brut du prestataire, son empreinte SHA-256 et un horodatage RFC 3161 indépendant. Configuré en quelques minutes.",
   "landing.hero_note": "L'offre gratuite est permanente. Les nouveaux comptes commencent par 14 jours de l'offre payante.",
   "landing.card1_title": "Signez plus vite",
   "landing.card1_body": "Un seul lien à envoyer, au lieu de remplir les mêmes questions sur vos prestataires à chaque audit de sécurité. Vos acheteurs voient une présence conformité professionnelle et auditable — même avec une équipe de cinq personnes.",
@@ -52,8 +49,7 @@
   "landing.demo_alt1": "Tableau de bord TrustPages affichant les URL de sous-traitants ultérieurs surveillées et leur statut",
   "landing.demo_alt2": "Trust Center public avec les sous-traitants ultérieurs autorisés, l'historique des modifications et l'abonnement e-mail",
   "landing.final_title": "Prêt pour les grands comptes avant l'arrivée du questionnaire",
-  "landing.final_body": "Cinq minutes de configuration — vous n'êtes alerté que lorsque quelque chose change vraiment.",
-
+  "landing.final_body": "Quelques minutes de configuration — vous n'êtes alerté que lorsque quelque chose change vraiment.",
   "pricing.meta_title": "Tarifs — surveiller ses sous-traitants ultérieurs dès 0 € | TrustPages",
   "pricing.meta_description": "Tarifs TrustPages : une offre gratuite permanente pour 3 pages de prestataires, Starter à 29 $/mois pour 10, ou Growth à 89 $/mois pour 30 avec un pack de preuves d'audit téléchargeable et vérifié par SHA-256. Conservez une trace datée et auditable de chaque modification apportée par vos prestataires à leurs listes de sous-traitants ultérieurs, et publiez-la sur un Trust Center que vos clients peuvent suivre.",
   "pricing.h1": "Commencez gratuitement. Payez quand la liste s'allonge.",
@@ -111,7 +107,6 @@
   "pricing.faq5_q": "Puis-je résilier à tout moment ?",
   "pricing.faq5_a": "Oui, depuis la page de facturation de votre tableau de bord. Vous conservez Growth jusqu'à la fin de la période déjà payée, puis le compte continue sur l'offre gratuite au lieu de fermer — votre Trust Center reste en ligne et votre historique intact. Résilier ne fait donc pas disparaître une page publique que vos clients ont peut-être mise en favori.",
   "pricing.faq5_link": "Voir notre politique de remboursement et la garantie satisfait ou remboursé de 14 jours sur votre première période payée.",
-
   "compare.meta_title": "Comparatif des outils de surveillance des sous-traitants ultérieurs | TrustPages",
   "compare.meta_description": "Les quatre familles d'outils qui surveillent les pages de sous-traitants ultérieurs, ce que chacune coûte et laquelle choisir — y compris quand la réponse n'est pas nous.",
   "compare.h1": "Où se situe TrustPages",
@@ -125,7 +120,6 @@
   "compare.sample_zip_line": "Voyez le fichier réel avant de vous inscrire — ancre SHA-256, HTML brut, diff unifié, un horodatage indépendant RFC 3161 et un manifest.txt avec les empreintes SHA-256 de chaque fichier, construits à partir d'un exemple de changement.",
   "compare.gaps_title": "Ce que nous n'avons pas",
   "compare.gaps_note": "Si l'un de ces points est une exigence, l'une des catégories ci-dessus est un meilleur achat que nous.",
-
   "compare.categories": [
     {
       "slug": "lightweight-registries",
@@ -196,7 +190,6 @@
       "pick_them_when": "Les questionnaires de sécurité sont un coût récurrent pour toute l'entreprise et vous avez le budget pour tout régler d'un coup."
     }
   ],
-
   "compare.position": [
     {
       "title": "Les documents, pas seulement le diff",
@@ -219,7 +212,6 @@
       "body": "Les pages qui ne s'affichent qu'avec JavaScript sont récupérées avec un vrai navigateur. La couverture ne s'arrête donc pas à une liste de prestataires que nous suivons déjà."
     }
   ],
-
   "compare.gaps": [
     "30 pages sur l'offre la plus haute, là où des outils moins chers proposent l'illimité.",
     "Le Trust Center public vit sur une adresse usetrustpages.com ; pas encore de domaine personnalisé.",
@@ -227,7 +219,6 @@
     "Un seul identifiant par compte : pas de rôles pour une équipe conformité qui travaille ensemble.",
     "Pas de registre des traitements, pas d'analyse d'impact des transferts, pas d'automatisation des questionnaires."
   ],
-
   "vendors.meta_title": "Listes de sous-traitants ultérieurs de {count} prestataires, vérifiées chaque jour | TrustPages",
   "vendors.meta_description": "Un annuaire des listes de sous-traitants ultérieurs — qui chaque fournisseur emploie, et ce qui a changé. Chaque page est revérifiée quotidiennement à la source, chez le prestataire lui-même.",
   "vendors.h1": "Annuaire des sous-traitants ultérieurs",
@@ -243,7 +234,6 @@
   "vendors.empty": "L'annuaire se remplit — les pages apparaissent ici dès que leur première liste a été lue.",
   "vendors.cta_title": "La même chose pour vos propres prestataires ?",
   "vendors.cta_body": "Pointez TrustPages vers les fournisseurs que vous utilisez réellement. Nous surveillons leurs pages, vous signalons les changements substantiels, conservons des preuves datées et publions un Trust Center que vos propres clients peuvent suivre.",
-
   "vendor.meta_title": "Sous-traitants ultérieurs de {vendor} — surveillés chaque jour | TrustPages",
   "vendor.meta_description": "Les sous-traitants ultérieurs publiés par {vendor}, avec l'historique des modifications enregistré depuis le début de la surveillance. Vérifié chaque jour sur la page de {vendor}.",
   "vendor.banner": "Vous utilisez {vendor} dans votre produit ? Automatisez les notifications DPA que vous devez à vos propres clients lorsque cette liste change.",

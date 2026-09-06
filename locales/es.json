@@ -5,12 +5,10 @@
   "nav.pricing": "Precios",
   "nav.signin": "Iniciar sesión",
   "nav.language": "Idioma",
-
   "cta.start_free": "Empezar gratis — 3 proveedores, sin tarjeta",
   "cta.trial_note": "Las cuentas nuevas empiezan con 14 días del plan de pago.",
   "cta.pricing_link": "Precios",
   "cta.sample_zip": "Descargar prueba de auditoría de ejemplo (.zip)",
-
   "footer.copyright": "© 2026 Denizhan Koçakgöl · Antalya, Turquía",
   "footer.terms": "Términos del servicio",
   "footer.privacy": "Privacidad",
@@ -20,11 +18,10 @@
   "vendor.robots_blocked": "{vendor} pide a los lectores automatizados que no descarguen esta página, así que hemos dejado de monitorizarla. El enlace de arriba sigue llevando a su propia lista.",
   "vendors.robots_badge": "monitorización detenida a petición del proveedor",
   "footer.legal_note": "Los documentos legales solo son vinculantes en inglés.",
-
   "landing.meta_title": "Monitorización automática de subencargados del tratamiento y Trust Center RGPD | TrustPages",
   "landing.meta_description": "Monitoriza automáticamente las listas de subencargados del tratamiento de tus proveedores, conserva prueba fechada de cada cambio y publica un Trust Center público al que tus clientes puedan suscribirse. Gratis para 3 proveedores, para siempre — sin tarjeta.",
   "landing.hero_title": "Cumplimiento de subencargados con pruebas verificables y con sello de tiempo — automatizado.",
-  "landing.hero_body": "Monitoriza las actualizaciones de las políticas de privacidad de tus proveedores, filtra el ruido con IA, aprueba los cambios reales y entrega a los auditores pruebas que ellos mismos pueden comprobar: el HTML original del proveedor, su hash SHA-256 y un sello de tiempo RFC 3161 independiente. Configúralo en 60 segundos.",
+  "landing.hero_body": "Monitoriza las actualizaciones de las políticas de privacidad de tus proveedores, filtra el ruido con IA, aprueba los cambios reales y entrega a los auditores pruebas que ellos mismos pueden comprobar: el HTML original del proveedor, su hash SHA-256 y un sello de tiempo RFC 3161 independiente. Configúralo en unos minutos.",
   "landing.hero_note": "El plan gratuito es permanente. Las cuentas nuevas empiezan con 14 días del plan de pago.",
   "landing.card1_title": "Cierra antes",
   "landing.card1_body": "Envía un enlace en lugar de rellenar las mismas preguntas sobre proveedores en cada revisión de seguridad. Tus compradores ven una presencia de cumplimiento profesional y auditable — aunque seáis un equipo de cinco.",
@@ -52,8 +49,7 @@
   "landing.demo_alt1": "Panel de TrustPages con las URLs de subencargados monitorizadas y su estado",
   "landing.demo_alt2": "Trust Center público con los subencargados autorizados, el historial de cambios y la suscripción por correo",
   "landing.final_title": "Preparado para grandes clientes antes de que llegue el cuestionario",
-  "landing.final_body": "Cinco minutos de configuración — solo te avisamos cuando algo cambia de verdad.",
-
+  "landing.final_body": "Configúralo en unos minutos — solo te avisamos cuando algo cambia de verdad.",
   "pricing.meta_title": "Precios — monitoriza subencargados del tratamiento desde 0 € | TrustPages",
   "pricing.meta_description": "Precios de TrustPages: plan gratuito permanente para 3 páginas de proveedores, Starter por 29 $/mes para 10, o Growth por 89 $/mes para 30 con un paquete de pruebas de auditoría descargable y verificado por SHA-256. Conserva un registro fechado y auditable de cada cambio que tus proveedores hagan en sus listas de subencargados y publícalo en un Trust Center al que tus clientes puedan suscribirse.",
   "pricing.h1": "Empieza gratis. Paga cuando la lista se alargue.",
@@ -111,7 +107,6 @@
   "pricing.faq5_q": "¿Puedo cancelar cuando quiera?",
   "pricing.faq5_a": "Sí, desde la página de facturación de tu panel. Conservas Growth hasta el final del periodo que ya has pagado y después la cuenta continúa en el plan gratuito en lugar de cerrarse — tu Trust Center sigue online y tu historial intacto, así que cancelar no retira una página pública que tus clientes puedan tener guardada.",
   "pricing.faq5_link": "Consulta nuestra política de reembolso y la garantía de devolución de 14 días sobre tu primer periodo pagado.",
-
   "compare.meta_title": "Comparativa de herramientas para monitorizar subencargados del tratamiento | TrustPages",
   "compare.meta_description": "Los cuatro tipos de herramienta que vigilan las páginas de subencargados, cuánto cuesta cada uno y cuál elegir — incluido cuando la respuesta no somos nosotros.",
   "compare.h1": "Dónde encaja TrustPages",
@@ -125,7 +120,6 @@
   "compare.sample_zip_line": "Mira el archivo real antes de registrarte — ancla SHA-256, HTML original, diff unificado, un sello de tiempo independiente RFC 3161 y un manifest.txt con hashes SHA-256 de cada archivo, construidos a partir de un cambio de ejemplo.",
   "compare.gaps_title": "Lo que no tenemos",
   "compare.gaps_note": "Si alguno de estos puntos es un requisito, una de las categorías de arriba es mejor compra que nosotros.",
-
   "compare.categories": [
     {
       "slug": "lightweight-registries",
@@ -196,7 +190,6 @@
       "pick_them_when": "Los cuestionarios de seguridad son un coste recurrente en toda la empresa y tienes presupuesto para resolverlo todo de una vez."
     }
   ],
-
   "compare.position": [
     {
       "title": "Los documentos, no solo el diff",
@@ -219,7 +212,6 @@
       "body": "Las páginas que solo se muestran con JavaScript se descargan con un navegador real, así que la cobertura no termina en una lista de proveedores que casualmente sigamos."
     }
   ],
-
   "compare.gaps": [
     "30 páginas en el plan más alto, donde herramientas más baratas ofrecen ilimitado.",
     "El Trust Center público vive en una dirección de usetrustpages.com; todavía no hay dominio propio.",
@@ -227,7 +219,6 @@
     "Un único acceso por cuenta: sin roles para un equipo de privacidad que trabaja junto.",
     "Sin RAT, sin evaluaciones de impacto de transferencias, sin automatización de cuestionarios."
   ],
-
   "vendors.meta_title": "Listas de subencargados de {count} proveedores, revisadas a diario | TrustPages",
   "vendors.meta_description": "Un directorio de listas de subencargados del tratamiento — a quién recurre cada proveedor y qué ha cambiado. Cada página se vuelve a comprobar a diario contra la fuente del propio proveedor.",
   "vendors.h1": "Directorio de subencargados del tratamiento",
@@ -243,7 +234,6 @@
   "vendors.empty": "El directorio se está llenando — las páginas aparecen aquí en cuanto se ha leído su primera lista.",
   "vendors.cta_title": "¿Lo mismo para tus propios proveedores?",
   "vendors.cta_body": "Apunta TrustPages a los suministradores que de verdad usas. Vigilamos sus páginas, te avisamos cuando algo sustancial cambia, conservamos prueba fechada y publicamos un Trust Center al que tus propios clientes pueden suscribirse.",
-
   "vendor.meta_title": "Subencargados de {vendor} — monitorizados a diario | TrustPages",
   "vendor.meta_description": "Los subencargados del tratamiento que publica {vendor}, con el historial de cambios registrado desde que empezó la monitorización. Comprobado a diario contra la propia página de {vendor}.",
   "vendor.banner": "¿Usas {vendor} en tu producto? Automatiza los avisos del DPA que debes a tus propios clientes cuando esta lista cambie.",
