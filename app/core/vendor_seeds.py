@@ -13,13 +13,19 @@ sub-processor list: those are the queries worth ranking for.
 VENDOR_SEEDS: list[dict[str, str]] = [
     {"slug": "stripe", "name": "Stripe", "monitored_url": "https://stripe.com/legal/service-providers", "homepage_url": "https://stripe.com"},
     {"slug": "openai", "name": "OpenAI", "monitored_url": "https://openai.com/policies/sub-processor-list/", "homepage_url": "https://openai.com"},
-    {"slug": "anthropic", "name": "Anthropic", "monitored_url": "https://www.anthropic.com/legal/subprocessors", "homepage_url": "https://www.anthropic.com"},
+    {"slug": "anthropic", "name": "Anthropic", "monitored_url": "https://trust.anthropic.com/subprocessors", "homepage_url": "https://www.anthropic.com"},
     {"slug": "aws", "name": "Amazon Web Services", "monitored_url": "https://aws.amazon.com/compliance/sub-processors/", "homepage_url": "https://aws.amazon.com"},
     {"slug": "google-cloud", "name": "Google Cloud", "monitored_url": "https://cloud.google.com/terms/subprocessors", "homepage_url": "https://cloud.google.com"},
     {"slug": "cloudflare", "name": "Cloudflare", "monitored_url": "https://www.cloudflare.com/gdpr/subprocessors/cloudflare-services/", "homepage_url": "https://www.cloudflare.com"},
     {"slug": "vercel", "name": "Vercel", "monitored_url": "https://vercel.com/legal/sub-processors", "homepage_url": "https://vercel.com"},
     {"slug": "github", "name": "GitHub", "monitored_url": "https://docs.github.com/en/site-policy/privacy-policies/github-subprocessors", "homepage_url": "https://github.com"},
-    {"slug": "slack", "name": "Slack", "monitored_url": "https://slack.com/slack-subprocessors", "homepage_url": "https://slack.com"},
+    # Slack's own page 301s straight to this PDF; Heroku and Salesforce's
+    # compliance-site listing pages link out to the same file rather than
+    # showing it inline — all three monitor the PDF directly instead of an
+    # index page, now that the scraper can read one (pdf_extract.py).
+    {"slug": "slack", "name": "Slack", "monitored_url": "https://www.salesforce.com/content/dam/web/en_us/www/documents/legal/misc/salesforce-infrastructure-and-subprocessors.pdf", "homepage_url": "https://slack.com"},
+    {"slug": "heroku", "name": "Heroku", "monitored_url": "https://www.salesforce.com/content/dam/web/en_us/www/documents/legal/misc/salesforce-infrastructure-and-subprocessors.pdf", "homepage_url": "https://www.heroku.com"},
+    {"slug": "salesforce", "name": "Salesforce", "monitored_url": "https://www.salesforce.com/content/dam/web/en_us/www/documents/legal/misc/salesforce-infrastructure-and-subprocessors.pdf", "homepage_url": "https://www.salesforce.com"},
     {"slug": "notion", "name": "Notion", "monitored_url": "https://trust.notion.com/subprocessors", "homepage_url": "https://www.notion.com"},
     {"slug": "hubspot", "name": "HubSpot", "monitored_url": "https://legal.hubspot.com/sub-processors-page", "homepage_url": "https://www.hubspot.com"},
     {"slug": "twilio", "name": "Twilio", "monitored_url": "https://www.twilio.com/en-us/legal/sub-processors", "homepage_url": "https://www.twilio.com"},
@@ -42,11 +48,8 @@ VENDOR_SEEDS: list[dict[str, str]] = [
     {"slug": "snowflake", "name": "Snowflake", "monitored_url": "https://trust.snowflake.com/?product=subprocessors", "homepage_url": "https://www.snowflake.com"},
     {"slug": "databricks", "name": "Databricks", "monitored_url": "https://www.databricks.com/legal/databricks-subprocessors", "homepage_url": "https://www.databricks.com"},
     {"slug": "mongodb", "name": "MongoDB", "monitored_url": "https://www.mongodb.com/products/platform/trust/subprocessors", "homepage_url": "https://www.mongodb.com"},
-    {"slug": "supabase", "name": "Supabase", "monitored_url": "https://supabase.com/legal/customer-resources/subprocessor-list", "homepage_url": "https://supabase.com"},
     {"slug": "netlify", "name": "Netlify", "monitored_url": "https://www.netlify.com/legal/subprocessors/", "homepage_url": "https://www.netlify.com"},
     {"slug": "digitalocean", "name": "DigitalOcean", "monitored_url": "https://www.digitalocean.com/trust/subprocessors", "homepage_url": "https://www.digitalocean.com"},
-    {"slug": "heroku", "name": "Heroku", "monitored_url": "https://compliance.salesforce.com/en/documents/a00Kd00000z7FAnIAM", "homepage_url": "https://www.heroku.com"},
-    {"slug": "salesforce", "name": "Salesforce", "monitored_url": "https://compliance.salesforce.com/en/documents/a00Kd00000z7FAnIAM", "homepage_url": "https://www.salesforce.com"},
     {"slug": "zoom", "name": "Zoom", "monitored_url": "https://www.zoom.com/en/trust/subprocessors/", "homepage_url": "https://zoom.us"},
     {"slug": "shopify", "name": "Shopify", "monitored_url": "https://help.shopify.com/en/manual/privacy-and-security/privacy/subprocessors", "homepage_url": "https://www.shopify.com"},
     {"slug": "paddle", "name": "Paddle", "monitored_url": "https://trust.paddle.com/subprocessors", "homepage_url": "https://www.paddle.com"},
@@ -59,3 +62,14 @@ VENDOR_SEEDS: list[dict[str, str]] = [
 # neither of which this scraper can read a stable list off. Same rule as the
 # importer: no confident URL, no entry, rather than a directory page for the
 # wrong company.
+#
+# A 2026-09-06 URL audit found four more vendors in the same shape of
+# trouble as Auth0 above. Slack, Heroku and Salesforce turned out to be the
+# *same* problem — no PDF reader, not a bad link — and were fixed the same
+# day by adding one (app/core/scraper/pdf_extract.py) rather than dropped.
+#
+# Supabase deliberately stays out: its public page links to a dated file
+# (`subprocessor-list/June-1-2026.pdf`) whose name changes on every update,
+# so even with PDF support the URL would 404 the next time Supabase
+# publishes a change — the rotating-file shape Auth0 was excluded for above,
+# not the missing-reader shape the other three had.
