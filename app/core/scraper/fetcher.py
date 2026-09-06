@@ -8,6 +8,7 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.scraper.content_health import is_bot_wall_body
+from app.core.scraper.pdf_extract import extract_pdf_text, is_pdf_response, pdf_text_as_html
 from app.core.urlguard import UnsafeUrlError, ensure_safe_url
 from app.db.models.subprocessor import Subprocessor
 
@@ -93,6 +94,14 @@ async def _fetch_tier1(url: str) -> tuple[str, bool]:
                 # the hop we actually made, then validate the result.
                 current = str(response.url.join(location))
                 continue
+
+            content_type = response.headers.get("content-type", "")
+            if response.status_code < 400 and is_pdf_response(content_type, current):
+                # A sub-processor list served as a static PDF (Slack, Heroku
+                # and Salesforce all resolve to one) — see pdf_extract.py.
+                # Never bot-walled in practice, so nothing to escalate here.
+                html = pdf_text_as_html(extract_pdf_text(response.content))
+                return html, False
 
             html = response.text
             blocked = _is_bot_protected(response.status_code, html)
