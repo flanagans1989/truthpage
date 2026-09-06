@@ -1,0 +1,53 @@
+{% extends "_legal_base.html" %}
+{% block title %}GDPR Article 28(2) Sub-processor Notice Template — TrustPages{% endblock %}
+{% block meta_description %}What Article 28(2) GDPR requires before you add or replace a sub-processor, a plain-language notice template, and how to send it without tracking every vendor's policy page by hand.{% endblock %}
+{% block page_title %}GDPR Article 28(2): the sub-processor notice, and a template{% endblock %}
+{% block updated_line %}Last updated: September 6, 2026{% endblock %}
+{% block legal_body %}
+<p class="text-sm text-slate-500">Not legal advice — a plain-language starting point. Your DPA with each customer may set a stricter notice period or a different channel than the article itself requires; theirs governs.</p>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">What the article actually says</h2>
+    <p>GDPR Article 28(2) lets a processor use sub-processors only with the controller's prior written authorization — general or specific — and, where that authorization is general, requires the processor to <strong>inform the controller of any intended changes</strong> concerning the addition or replacement of sub-processors, giving the controller an opportunity to object.</p>
+    <p>Three things fall out of that wording that are easy to miss:</p>
+    <ul class="list-disc pl-5 space-y-1">
+        <li>It's triggered by <em>intent</em> — the notice is supposed to go out before the new sub-processor starts processing data, not as an after-the-fact FYI.</li>
+        <li>It only covers additions and replacements. A sub-processor's own sub-processors, or a change to what an existing one already does, isn't in scope unless your DPA says otherwise.</li>
+        <li>The article doesn't set a notice period. Most DPAs do (30 days is common) — that number comes from your contract, not from GDPR itself.</li>
+    </ul>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">A template</h2>
+    <p>Adjust the bracketed parts and the notice period to match your own DPA.</p>
+    <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 text-slate-700 whitespace-pre-wrap font-mono text-xs leading-relaxed">Subject: Notice of new sub-processor — [Your Company]
+
+Dear [Customer],
+
+In accordance with Article 28(2) of the GDPR and our Data Processing Agreement, we are
+writing to notify you of an intended change to our sub-processors used in providing
+[Service Name].
+
+Sub-processor: [Vendor name]
+Purpose: [What it does — e.g. "email delivery", "cloud hosting"]
+Location of processing: [Country/region]
+Effective date: [Date, no earlier than [notice period] from this notice]
+
+If you wish to object to this sub-processor, please contact us at [contact email] within
+[notice period] of this notice, stating your grounds. We will work with you in good faith
+to address a reasonable objection.
+
+[Your Company]</div>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">Where the work actually is</h2>
+    <p>Writing the notice is the easy part. The hard part is <em>knowing</em> a change happened — every vendor you depend on publishes its own sub-processor list, on its own page, updated on its own schedule, with no ping to tell you. Checking those pages by hand, across every vendor you use, is the part that quietly stops happening after the first quarter.</p>
+    <p>That's the specific gap TrustPages closes: point it at the sub-processor pages you depend on, and it re-checks them daily, tells you when one changed and whether the change looks material, and drafts the Article 28(2) notice above — filled in — for changes you approve. You still send it; we do the watching and the first draft.</p>
+    <p>Our own sub-processor list, kept the same way, is at <a href="/trust/trustpages" class="text-blue-600 hover:underline">our public trust page</a> if you want to see the output before trying it.</p>
+</section>
+
+<section>
+    <p class="text-sm text-slate-600">See also: our <a href="/guides/dora-ict-register" class="text-blue-600 hover:underline">DORA ICT third-party register guide</a>, or <a href="/pricing" class="text-blue-600 hover:underline">what TrustPages costs</a>.</p>
+</section>
+{% endblock %}

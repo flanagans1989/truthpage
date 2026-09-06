@@ -1,0 +1,30 @@
+{% extends "_legal_base.html" %}
+{% block title %}DORA ICT Third-Party Register: What to Track — TrustPages{% endblock %}
+{% block meta_description %}What DORA's register of information requires EU financial entities to track about ICT third-party providers, and how continuous sub-processor monitoring keeps it accurate instead of stale.{% endblock %}
+{% block page_title %}DORA's ICT third-party register: what has to stay current{% endblock %}
+{% block updated_line %}Last updated: September 6, 2026{% endblock %}
+{% block legal_body %}
+<p class="text-sm text-slate-500">Not legal advice. DORA's technical standards are detailed and still being interpreted case by case — this is an orientation, not a compliance checklist to submit as-is.</p>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">What DORA requires</h2>
+    <p>The EU's Digital Operational Resilience Act requires financial entities (banks, insurers, investment firms, and a long list of other regulated entities) to maintain a <strong>register of information</strong> on all contractual arrangements with ICT third-party providers, and to report it to their competent authority — annually at minimum, and on request. The register has to cover not just your direct vendors, but their sub-contractors where they support a critical or important function.</p>
+    <p>In practice that means: for every ICT provider in scope, you need to know what they do for you, where they process data, whether the function is "critical or important," and — this is the part that decays fastest — <strong>who their own sub-processors are</strong>, because a vendor's sub-processor is your sub-contractor chain under DORA's reporting template.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">Why the register goes stale</h2>
+    <p>A register built once, at onboarding, is accurate for exactly as long as none of your vendors change anything. In reality, a vendor the size of a typical cloud or SaaS provider adds or swaps a sub-processor a few times a year, disclosed — if at all — on a legal page you were never notified about. The register that only gets updated at your next audit cycle is, most of the year, describing a supply chain you no longer actually have.</p>
+    <p>The regulatory reporting deadline compounds this: national supervisors have already flagged that a large share of in-scope entities under-reported or missed their register submission in the first reporting rounds — not because the requirement is unclear, but because keeping the underlying data current is genuinely tedious across dozens of vendors.</p>
+</section>
+
+<section>
+    <h2 class="text-lg font-semibold text-slate-900 mb-2">What continuous monitoring gives you</h2>
+    <p>TrustPages doesn't file your register for you — it keeps the input to it honest. Point it at the sub-processor lists of the ICT providers you depend on, and it re-reads them daily, tells you when one adds or replaces a sub-processor, and keeps a dated, hash-verified record of what each page said and when it said it. That's the raw material for "who processes our data, since when" that a register update — or an auditor's question about it — actually needs.</p>
+    <p>Concretely, what carries over to a register entry: the sub-processor's name and what it's used for (extracted from the vendor's own published list), the date the change was first detected, and — on paid plans — a downloadable, timestamped evidence pack per change if you need to show your working to an auditor or supervisor.</p>
+</section>
+
+<section>
+    <p class="text-sm text-slate-600">See also: our <a href="/guides/article-28-notice-template" class="text-blue-600 hover:underline">GDPR Article 28(2) notice guide</a>, or <a href="/pricing" class="text-blue-600 hover:underline">what TrustPages costs</a>.</p>
+</section>
+{% endblock %}

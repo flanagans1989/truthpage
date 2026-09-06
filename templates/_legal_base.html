@@ -10,7 +10,7 @@
 
     <main class="flex-1 max-w-3xl mx-auto px-6 py-14 w-full">
         <h1 class="text-3xl font-bold text-slate-900 mb-2">{% block page_title %}{% endblock %}</h1>
-        <p class="text-sm text-slate-500 mb-10">Last updated: July 8, 2026</p>
+        <p class="text-sm text-slate-500 mb-10">{% block updated_line %}Last updated: July 8, 2026{% endblock %}</p>
         <div class="space-y-8 text-sm leading-relaxed text-slate-700">
             {% block legal_body %}{% endblock %}
         </div>
