@@ -49,8 +49,15 @@ jobs:
         # header (app/main.py: `x_admin_secret: str = Header(...)`), not a
         # body field or query param — read straight from the handler, not
         # assumed. Success is 200 with {"status": "sweep triggered"}.
+        #
+        # The handler awaits run_sweep_cycle() in-request rather than firing
+        # it in the background, so this call blocks for the whole cycle — a
+        # live run against production took ~2m40s. -m 120 timed out on a
+        # sweep the server finished seconds later with no error (confirmed
+        # via /healthz/monitoring), so this needs real headroom rather than
+        # a value guessed from the empty-database case.
         run: |
-          http_code=$(curl -s -o /tmp/sweep_body.json -w "%{http_code}" -m 120 \
+          http_code=$(curl -s -o /tmp/sweep_body.json -w "%{http_code}" -m 540 \
             -X POST https://usetrustpages.com/internal/sweep \
             -H "X-Admin-Secret: ${SWEEP_SECRET}")
           echo "POST /internal/sweep -> $http_code"
