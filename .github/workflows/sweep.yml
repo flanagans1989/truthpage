@@ -1,0 +1,99 @@
+name: sweep
+
+# Render's free plan scales the service to zero when it's idle, and the
+# in-process APScheduler (see app/main.py's lifespan) dies with it — so
+# "we check daily" is only true if something outside the box wakes the
+# service and asks. This workflow is that something: it's the entire
+# dead-man's switch for the product's monitoring claim, running on GitHub's
+# free Actions minutes.
+#
+# Requires a repo secret: SWEEP_SECRET, matching the app's SWEEP_SECRET env
+# var (see Settings.SWEEP_SECRET / app/main.py's POST /internal/sweep).
+# Blank or wrong and both jobs below fail loudly rather than silently no-op.
+
+on:
+  schedule:
+    # Staleness alarm (STALENESS_ALERT_DAYS / SWEEP_MAX_AGE_HOURS) fires at
+    # 3 days / 10 hours respectively, so a 6-hour cadence is comfortable
+    # slack on both without being wasteful of free minutes.
+    - cron: "0 */6 * * *"   # drives the sweep job
+    - cron: "15 */6 * * *"  # drives the independent healthcheck job
+  workflow_dispatch: {}     # manual run — both jobs run regardless of schedule
+
+concurrency:
+  group: sweep-cron
+  cancel-in-progress: false  # queue rather than kill a sweep in progress
+
+jobs:
+  sweep:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 */6 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake the service
+        # Render's free-plan cold start can take ~50s; poll rather than
+        # assume the first request lands on a warm instance.
+        run: |
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" -m 15 https://usetrustpages.com/healthz || echo "000")
+            echo "attempt $i: healthz -> $code"
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::service never answered 200 on /healthz after 6 attempts"
+          exit 1
+
+      - name: Trigger the sweep
+        # POST /internal/sweep expects the secret in an X-Admin-Secret
+        # header (app/main.py: `x_admin_secret: str = Header(...)`), not a
+        # body field or query param — read straight from the handler, not
+        # assumed. Success is 200 with {"status": "sweep triggered"}.
+        run: |
+          http_code=$(curl -s -o /tmp/sweep_body.json -w "%{http_code}" -m 120 \
+            -X POST https://usetrustpages.com/internal/sweep \
+            -H "X-Admin-Secret: ${SWEEP_SECRET}")
+          echo "POST /internal/sweep -> $http_code"
+          cat /tmp/sweep_body.json
+          echo
+          case "$http_code" in
+            2??) ;;
+            *) echo "::error::sweep trigger returned $http_code"; exit 1 ;;
+          esac
+        env:
+          SWEEP_SECRET: ${{ secrets.SWEEP_SECRET }}
+
+      - name: Verify monitoring is healthy
+        run: |
+          http_code=$(curl -s -o /tmp/monitoring_body.json -w "%{http_code}" -m 15 \
+            https://usetrustpages.com/healthz/monitoring)
+          echo "GET /healthz/monitoring -> $http_code"
+          cat /tmp/monitoring_body.json
+          echo
+          status=$(python3 -c "import json,sys; print(json.load(open('/tmp/monitoring_body.json')).get('status'))")
+          last_error=$(python3 -c "import json,sys; print(json.load(open('/tmp/monitoring_body.json')).get('last_sweep_error'))")
+          if [ "$status" != "ok" ] || [ "$last_error" != "None" ]; then
+            echo "::error::monitoring is not healthy (status=$status, last_sweep_error=$last_error) — see logged body above"
+            exit 1
+          fi
+
+  healthcheck:
+    # Independent of the sweep job — no `needs:`, so this still runs (and
+    # still alarms) even if the sweep job above is skipped or fails.
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '15 */6 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check /healthz
+        run: |
+          http_code=$(curl -s -o /tmp/healthz_body.json -w "%{http_code}" -m 15 \
+            https://usetrustpages.com/healthz)
+          echo "GET /healthz -> $http_code"
+          cat /tmp/healthz_body.json
+          echo
+          status=$(python3 -c "import json; print(json.load(open('/tmp/healthz_body.json')).get('status'))")
+          database=$(python3 -c "import json; print(json.load(open('/tmp/healthz_body.json')).get('database'))")
+          billing=$(python3 -c "import json; print(json.load(open('/tmp/healthz_body.json')).get('billing'))")
+          if [ "$http_code" != "200" ] || [ "$status" != "ok" ] || [ "$database" != "reachable" ] || [ "$billing" != "configured" ]; then
+            echo "::error::healthz not fully healthy (http=$http_code status=$status database=$database billing=$billing)"
+            exit 1
+          fi
