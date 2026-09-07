@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import random
 from collections.abc import Awaitable, Callable
@@ -144,7 +145,17 @@ async def _fetch_tier2(url: str) -> str:
             return
         await route.continue_()
 
-    async with async_playwright() as pw:
+    # Managed by hand rather than `async with async_playwright()`: the caller
+    # (directory.py, monitoring.py) wraps this whole call in asyncio.wait_for,
+    # and a timeout there delivers a CancelledError at whatever await point
+    # we're sitting on. If that lands inside a plain `await browser.close()`
+    # or the context manager's __aexit__, the close itself gets cancelled —
+    # the Chromium subprocess (and the Node driver process behind Playwright)
+    # is orphaned instead of exiting, and it leaks until Render's memory
+    # limit trips and restarts the instance. asyncio.shield makes each
+    # cleanup call run to completion regardless of the outer cancellation.
+    pw = await async_playwright().start()
+    try:
         browser = await pw.chromium.launch(headless=True)
         try:
             page = await browser.new_page()
@@ -154,7 +165,9 @@ async def _fetch_tier2(url: str) -> str:
                 raise RuntimeError(f"HTTP {response.status} for {url} (Tier-2)")
             html = await page.content()
         finally:
-            await browser.close()
+            await asyncio.shield(browser.close())
+    finally:
+        await asyncio.shield(pw.stop())
 
     return html
 
