@@ -126,6 +126,30 @@ async def run_vendor_check(vendor_id: UUID, session: AsyncSession) -> None:
     # been missed — which is exactly why the check lives in a shared module
     # instead of inside whichever pipeline noticed the problem first.
     issue = content_health_issue(raw_html, canonical_text)
+
+    # Same gap as monitoring.py: "empty_content" only shows up after
+    # normalization, too late for fetch_raw_html to have escalated on its
+    # own — it only escalates on a bot-wall status code or body signature.
+    # A JS-rendered page that isn't a bot wall would otherwise fail this
+    # exact way forever on Tier-1. One inline retry, only from Tier-1.
+    if issue == "empty_content" and not vendor.requires_browser:
+        logger.info(
+            "Tier-1 content too thin for vendor %s — retrying once with Tier-2 before failing",
+            vendor.slug,
+        )
+        try:
+            tier2_html = await asyncio.wait_for(
+                fetch_raw_html(vendor.monitored_url, use_browser=True),
+                timeout=_FETCH_TIMEOUT,
+            )
+        except Exception:
+            logger.exception("Tier-2 retry failed for vendor %s", vendor.slug)
+        else:
+            await _mark_vendor_requires_browser(vendor.id, session)
+            raw_html = tier2_html
+            canonical_text = _normalizer.normalize(raw_html)
+            issue = content_health_issue(raw_html, canonical_text)
+
     if issue is not None:
         logger.warning(
             "Unhealthy content (%s) for vendor %s — treating as a fetch failure",
