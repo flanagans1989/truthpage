@@ -241,6 +241,32 @@ async def run_subprocessor_check(subprocessor_id: UUID, session: AsyncSession) -
     # actually being read.
     canonical_text = _normalizer.normalize(raw_html)
     failure_reason = content_health_issue(raw_html, canonical_text)
+
+    # "empty_content" only shows up post-normalize, so Tier-1 (fetch_raw_html)
+    # had no way to know to escalate — it only escalates on a bot-wall status
+    # code or body signature. A JS-rendered page that isn't a bot wall (no
+    # interstitial, just too little visible text server-side) would otherwise
+    # fail this exact way forever on Tier-1, never trying a real browser.
+    # One inline retry, only from Tier-1: a source already on Tier-2 that
+    # comes back empty is genuinely empty, not under-rendered.
+    if failure_reason == "empty_content" and not subprocessor.requires_browser:
+        logger.info(
+            "Tier-1 content too thin for %s — retrying once with Tier-2 before failing",
+            subprocessor.monitored_url,
+        )
+        try:
+            tier2_html = await asyncio.wait_for(
+                fetch_raw_html(subprocessor.monitored_url, use_browser=True),
+                timeout=90.0,
+            )
+        except Exception:
+            logger.exception("Tier-2 retry failed for %s", subprocessor.monitored_url)
+        else:
+            await mark_subprocessor_requires_browser(subprocessor.id, session)
+            raw_html = tier2_html
+            canonical_text = _normalizer.normalize(raw_html)
+            failure_reason = content_health_issue(raw_html, canonical_text)
+
     if failure_reason is not None:
         logger.warning(
             "Unhealthy content (%s) for %s — treating as fetch failure, retrying in 30 min",
